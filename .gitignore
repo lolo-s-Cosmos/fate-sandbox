@@ -1,0 +1,11 @@
+# Gameplay-generated files
+state/
+sessions/
+
+# Pi isolation (auto-generated on first run)
+.pi/agent/
+.pi/npm/
+
+# Build / deps
+node_modules/
+dist/
