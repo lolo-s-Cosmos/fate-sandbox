@@ -8,7 +8,10 @@ export type ConsequenceAction =
   | "战斗"
   | "魔术"
   | "逃跑"
-  | "休息";
+  | "休息"
+  | "医疗"
+  | "魔术治疗"
+  | "安全屋整备";
 export type ConsequenceRisk = "低" | "中" | "高" | "致命";
 
 export interface ConsequenceInput {
@@ -29,6 +32,7 @@ export interface RawConsequenceInput {
 
 export interface ConsequenceDelta {
   经过分钟: number;
+  身体状态: number;
   疲劳: number;
   魔力负担: number;
   危险度: number;
@@ -75,6 +79,10 @@ export function assertConsequenceInput(raw: RawConsequenceInput): ConsequenceInp
 }
 
 function calculateDelta(input: ConsequenceInput): ConsequenceDelta {
+  if (isRecoveryAction(input.行动类型)) {
+    return recoveryDelta(input);
+  }
+
   const base = baseDelta(input.行动类型);
   const risk = riskDelta(input.风险等级);
   const publicDelta = input.是否公开 ? 8 : 0;
@@ -84,6 +92,7 @@ function calculateDelta(input: ConsequenceInput): ConsequenceDelta {
 
   return {
     经过分钟: input.预计耗时分钟,
+    身体状态: 0,
     疲劳: base.疲劳 + risk.疲劳 + durationFatigue,
     魔力负担: base.魔力负担 + (input.是否涉及神秘 ? risk.魔力负担 : 0),
     危险度: Math.max(base.危险度, risk.危险度),
@@ -93,7 +102,59 @@ function calculateDelta(input: ConsequenceInput): ConsequenceDelta {
   };
 }
 
-function baseDelta(action: ConsequenceAction): ConsequenceDelta {
+function recoveryDelta(input: ConsequenceInput): ConsequenceDelta {
+  const risk = riskDelta(input.风险等级);
+  const hours = Math.floor(input.预计耗时分钟 / 60);
+  const alertFromTime = Math.floor(input.预计耗时分钟 / 120);
+  const unsafeAlert = Math.ceil(risk.敌方警觉 / 2);
+
+  switch (input.行动类型) {
+    case "休息":
+      return createDelta({
+        经过分钟: input.预计耗时分钟,
+        身体状态: input.预计耗时分钟 >= 360 ? 4 : input.预计耗时分钟 >= 90 ? 1 : 0,
+        疲劳: -Math.min(35, 8 + Math.floor(input.预计耗时分钟 / 30) * 4),
+        魔力负担: -Math.min(18, 4 + hours * 3),
+        危险度: risk.危险度,
+        敌方警觉: 2 + alertFromTime + unsafeAlert,
+      });
+    case "医疗":
+      return createDelta({
+        经过分钟: input.预计耗时分钟,
+        身体状态: Math.min(28, 6 + hours * 4),
+        疲劳: -Math.min(18, 4 + hours * 2),
+        危险度: risk.危险度,
+        社会暴露: 8 + (input.是否公开 ? 12 : 3) + risk.社会暴露,
+        敌方警觉: 3 + alertFromTime + unsafeAlert,
+      });
+    case "魔术治疗":
+      return createDelta({
+        经过分钟: input.预计耗时分钟,
+        身体状态: Math.min(24, 5 + hours * 4),
+        疲劳: -Math.min(12, 3 + hours),
+        魔力负担: 12 + risk.魔力负担,
+        危险度: Math.max(2, risk.危险度),
+        神秘暴露: 14 + risk.神秘暴露 + (input.是否公开 ? 6 : 0),
+        敌方警觉: 6 + alertFromTime + unsafeAlert,
+      });
+    case "安全屋整备":
+      return createDelta({
+        经过分钟: input.预计耗时分钟,
+        身体状态: input.预计耗时分钟 >= 360 ? 6 : 2,
+        疲劳: -Math.min(45, 12 + Math.floor(input.预计耗时分钟 / 30) * 4),
+        魔力负担: -Math.min(30, 8 + hours * 4),
+        危险度: risk.危险度,
+        神秘暴露: -Math.min(8, 2 + hours),
+        社会暴露: -Math.min(8, 2 + hours),
+        敌方警觉: 4 + alertFromTime + unsafeAlert,
+      });
+  }
+  throw new Error(`未处理的恢复行动类型: ${input.行动类型}`);
+}
+
+function baseDelta(
+  action: Exclude<ConsequenceAction, "休息" | "医疗" | "魔术治疗" | "安全屋整备">,
+): ConsequenceDelta {
   switch (action) {
     case "移动":
       return createDelta({ 疲劳: 3, 危险度: 1, 社会暴露: 2 });
@@ -116,8 +177,6 @@ function baseDelta(action: ConsequenceAction): ConsequenceDelta {
       return createDelta({ 疲劳: 6, 魔力负担: 15, 危险度: 3, 神秘暴露: 18, 敌方警觉: 10 });
     case "逃跑":
       return createDelta({ 疲劳: 12, 危险度: 3, 社会暴露: 8, 敌方警觉: 8 });
-    case "休息":
-      return createDelta({ 疲劳: -16, 魔力负担: -8, 危险度: 0, 敌方警觉: 2 });
     default: {
       const exhaustive: never = action;
       throw new Error(`未处理的行动类型: ${String(exhaustive)}`);
@@ -166,6 +225,7 @@ function riskDelta(risk: ConsequenceRisk): ConsequenceDelta {
 function createDelta(overrides: Partial<ConsequenceDelta>): ConsequenceDelta {
   return {
     经过分钟: 0,
+    身体状态: 0,
     疲劳: 0,
     魔力负担: 0,
     危险度: 0,
@@ -182,6 +242,7 @@ function applyConsequenceDelta(state: State, delta: ConsequenceDelta): State {
     ...state,
     当前时间: advanceIsoTime(state.当前时间, delta.经过分钟),
     经过分钟: elapsedMinutes,
+    身体状态: clampPercent(state.身体状态 + delta.身体状态),
     疲劳: clampPercent(state.疲劳 + delta.疲劳),
     魔力负担: clampPercent(state.魔力负担 + delta.魔力负担),
     危险度: clampDanger(delta.危险度),
@@ -194,6 +255,7 @@ function applyConsequenceDelta(state: State, delta: ConsequenceDelta): State {
 function calculateActualDelta(before: State, after: State): ConsequenceDelta {
   return {
     经过分钟: after.经过分钟 - before.经过分钟,
+    身体状态: after.身体状态 - before.身体状态,
     疲劳: after.疲劳 - before.疲劳,
     魔力负担: after.魔力负担 - before.魔力负担,
     危险度: after.危险度 - before.危险度,
@@ -207,6 +269,7 @@ function toPatchOps(state: State): PatchOp[] {
   return [
     { op: "replace", path: "/当前时间", value: state.当前时间 },
     { op: "replace", path: "/经过分钟", value: state.经过分钟 },
+    { op: "replace", path: "/身体状态", value: state.身体状态 },
     { op: "replace", path: "/疲劳", value: state.疲劳 },
     { op: "replace", path: "/魔力负担", value: state.魔力负担 },
     { op: "replace", path: "/危险度", value: state.危险度 },
@@ -222,6 +285,12 @@ function buildNarrativeConstraints(input: ConsequenceInput, before: State, after
     "必须描写至少一个具体代价，禁止写成毫无后果。",
   ];
 
+  if (after.身体状态 > before.身体状态) {
+    constraints.push("身体状态有所恢复，但不能写成立刻完全无伤；恢复需要过程和残留不适。");
+  }
+  if (after.疲劳 < before.疲劳 || after.魔力负担 < before.魔力负担) {
+    constraints.push("恢复降低了压力，但时间已经流逝；NPC 和敌对势力不会因此暂停行动。 ");
+  }
   if (after.疲劳 > before.疲劳) {
     constraints.push("必须体现疲劳、迟滞、疼痛或注意力下降。只有休息或治疗才能抹平。");
   }
@@ -239,11 +308,25 @@ function buildNarrativeConstraints(input: ConsequenceInput, before: State, after
   if (after.敌方警觉 > before.敌方警觉) {
     constraints.push("敌方警觉已上升；NPC/敌对势力会在自己的时间线里行动，不能写成完全安全。 ");
   }
+  if (input.行动类型 === "医疗") {
+    constraints.push(
+      "医疗恢复会带来费用、记录、目击或解释压力；如发生消费必须另行 patch_state 扣款。 ",
+    );
+  }
+  if (input.行动类型 === "魔术治疗") {
+    constraints.push("魔术治疗不是免费治愈；必须描写魔术回路负担或神秘痕迹。 ");
+  }
   if (input.风险等级 === "高" || input.风险等级 === "致命") {
     constraints.push("高风险行动不能被一句话、善意或临场觉悟轻易化解。 ");
   }
 
   return constraints;
+}
+
+function isRecoveryAction(
+  action: ConsequenceAction,
+): action is "休息" | "医疗" | "魔术治疗" | "安全屋整备" {
+  return action === "休息" || action === "医疗" || action === "魔术治疗" || action === "安全屋整备";
 }
 
 function advanceIsoTime(isoTime: string, minutes: number): string {
@@ -271,12 +354,15 @@ function assertAction(value: unknown): ConsequenceAction {
     value === "战斗" ||
     value === "魔术" ||
     value === "逃跑" ||
-    value === "休息"
+    value === "休息" ||
+    value === "医疗" ||
+    value === "魔术治疗" ||
+    value === "安全屋整备"
   ) {
     return value;
   }
   throw new Error(
-    `非法行动类型: ${formatUnknown(value)}。可选: 移动/调查/社交/潜入/战斗/魔术/逃跑/休息。`,
+    `非法行动类型: ${formatUnknown(value)}。可选: 移动/调查/社交/潜入/战斗/魔术/逃跑/休息/医疗/魔术治疗/安全屋整备。`,
   );
 }
 

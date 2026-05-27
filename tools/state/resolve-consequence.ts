@@ -7,6 +7,7 @@ export function resolveConsequenceTool(params: RawConsequenceInput): ToolResult 
   const text = [
     "后果已结算：",
     `⏱️ 时间: ${result.before.当前时间} → ${result.after.当前时间}（+${result.delta.经过分钟} 分钟）`,
+    `💪 身体: ${formatChange(result.before.身体状态, result.after.身体状态)}`,
     `💤 疲劳: ${formatChange(result.before.疲劳, result.after.疲劳)}`,
     `🔮 魔力负担: ${formatChange(result.before.魔力负担, result.after.魔力负担)}`,
     `⚠️ 危险度: ${formatChange(result.before.危险度, result.after.危险度)}`,

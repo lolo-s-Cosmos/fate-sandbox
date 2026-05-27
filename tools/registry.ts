@@ -71,11 +71,13 @@ export function registerAllTools(pi: ExtensionAPI): void {
       "【必须调用的场景】\n" +
       "- 玩家采取可能产生风险、耗时、暴露、疲劳或魔力消耗的行动\n" +
       "- 战斗、潜入、调查、施法、逃跑、长距离移动、夜间行动\n" +
+      "- 休息、医疗、魔术治疗、安全屋整备等恢复行为；恢复也会推进时间和敌方行动\n" +
       "- 任何你想写成「暂时安全」「没人发现」「没有代价」的场景，必须先调用本工具确认\n" +
       "- 玩家试图用一句话、善意或临场觉悟化解危机时\n\n" +
       "【严禁的行为】\n" +
       "- 不调用本工具就叙述高风险行动无后果\n" +
       "- 自行决定敌方没有注意到、魔术没有留下痕迹、行动没有疲劳/时间/暴露成本\n" +
+      "- 把治疗/休息写成免费瞬间满血，或让敌人在恢复期间静止等待\n" +
       "- 忽略工具返回的叙事约束",
     parameters: Type.Object({
       行动类型: Type.Union(
@@ -88,6 +90,9 @@ export function registerAllTools(pi: ExtensionAPI): void {
           Type.Literal("魔术"),
           Type.Literal("逃跑"),
           Type.Literal("休息"),
+          Type.Literal("医疗"),
+          Type.Literal("魔术治疗"),
+          Type.Literal("安全屋整备"),
         ],
         { description: "本轮玩家行动类型" },
       ),
