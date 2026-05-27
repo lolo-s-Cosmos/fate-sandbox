@@ -1,13 +1,9 @@
 /**
- * 轻量状态引擎：in-memory 真相源 → session entry 持久化 → state/state.json debug export
+ * 轻量状态引擎：in-memory 真相源 → session entry 持久化。
  *
- * State 字段：
- *   金钱     — number (日元)
- *   当前位置 — string (如 "冬木市·深山镇·卫宫邸")
- *   身体状态 — number 0-100 (100=健康, 0=死亡)
+ * This module owns all player state invariants. Callers may read snapshots and request
+ * state transitions, but the mutable store never crosses this seam.
  */
-
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 // --- Types ---
 
@@ -24,20 +20,24 @@ export interface StateMetadata {
   updatedAt: string;
 }
 
+export type StatePatchPath = "/金钱" | "/当前位置" | "/身体状态";
+
+export interface PatchOp {
+  op: "replace";
+  path: string;
+  value: unknown;
+}
+
 // --- Constants ---
 
 export const CURRENT_STATE_SCHEMA_VERSION = 1;
 
-export const INITIAL_STATE: State = {
-  元数据: {
-    schemaVersion: CURRENT_STATE_SCHEMA_VERSION,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  金钱: 50000,
-  当前位置: "冬木市·深山镇·穗群原学园",
-  身体状态: 100,
-};
+const SESSION_KEY = "fsn-state";
+const INITIAL_MONEY = 50000;
+const INITIAL_LOCATION = "冬木市·深山镇·穗群原学园";
+const INITIAL_BODY_STATUS = 100;
+const MIN_BODY_STATUS = 0;
+const MAX_BODY_STATUS = 100;
 
 // --- Global store (jiti/tsx multi-instance safe) ---
 
@@ -46,17 +46,10 @@ declare global {
   var __fsn_state_store__: State | undefined;
 }
 
-function getStore(): State {
-  if (!globalThis.__fsn_state_store__) {
-    globalThis.__fsn_state_store__ = structuredClone(INITIAL_STATE);
-  }
-  return globalThis.__fsn_state_store__;
-}
-
 // --- Public API ---
 
 export function getState(): State {
-  return getStore();
+  return cloneState();
 }
 
 export function cloneState(): State {
@@ -64,104 +57,185 @@ export function cloneState(): State {
 }
 
 export function patchState(ops: ReadonlyArray<PatchOp>): State {
-  const state = getStore();
-  for (const op of ops) {
-    applyPatchOp(state, op);
+  if (ops.length === 0) {
+    return cloneState();
   }
-  state.元数据.updatedAt = new Date().toISOString();
-  return state;
+
+  const next = cloneState();
+  for (const op of ops) {
+    applyValidatedPatchOp(next, op);
+  }
+
+  next.元数据.updatedAt = new Date().toISOString();
+  setStore(next);
+  return structuredClone(next);
 }
 
 export function resetState(): State {
-  const fresh = structuredClone(INITIAL_STATE);
-  globalThis.__fsn_state_store__ = fresh;
-  return fresh;
+  const fresh = createInitialState();
+  setStore(fresh);
+  return structuredClone(fresh);
 }
 
-export function hydrateState(raw: State): void {
-  if (raw.元数据?.schemaVersion !== CURRENT_STATE_SCHEMA_VERSION) {
-    throw new Error(
-      `State schema version mismatch: got ${raw.元数据?.schemaVersion}, need ${CURRENT_STATE_SCHEMA_VERSION}`,
-    );
-  }
-  globalThis.__fsn_state_store__ = raw;
+export function hydrateState(raw: unknown): void {
+  const state = assertState(raw);
+  setStore(state);
 }
-
-// --- Session-backed persistence ---
-
-const SESSION_KEY = "fsn-state";
 
 export function toSessionEntry(state: State): Record<string, unknown> {
-  return { v: CURRENT_STATE_SCHEMA_VERSION, turn: 0, state };
+  return { v: CURRENT_STATE_SCHEMA_VERSION, turn: 0, state: structuredClone(state) };
 }
 
 export function sessionKey(): string {
   return SESSION_KEY;
 }
 
-// --- JSON Patch ---
-
-export interface PatchOp {
-  op: "add" | "replace" | "remove";
-  path: string;
-  value?: unknown;
-}
-
-/** Allowed top-level paths (Chinese keys) */
-const VALID_ROOTS = new Set(["/金钱", "/当前位置", "/身体状态"]);
-
-function applyPatchOp(state: State, op: PatchOp): void {
-  // Validate root path
-  const root = op.path.split("/").filter(Boolean)[0];
-  const rootPath = root !== undefined ? `/${root}` : "/";
-  if (!VALID_ROOTS.has(rootPath)) {
-    throw new Error(`禁止的路径: "${op.path}"。仅允许修改: ${[...VALID_ROOTS].join(", ")}`);
-  }
-
-  const segments = op.path.split("/").filter(Boolean);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let target: any = state;
-
-  // Navigate to parent
-  for (let i = 0; i < segments.length - 1; i++) {
-    const seg = segments[i]!;
-    if (!(seg in target)) {
-      if (op.op === "add") {
-        target[seg] = {};
-      } else {
-        throw new Error(`路径不存在: ${op.path} (在 "${seg}" 处断裂)`);
-      }
-    }
-    target = target[seg];
-  }
-
-  const lastKey = segments[segments.length - 1]!;
-
-  switch (op.op) {
-    case "add":
-    case "replace":
-      target[lastKey] = op.value;
-      break;
-    case "remove":
-      delete target[lastKey];
-      break;
-  }
-}
-
-// --- Extension hook helpers ---
-
-/**
- * Write state snapshot to toolResult.details for session persistence.
- * Called after every mutating tool execution.
- */
 export function writeStateToDetails(details: Record<string, unknown>): void {
-  const state = getStore();
-  details[SESSION_KEY] = toSessionEntry(state);
+  details[SESSION_KEY] = toSessionEntry(getStore());
 }
 
-/**
- * Debug export to state/state.json.
- */
-export function debugExportState(_pi: ExtensionAPI): void {
-  // No-op: debug export handled by extension hooks
+// --- Store ---
+
+function getStore(): State {
+  if (!globalThis.__fsn_state_store__) {
+    globalThis.__fsn_state_store__ = createInitialState();
+  }
+  return globalThis.__fsn_state_store__;
+}
+
+function setStore(state: State): void {
+  globalThis.__fsn_state_store__ = structuredClone(state);
+}
+
+function createInitialState(): State {
+  const now = new Date().toISOString();
+  return {
+    元数据: {
+      schemaVersion: CURRENT_STATE_SCHEMA_VERSION,
+      createdAt: now,
+      updatedAt: now,
+    },
+    金钱: INITIAL_MONEY,
+    当前位置: INITIAL_LOCATION,
+    身体状态: INITIAL_BODY_STATUS,
+  };
+}
+
+// --- Patch validation ---
+
+function applyValidatedPatchOp(state: State, op: PatchOp): void {
+  switch (op.path) {
+    case "/金钱":
+      state.金钱 = assertMoney(op.value);
+      break;
+    case "/当前位置":
+      state.当前位置 = assertLocation(op.value);
+      break;
+    case "/身体状态":
+      state.身体状态 = assertBodyStatus(op.value);
+      break;
+    default:
+      throw new Error(`禁止的路径: "${op.path}"。仅允许修改: /金钱, /当前位置, /身体状态`);
+  }
+}
+
+function assertMoney(value: unknown): number {
+  if (typeof value !== "number" || !Number.isInteger(value)) {
+    throw new Error(`非法金钱值: ${formatUnknown(value)}。金钱必须是整数日元。`);
+  }
+  if (value < 0) {
+    throw new Error(`非法金钱值: ${value}。金钱不能为负数。`);
+  }
+  return value;
+}
+
+function assertLocation(value: unknown): string {
+  if (typeof value !== "string") {
+    throw new Error(`非法位置值: ${formatUnknown(value)}。当前位置必须是字符串。`);
+  }
+  const location = value.trim();
+  if (location.length === 0) {
+    throw new Error("非法位置值: 当前位置不能为空。");
+  }
+  return location;
+}
+
+function assertBodyStatus(value: unknown): number {
+  if (typeof value !== "number" || !Number.isInteger(value)) {
+    throw new Error(`非法身体状态值: ${formatUnknown(value)}。身体状态必须是整数。`);
+  }
+  if (value < MIN_BODY_STATUS || value > MAX_BODY_STATUS) {
+    throw new Error(
+      `非法身体状态值: ${value}。身体状态必须在 ${MIN_BODY_STATUS}-${MAX_BODY_STATUS} 之间。`,
+    );
+  }
+  return value;
+}
+
+// --- Runtime schema guard ---
+
+function assertState(raw: unknown): State {
+  if (!isRecord(raw)) {
+    throw new Error("State hydration failed: state must be an object.");
+  }
+
+  const metadata = assertMetadata(raw["元数据"]);
+  const state: State = {
+    元数据: metadata,
+    金钱: assertMoney(raw["金钱"]),
+    当前位置: assertLocation(raw["当前位置"]),
+    身体状态: assertBodyStatus(raw["身体状态"]),
+  };
+
+  if (metadata.updatedAt < metadata.createdAt) {
+    throw new Error("State hydration failed: updatedAt cannot be earlier than createdAt.");
+  }
+
+  return state;
+}
+
+function assertMetadata(raw: unknown): StateMetadata {
+  if (!isRecord(raw)) {
+    throw new Error("State hydration failed: metadata must be an object.");
+  }
+
+  const schemaVersion = raw["schemaVersion"];
+  if (schemaVersion !== CURRENT_STATE_SCHEMA_VERSION) {
+    throw new Error(
+      `State schema version mismatch: got ${formatUnknown(schemaVersion)}, need ${CURRENT_STATE_SCHEMA_VERSION}`,
+    );
+  }
+
+  const createdAt = assertIsoDateString(raw["createdAt"], "createdAt");
+  const updatedAt = assertIsoDateString(raw["updatedAt"], "updatedAt");
+
+  return { schemaVersion, createdAt, updatedAt };
+}
+
+function assertIsoDateString(value: unknown, fieldName: string): string {
+  if (typeof value !== "string") {
+    throw new Error(`State hydration failed: ${fieldName} must be an ISO date string.`);
+  }
+  const timestamp = Date.parse(value);
+  if (Number.isNaN(timestamp)) {
+    throw new Error(`State hydration failed: ${fieldName} is not a valid ISO date string.`);
+  }
+  return value;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function formatUnknown(value: unknown): string {
+  if (typeof value === "string") {
+    return JSON.stringify(value);
+  }
+  if (typeof value === "number" || typeof value === "boolean" || value === null) {
+    return String(value);
+  }
+  if (value === undefined) {
+    return "undefined";
+  }
+  return Object.prototype.toString.call(value);
 }
