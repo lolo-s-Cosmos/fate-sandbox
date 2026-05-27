@@ -1,109 +1,12 @@
-/**
- * 工具注册中心
- *
- * 常驻工具（always）：
- *   get_status   — 查看当前状态
- *   patch_state  — 修改状态
- *   lookup       — 查询角色/地点/设定
- *   switch_toolset — 切换工具组
- *
- * debug 工具组：
- *   get_state_schema — 查看当前 schema
- */
-
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 import { Type } from "typebox";
 
-import {
-  patchState,
-  getState,
-  writeStateToDetails,
-  CURRENT_STATE_SCHEMA_VERSION,
-  cloneState,
-  type PatchOp,
-} from "../engine/core/state";
-import { lookupWorldData } from "../engine/world-data/lookup";
-
-// --- Types ---
-
-type ToolResult = {
-  content: Array<{ type: "text"; text: string }>;
-  details: Record<string, unknown>;
-};
-// --- Tool implementations ---
-
-function toolGetStatus(): ToolResult {
-  const state = cloneState();
-  const text = [
-    `💰 持有金钱: ${state.金钱.toLocaleString()} 円`,
-    `📍 当前位置: ${state.当前位置}`,
-    `💪 身体状态: ${state.身体状态}%`,
-  ].join("\n");
-  return { content: [{ type: "text", text }], details: {} };
-}
-
-function toolPatchState(params: { ops: ReadonlyArray<PatchOp> }): ToolResult {
-  const before = cloneState();
-  patchState(params.ops);
-  const after = getState();
-
-  const opsDesc = params.ops.map((op) => `${op.op} ${op.path}`).join(", ");
-
-  const text = [
-    `状态已更新 (${opsDesc})`,
-    `💰 金钱: ${before.金钱.toLocaleString()} → ${after.金钱.toLocaleString()} 円`,
-    `📍 位置: ${before.当前位置} → ${after.当前位置}`,
-    `💪 身体: ${before.身体状态}% → ${after.身体状态}%`,
-  ].join("\n");
-
-  const details: Record<string, unknown> = {};
-  writeStateToDetails(details);
-
-  return { content: [{ type: "text", text }], details };
-}
-
-function toolLookup(params: { 查询: string; 类型?: string }): ToolResult {
-  const result = lookupWorldData(params);
-  return { content: [{ type: "text", text: result.text }], details: {} };
-}
-
-// --- Debug tools ---
-
-const TOOLSET = { current: "always" };
-
-function toolGetStateSchema(): ToolResult {
-  const schema = {
-    版本: CURRENT_STATE_SCHEMA_VERSION,
-    字段: {
-      金钱: "number — 日元余额",
-      当前位置: "string — 如 冬木市·深山镇·卫宫邸",
-      身体状态: "number — 0-100, 100=健康, 0=死亡",
-    },
-    受保护路径: ["/金钱", "/当前位置", "/身体状态"],
-    仅允许: "patch_state 只能修改以上三个路径",
-  };
-  return { content: [{ type: "text", text: JSON.stringify(schema, null, 2) }], details: {} };
-}
-
-function toolSwitchToolset(params: { toolset: string }): ToolResult {
-  const allowed = ["always", "debug"];
-  if (!allowed.includes(params.toolset)) {
-    return {
-      content: [
-        { type: "text", text: `无效工具组: ${params.toolset}。可选: ${allowed.join(", ")}` },
-      ],
-      details: {},
-    };
-  }
-  TOOLSET.current = params.toolset;
-  return {
-    content: [{ type: "text", text: `工具组已切换至: ${params.toolset}` }],
-    details: {},
-  };
-}
-
-// --- Registration ---
+import { getStateSchemaTool } from "./debug/get-state-schema";
+import { switchToolsetTool } from "./debug/switch-toolset";
+import { lookupTool } from "./lookup/lookup";
+import { getStatusTool } from "./state/get-status";
+import { patchStateTool } from "./state/patch-state";
 
 export function registerAllTools(pi: ExtensionAPI): void {
   const label = "FSN 沙盒";
@@ -120,7 +23,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
       "- 凭记忆叙述金钱数额——你的内部记忆不可靠\n" +
       "- 编造位置信息——以工具返回的当前位置为准",
     parameters: Type.Object({}),
-    execute: async () => toolGetStatus(),
+    execute: async () => getStatusTool(),
   });
 
   pi.registerTool({
@@ -151,7 +54,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
         { description: "JSON Patch 操作数组" },
       ),
     }),
-    execute: async (_toolCallId, params) => toolPatchState(params),
+    execute: async (_toolCallId, params) => patchStateTool(params),
   });
 
   pi.registerTool({
@@ -173,7 +76,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
       查询: Type.String({ description: "搜索关键词——角色名、地点名、概念名等" }),
       类型: Type.Optional(Type.String({ description: "可选过滤: 角色、从者、地点、设定、时间线" })),
     }),
-    execute: async (_toolCallId, params) => toolLookup(params),
+    execute: async (_toolCallId, params) => lookupTool(params),
   });
 
   pi.registerTool({
@@ -185,7 +88,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
     parameters: Type.Object({
       toolset: Type.String({ description: "工具组名: always 或 debug" }),
     }),
-    execute: async (_toolCallId, params) => toolSwitchToolset(params),
+    execute: async (_toolCallId, params) => switchToolsetTool(params),
   });
 
   pi.registerTool({
@@ -193,6 +96,6 @@ export function registerAllTools(pi: ExtensionAPI): void {
     name: "get_state_schema",
     description: "【调试工具】查看当前状态 schema 版本与字段定义。",
     parameters: Type.Object({}),
-    execute: async () => toolGetStateSchema(),
+    execute: async () => getStateSchemaTool(),
   });
 }
