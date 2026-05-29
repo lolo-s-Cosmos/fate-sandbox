@@ -7,7 +7,7 @@ export function getStatusTool(): ToolResult {
   const text = [
     `💰 持有金钱: ${state.金钱.toLocaleString()} 円`,
     `📍 当前位置: ${state.当前位置}`,
-    `⏱️ 当前时间: ${state.当前时间}`,
+    `⏱️ 当前时间: ${state.时间.当前时间}`,
     `压力摘要：${formatPressureSummary(state)}`,
     noNumberNarrativeHint(),
   ].join("\n");

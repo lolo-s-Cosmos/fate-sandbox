@@ -46,7 +46,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
       "- 用裸 patch 逃避风险/后果结算；高风险行动必须先 resolve_consequence\n\n" +
       "参数 ops 为 JSON Patch 数组，每个 op 包含:\n" +
       '- op: "replace"（通常用这个）\n' +
-      '- path: "/金钱" | "/当前位置" | "/身体状态" | "/当前时间" | "/经过分钟" | "/疲劳" | "/魔力负担" | "/危险度"\n' +
+      '- path: "/金钱" | "/当前位置" | "/身体状态" | "/时间/当前时间" | "/疲劳" | "/魔力负担" | "/危险度"\n' +
       "- value: 新值",
     parameters: Type.Object({
       ops: Type.Array(
@@ -55,7 +55,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
             description: "操作类型——一般用 replace",
           }),
           path: Type.String({
-            description: "路径，如 /金钱、/当前位置、/身体状态、/当前时间、/疲劳",
+            description: "路径，如 /金钱、/当前位置、/身体状态、/时间/当前时间、/疲劳",
           }),
           value: Type.Unknown({ description: "新值；数字字段可传 number 或整数字符串" }),
         }),
@@ -74,7 +74,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
       "【必须调用的场景】\n" +
       "- 玩家采取可能产生风险、耗时、疲劳或魔力消耗的行动\n" +
       "- 战斗、潜入、调查、施法、逃跑、长距离移动、夜间行动\n" +
-      "- 休息、医疗、魔术治疗、安全屋整备、补魔等恢复行为；恢复也会推进时间\n" +
+      "- 休息、睡眠、医疗、魔术治疗、安全屋整备、补魔等恢复行为；恢复也会推进时间\n" +
       "- 任何你想写成「暂时安全」「没有代价」的场景，必须先调用本工具确认\n" +
       "- 玩家试图用一句话、善意或临场觉悟化解危机时\n\n" +
       "【严禁的行为】\n" +
@@ -93,6 +93,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
           Type.Literal("魔术"),
           Type.Literal("逃跑"),
           Type.Literal("休息"),
+          Type.Literal("睡眠"),
           Type.Literal("医疗"),
           Type.Literal("魔术治疗"),
           Type.Literal("安全屋整备"),

@@ -1,3 +1,5 @@
+import type { TimeActivityKind } from "./time";
+
 import {
   adjustBody,
   adjustFatigue,
@@ -97,7 +99,14 @@ function applyCheckEffects(state: State, input: CheckInput, outcome: CheckOutcom
   const severity = outcomeSeverity(outcome);
   const risk = riskSeverity(input.riskLevel);
   const basePressure = Math.max(0, severity + risk - 1);
-  const effects: StatEffect[] = [advanceTime(state, input.durationMinutes, "判定耗时")];
+  const effects: StatEffect[] = [
+    advanceTime(state, {
+      minutes: input.durationMinutes,
+      activityKind: checkActivityKind(input),
+      involvesMystery: input.checkType === "魔术" || input.consequence === "魔力负担",
+      reason: "判定耗时",
+    }),
+  ];
 
   if (outcome === "大成功") {
     effects.push(adjustFatigue(state, -Math.min(3, risk), "大成功节省体力"));
@@ -215,12 +224,26 @@ function buildNarrativeConstraints(
 
 function toPatchOps(state: State): PatchOp[] {
   return [
-    { op: "replace", path: "/当前时间", value: state.当前时间 },
-    { op: "replace", path: "/经过分钟", value: state.经过分钟 },
+    { op: "replace", path: "/时间/当前时间", value: state.时间.当前时间 },
+    { op: "replace", path: "/时间/当天休息分钟", value: state.时间.当天休息分钟 },
+    { op: "replace", path: "/时间/当天高压分钟", value: state.时间.当天高压分钟 },
+    { op: "replace", path: "/时间/当天低压分钟", value: state.时间.当天低压分钟 },
     { op: "replace", path: "/身体状态", value: state.身体状态 },
     { op: "replace", path: "/疲劳", value: state.疲劳 },
     { op: "replace", path: "/魔力负担", value: state.魔力负担 },
   ];
+}
+
+function checkActivityKind(input: CheckInput): TimeActivityKind {
+  if (
+    input.checkType === "战斗" ||
+    input.checkType === "魔术" ||
+    input.riskLevel === "高" ||
+    input.riskLevel === "致命"
+  ) {
+    return "高压行动";
+  }
+  return "低压行动";
 }
 
 function compactEffects(effects: StatEffect[]): StatEffect[] {

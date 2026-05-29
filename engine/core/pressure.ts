@@ -1,5 +1,7 @@
 import type { State, StatePatchPath } from "./state";
 
+import { advanceTimeSegment, type TimeActivityKind } from "./time";
+
 export interface StatEffect {
   path: StatePatchPath;
   before: number | string;
@@ -9,25 +11,33 @@ export interface StatEffect {
   narrativeHint: string;
 }
 
+export interface TimeEffectInput {
+  minutes: number;
+  activityKind: TimeActivityKind;
+  involvesMystery: boolean;
+  reason: string;
+}
+
 const MIN_PERCENT = 0;
 const MAX_PERCENT = 100;
 const MIN_DANGER_LEVEL = 0;
 const MAX_DANGER_LEVEL = 5;
 
-export function advanceTime(state: State, minutes: number, reason: string): StatEffect {
-  const beforeTime = state.当前时间;
-  const beforeElapsed = state.经过分钟;
-  state.当前时间 = advanceIsoTime(state.当前时间, minutes);
-  state.经过分钟 += minutes;
+export function advanceTime(state: State, input: TimeEffectInput): StatEffect {
+  const result = advanceTimeSegment(state, {
+    minutes: input.minutes,
+    activityKind: input.activityKind,
+    involvesMystery: input.involvesMystery,
+  });
   return {
-    path: "/经过分钟",
-    before: beforeElapsed,
-    after: state.经过分钟,
-    delta: minutes,
-    reason,
+    path: "/时间/当前时间",
+    before: result.beforeTime,
+    after: result.afterTime,
+    delta: input.minutes,
+    reason: input.reason,
     narrativeHint:
-      minutes >= 30
-        ? `时间流逝了 ${minutes} 分钟：${beforeTime} → ${state.当前时间}。`
+      input.minutes >= 30
+        ? `时间流逝了 ${input.minutes} 分钟：${result.beforeTime} → ${result.afterTime}。`
         : "时间只短暂推进；无需明说分钟数，只要让行动节奏连贯。",
   };
 }
@@ -176,14 +186,6 @@ function pushThresholdHint(
 
 function significant(amount: number, threshold: number): boolean {
   return Math.abs(amount) >= threshold;
-}
-
-function advanceIsoTime(isoTime: string, minutes: number): string {
-  const timestamp = Date.parse(isoTime);
-  if (Number.isNaN(timestamp)) {
-    throw new Error(`无法推进非法时间: ${isoTime}`);
-  }
-  return new Date(timestamp + minutes * 60_000).toISOString();
 }
 
 function clampPercent(value: number): number {

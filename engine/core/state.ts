@@ -5,6 +5,8 @@
  * state transitions, but the mutable store never crosses this seam.
  */
 
+import type { TimeState } from "./time";
+
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -15,8 +17,7 @@ export interface State {
   金钱: number;
   当前位置: string;
   身体状态: number;
-  当前时间: string;
-  经过分钟: number;
+  时间: TimeState;
   疲劳: number;
   魔力负担: number;
   危险度: number;
@@ -32,8 +33,10 @@ export type StatePatchPath =
   | "/金钱"
   | "/当前位置"
   | "/身体状态"
-  | "/当前时间"
-  | "/经过分钟"
+  | "/时间/当前时间"
+  | "/时间/当天休息分钟"
+  | "/时间/当天高压分钟"
+  | "/时间/当天低压分钟"
   | "/疲劳"
   | "/魔力负担"
   | "/危险度";
@@ -46,7 +49,7 @@ export interface PatchOp {
 
 // --- Constants ---
 
-export const CURRENT_STATE_SCHEMA_VERSION = 3;
+export const CURRENT_STATE_SCHEMA_VERSION = 4;
 
 const SESSION_KEY = "fsn-state";
 const DEBUG_STATE_PATH = join("state", "state.json");
@@ -64,8 +67,10 @@ const ALLOWED_PATCH_PATHS: readonly StatePatchPath[] = [
   "/金钱",
   "/当前位置",
   "/身体状态",
-  "/当前时间",
-  "/经过分钟",
+  "/时间/当前时间",
+  "/时间/当天休息分钟",
+  "/时间/当天高压分钟",
+  "/时间/当天低压分钟",
   "/疲劳",
   "/魔力负担",
   "/危险度",
@@ -165,8 +170,13 @@ function createInitialState(): State {
     金钱: INITIAL_MONEY,
     当前位置: INITIAL_LOCATION,
     身体状态: INITIAL_BODY_STATUS,
-    当前时间: INITIAL_CURRENT_TIME,
-    经过分钟: 0,
+    时间: {
+      开局时间: INITIAL_CURRENT_TIME,
+      当前时间: INITIAL_CURRENT_TIME,
+      当天休息分钟: 0,
+      当天高压分钟: 0,
+      当天低压分钟: 0,
+    },
     疲劳: 0,
     魔力负担: 0,
     危险度: 1,
@@ -186,11 +196,17 @@ function applyValidatedPatchOp(state: State, op: PatchOp): void {
     case "/身体状态":
       state.身体状态 = assertBodyStatus(op.value);
       break;
-    case "/当前时间":
-      state.当前时间 = assertIsoDateString(op.value, "当前时间");
+    case "/时间/当前时间":
+      state.时间.当前时间 = assertIsoDateString(op.value, "当前时间");
       break;
-    case "/经过分钟":
-      state.经过分钟 = assertNonNegativeInteger(op.value, "经过分钟");
+    case "/时间/当天休息分钟":
+      state.时间.当天休息分钟 = assertNonNegativeInteger(op.value, "当天休息分钟");
+      break;
+    case "/时间/当天高压分钟":
+      state.时间.当天高压分钟 = assertNonNegativeInteger(op.value, "当天高压分钟");
+      break;
+    case "/时间/当天低压分钟":
+      state.时间.当天低压分钟 = assertNonNegativeInteger(op.value, "当天低压分钟");
       break;
     case "/疲劳":
       state.疲劳 = assertPercent(op.value, "疲劳");
@@ -301,10 +317,10 @@ function assertState(raw: unknown): State {
   if (!isRecord(stateRaw)) {
     throw new Error(`非法状态: ${formatUnknown(raw)}。state 必须是对象。`);
   }
-  return assertStateV3(stateRaw);
+  return assertStateV4(stateRaw);
 }
 
-function assertStateV3(raw: Record<string, unknown>): State {
+function assertStateV4(raw: Record<string, unknown>): State {
   const metadata = assertMetadata(raw["元数据"]);
   return {
     元数据: {
@@ -315,8 +331,7 @@ function assertStateV3(raw: Record<string, unknown>): State {
     金钱: assertMoney(raw["金钱"]),
     当前位置: assertLocation(raw["当前位置"]),
     身体状态: assertBodyStatus(raw["身体状态"]),
-    当前时间: assertIsoDateString(raw["当前时间"], "当前时间"),
-    经过分钟: assertNonNegativeInteger(raw["经过分钟"], "经过分钟"),
+    时间: assertTimeState(raw),
     疲劳: assertPercent(raw["疲劳"], "疲劳"),
     魔力负担: assertPercent(raw["魔力负担"], "魔力负担"),
     危险度: assertDangerLevel(raw["危险度"]),
@@ -332,6 +347,62 @@ function assertMetadata(raw: unknown): StateMetadata {
     createdAt: assertIsoDateString(raw["createdAt"], "createdAt"),
     updatedAt: assertIsoDateString(raw["updatedAt"], "updatedAt"),
   };
+}
+
+function assertTimeState(raw: Record<string, unknown>): TimeState {
+  const timeRaw = raw["时间"];
+  if (isRecord(timeRaw)) {
+    const currentTime = assertIsoDateString(timeRaw["当前时间"], "时间.当前时间");
+    return {
+      开局时间: assertOptionalIsoDateString(
+        timeRaw["开局时间"],
+        "时间.开局时间",
+        INITIAL_CURRENT_TIME,
+      ),
+      当前时间: currentTime,
+      当天休息分钟: assertOptionalNonNegativeInteger(
+        timeRaw["当天休息分钟"],
+        "时间.当天休息分钟",
+        0,
+      ),
+      当天高压分钟: assertOptionalNonNegativeInteger(
+        timeRaw["当天高压分钟"],
+        "时间.当天高压分钟",
+        0,
+      ),
+      当天低压分钟: assertOptionalNonNegativeInteger(
+        timeRaw["当天低压分钟"],
+        "时间.当天低压分钟",
+        0,
+      ),
+    };
+  }
+
+  return {
+    开局时间: INITIAL_CURRENT_TIME,
+    当前时间: assertIsoDateString(raw["当前时间"], "当前时间"),
+    当天休息分钟: 0,
+    当天高压分钟: 0,
+    当天低压分钟: 0,
+  };
+}
+
+function assertOptionalNonNegativeInteger(
+  value: unknown,
+  fieldName: string,
+  fallback: number,
+): number {
+  if (value === undefined) {
+    return fallback;
+  }
+  return assertNonNegativeInteger(value, fieldName);
+}
+
+function assertOptionalIsoDateString(value: unknown, fieldName: string, fallback: string): string {
+  if (value === undefined) {
+    return fallback;
+  }
+  return assertIsoDateString(value, fieldName);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

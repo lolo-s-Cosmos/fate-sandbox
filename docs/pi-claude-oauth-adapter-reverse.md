@@ -2,7 +2,7 @@
 
 > 源码地址：npm `pi-claude-oauth-adapter@0.1.2`  
 > 作者：minzique  
-> 分析日期：2026-05-29  
+> 分析日期：2026-05-29
 
 ---
 
@@ -30,12 +30,12 @@ Pi Coding Agent 支持 Anthropic OAuth（Claude Pro/Max 订阅）登录，但 An
 x-anthropic-billing-header: cc_version=2.1.96.abc; cc_entrypoint=pi; cch=xxxxx;
 ```
 
-| 字段 | 来源 | 说明 |
-|------|------|------|
-| `cc_version` | `PI_CLAUDE_CODE_VERSION` 或默认 `2.1.96` | Claude Code 版本号 |
-| 版本 hash | `SHA256(salt + 采样字符 + version)` 取前 3 位 hex | 从首条 user message 的第 4、7、20 字符采样 |
-| `cc_entrypoint` | `PI_CLAUDE_CODE_ENTRYPOINT` 或默认 `pi` | 入口点标识 |
-| `cch` | `SHA256(首条 user message 全文)` 取前 5 位 hex | 消息内容 hash |
+| 字段            | 来源                                              | 说明                                       |
+| --------------- | ------------------------------------------------- | ------------------------------------------ |
+| `cc_version`    | `PI_CLAUDE_CODE_VERSION` 或默认 `2.1.96`          | Claude Code 版本号                         |
+| 版本 hash       | `SHA256(salt + 采样字符 + version)` 取前 3 位 hex | 从首条 user message 的第 4、7、20 字符采样 |
+| `cc_entrypoint` | `PI_CLAUDE_CODE_ENTRYPOINT` 或默认 `pi`           | 入口点标识                                 |
+| `cch`           | `SHA256(首条 user message 全文)` 取前 5 位 hex    | 消息内容 hash                              |
 
 **关键常量**：
 
@@ -48,9 +48,9 @@ const DEFAULT_CLAUDE_CODE_VERSION = "2.1.96";
 
 ```typescript
 function buildBillingHeader(messages, entrypoint) {
-  const firstUserMessage = messages.find(m => m.role === "user");
+  const firstUserMessage = messages.find((m) => m.role === "user");
   const messageText = firstUserMessage ? getText(firstUserMessage.content) : "";
-  const sampledChars = [4, 7, 20].map(i => messageText[i] ?? "0").join("");
+  const sampledChars = [4, 7, 20].map((i) => messageText[i] ?? "0").join("");
   const versionHash = sha256(`${BILLING_SALT}${sampledChars}${version}`).slice(0, 3);
   const cch = sha256(messageText).slice(0, 5);
   return `x-anthropic-billing-header: cc_version=${version}.${versionHash}; cc_entrypoint=${entrypoint}; cch=${cch};`;
@@ -58,6 +58,7 @@ function buildBillingHeader(messages, entrypoint) {
 ```
 
 **关键细节**：
+
 - `sampledChars` 取 [4,7,20] 三个位置，缺位补 `"0"`
 - `versionHash` 只有 3 位 hex，碰撞空间 ~4096，但加上 salt 和采样字符后实际不碰撞
 - `cch` 是对整个首条 user message 的 SHA256 前 5 位
@@ -67,9 +68,11 @@ function buildBillingHeader(messages, entrypoint) {
 在 `before_provider_request` hook 中对 system blocks 做三件事：
 
 1. **删除 identity block**
+
    ```
    "You are Claude Code, Anthropic's official CLI for Claude."
    ```
+
    匹配后直接 `continue`（跳过）
 
 2. **删除 Pi docs 段**
@@ -93,6 +96,7 @@ function buildBillingHeader(messages, entrypoint) {
 ```
 
 `extractDocsSection()` 找到 docs marker，然后找三个 end marker 中最早的那个：
+
 - `"\n\n# Project Context"`
 - `"\n\n<available_skills>"`
 - `"\nCurrent date:"`
@@ -105,9 +109,9 @@ function buildBillingHeader(messages, entrypoint) {
 
 ```typescript
 function shouldInjectDocs(prompt) {
-  if (scope === "never")  return false;
+  if (scope === "never") return false;
   if (scope === "always") return true;
-  return PI_TOPIC_REGEX.test(prompt);  // pi-only
+  return PI_TOPIC_REGEX.test(prompt); // pi-only
 }
 ```
 
@@ -121,14 +125,15 @@ Pi 话题检测正则：
 
 四种注入模式：
 
-| 模式 | 行为 | 默认 |
-|------|------|------|
-| `prepend-custom-message` | 最后一条 user message **前**插入隐藏 custom message | ✅ |
-| `append-custom-message` | 最后一条 user message **后**插入 | |
-| `user-reminder` | 直接在最后一条 user message 文本前拼接 `<system-reminder>` | |
-| `none` | 不注入 | |
+| 模式                     | 行为                                                       | 默认 |
+| ------------------------ | ---------------------------------------------------------- | ---- |
+| `prepend-custom-message` | 最后一条 user message **前**插入隐藏 custom message        | ✅   |
+| `append-custom-message`  | 最后一条 user message **后**插入                           |      |
+| `user-reminder`          | 直接在最后一条 user message 文本前拼接 `<system-reminder>` |      |
+| `none`                   | 不注入                                                     |      |
 
 custom message 格式：
+
 ```json
 {
   "role": "custom",
@@ -161,6 +166,7 @@ issue ──(session_shutdown)──→ inactive
 ```
 
 TUI footer 显示：
+
 - `✓ Claude OAuth ready` — 解析完成，等待首次请求
 - `✓ Claude OAuth active` — 已发出至少一次规范化请求
 - `⚠ Claude OAuth setup` — 缺少 docs context 或请求失败
@@ -188,29 +194,29 @@ function shouldApply(ctx) {
 
 ## 四、事件管线一览
 
-| Hook | 做什么 |
-|------|--------|
-| `session_start` | 状态同步 |
-| `model_select` | 模型切换时重新同步 |
-| `before_agent_start` | 剥离 docs，缓存到 activeTurn |
-| `context` | 按需注入 docs 到 messages |
+| Hook                      | 做什么                                             |
+| ------------------------- | -------------------------------------------------- |
+| `session_start`           | 状态同步                                           |
+| `model_select`            | 模型切换时重新同步                                 |
+| `before_agent_start`      | 剥离 docs，缓存到 activeTurn                       |
+| `context`                 | 按需注入 docs 到 messages                          |
 | `before_provider_request` | **核心**：净化 system blocks + 注入 billing header |
-| `after_provider_response` | 检测 HTTP 错误 |
-| `agent_end` | 清理 activeTurn |
-| `session_shutdown` | 重置所有状态 |
+| `after_provider_response` | 检测 HTTP 错误                                     |
+| `agent_end`               | 清理 activeTurn                                    |
+| `session_shutdown`        | 重置所有状态                                       |
 
 ---
 
 ## 五、可配置项
 
-| 环境变量 | 默认值 | 说明 |
-|----------|--------|------|
-| `PI_CLAUDE_OAUTH_REINJECT_SCOPE` | `pi-only` | `never` / `always` / `pi-only` |
-| `PI_CLAUDE_OAUTH_REINJECT_MODE` | `prepend-custom-message` | `prepend-custom-message` / `append-custom-message` / `user-reminder` / `none` |
-| `PI_CLAUDE_OAUTH_LOG_FILE` | (无) | JSONL 调试日志路径 |
-| `PI_CLAUDE_OAUTH_DOCS_FILE` | (无) | docs fallback 文件路径 |
-| `PI_CLAUDE_CODE_VERSION` | `2.1.96` | billing header 版本号 |
-| `PI_CLAUDE_CODE_ENTRYPOINT` | `pi` | billing header 入口点 |
+| 环境变量                         | 默认值                   | 说明                                                                          |
+| -------------------------------- | ------------------------ | ----------------------------------------------------------------------------- |
+| `PI_CLAUDE_OAUTH_REINJECT_SCOPE` | `pi-only`                | `never` / `always` / `pi-only`                                                |
+| `PI_CLAUDE_OAUTH_REINJECT_MODE`  | `prepend-custom-message` | `prepend-custom-message` / `append-custom-message` / `user-reminder` / `none` |
+| `PI_CLAUDE_OAUTH_LOG_FILE`       | (无)                     | JSONL 调试日志路径                                                            |
+| `PI_CLAUDE_OAUTH_DOCS_FILE`      | (无)                     | docs fallback 文件路径                                                        |
+| `PI_CLAUDE_CODE_VERSION`         | `2.1.96`                 | billing header 版本号                                                         |
+| `PI_CLAUDE_CODE_ENTRYPOINT`      | `pi`                     | billing header 入口点                                                         |
 
 ---
 
