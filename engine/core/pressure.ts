@@ -71,24 +71,6 @@ export function adjustBody(state: State, amount: number, reason: string): StatEf
   );
 }
 
-export function adjustFatigue(state: State, amount: number, reason: string): StatEffect {
-  const before = state.疲劳;
-  state.疲劳 = clampPercent(state.疲劳 + amount);
-  return createNumericEffect(
-    "/疲劳",
-    before,
-    state.疲劳,
-    reason,
-    amount >= 0
-      ? significant(amount, 10)
-        ? "疲劳明显上升；需要体现在动作迟缓、呼吸、疼痛或注意力下降中。"
-        : "疲劳轻微上升，只需用一两个感官细节暗示。"
-      : significant(amount, 10)
-        ? "疲劳明显下降，但时间已经流逝。"
-        : "疲劳轻微缓和，可用节奏变化带过。",
-  );
-}
-
 export function adjustManaStrain(state: State, amount: number, reason: string): StatEffect {
   const before = state.魔力负担;
   state.魔力负担 = clampPercent(state.魔力负担 + amount);
@@ -125,15 +107,6 @@ export function setDangerLevel(state: State, level: number, reason: string): Sta
 
 export function pressureThresholdHints(state: State): string[] {
   const hints: string[] = [];
-  pushThresholdHint(
-    hints,
-    state.疲劳,
-    50,
-    80,
-    "疲劳",
-    "动作迟缓、判断变差",
-    "高强度行动可能造成身体损伤",
-  );
   pushThresholdHint(
     hints,
     state.魔力负担,

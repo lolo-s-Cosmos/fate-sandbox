@@ -80,8 +80,8 @@ describe("resolveConsequence", () => {
         input({ actionType: "潜入", riskLevel: "中", durationMinutes: 30 }),
       );
 
-      const penaltyEffects = result.effects.filter((e) => e.reason.includes("持续高压"));
-      assert.equal(penaltyEffects.length, 1);
+      const penaltyEffects = result.effects.filter((e) => e.reason.includes("长时间高压"));
+      assert.equal(penaltyEffects.length, 0);
     });
 
     it("does not fire again after already crossed", () => {
@@ -109,10 +109,6 @@ describe("resolveConsequence", () => {
         input({ actionType: "潜入", riskLevel: "中", durationMinutes: 30 }),
       );
 
-      // Fatigue penalty always emits; danger penalty may be no-op if already >= 3.
-      const fatiguePenalty = result.effects.find((e) => e.reason === "长时间高压行动透支");
-      assert.ok(fatiguePenalty);
-      assert.equal(fatiguePenalty.delta, 5);
       // Danger floor is enforced even if the effect was compacted away.
       assert.ok(result.after.危险度 >= 3);
     });
@@ -167,26 +163,6 @@ describe("resolveConsequence", () => {
       const result = resolveConsequence(input({ actionType: "睡眠", durationMinutes: 480 }));
       // 98 + 6 = 104 → clamped to 100, so delta = 2.
       assert.equal(result.delta.身体状态, 2);
-    });
-  });
-
-  describe("日常 duration fatigue", () => {
-    it("adds +1 fatigue per 2 hours of 日常", () => {
-      const result = resolveConsequence(
-        input({ actionType: "日常", riskLevel: "低", durationMinutes: 240 }),
-      );
-      const fatigueEffect = result.effects.find((e) => e.reason === "行动负荷");
-      // risk.fatigue(低=1) + durationFatigue(floor(240/120)=2) = 3
-      assert.equal(fatigueEffect?.delta, 3);
-    });
-
-    it("adds 0 fatigue for < 2 hours of 日常", () => {
-      const result = resolveConsequence(
-        input({ actionType: "日常", riskLevel: "低", durationMinutes: 119 }),
-      );
-      const fatigueEffect = result.effects.find((e) => e.reason === "行动负荷");
-      // risk.fatigue(低=1) + durationFatigue(floor(119/120)=0) = 1
-      assert.equal(fatigueEffect?.delta, 1);
     });
   });
 

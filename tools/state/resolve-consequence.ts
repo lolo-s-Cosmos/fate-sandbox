@@ -20,9 +20,6 @@ export function resolveConsequenceTool(params: RawConsequenceInput, sessionManag
   const pressureSummary = formatPressureSummary(result.after);
   const delta = result.delta;
 
-  // Net-effect narrative hints — computed from total delta so contradictory
-  // per-effect hints (e.g. +4 fatigue from action, -2 from passive recovery)
-  // don't both appear.
   const netHints = buildNetHints(delta);
 
   // Keep per-effect hints only for non-numeric paths (time).
@@ -90,7 +87,6 @@ function uniqueHints(primary: string[], secondary: string[]): string[] {
 // --- Net-effect narrative hints ---
 
 interface DeltaLike {
-  疲劳: number;
   魔力负担: number;
   身体状态: number;
   危险度: number;
@@ -98,22 +94,10 @@ interface DeltaLike {
 
 function buildNetHints(delta: DeltaLike): string[] {
   const hints: string[] = [];
-  hints.push(...fatigueNetHint(delta.疲劳));
   hints.push(...manaNetHint(delta.魔力负担));
   hints.push(...bodyNetHint(delta.身体状态));
   hints.push(...dangerNetHint(delta.危险度));
   return hints;
-}
-
-function fatigueNetHint(delta: number): string[] {
-  if (delta === 0) return [];
-  const abs = Math.abs(delta);
-  if (delta > 0) {
-    return abs >= 10
-      ? ["疲劳明显上升；需要体现在动作迟缓、呼吸、疼痛或注意力下降中。"]
-      : ["疲劳轻微上升，只需用一两个感官细节暗示。"];
-  }
-  return abs >= 10 ? ["疲劳明显下降，但时间已经流逝。"] : ["疲劳轻微缓和，可用节奏变化带过。"];
 }
 
 function manaNetHint(delta: number): string[] {

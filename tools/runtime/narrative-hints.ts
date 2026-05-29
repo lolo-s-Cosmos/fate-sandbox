@@ -10,7 +10,6 @@ export function noNumberNarrativeHint(): string {
 export function formatPressureSummary(state: State): string {
   return [
     `身体 ${pressureBand(state.身体状态, "body")}`,
-    `疲劳 ${pressureBand(state.疲劳, "pressure")}`,
     `魔力 ${pressureBand(state.魔力负担, "pressure")}`,
     `危险 ${dangerBand(state.危险度)}`,
   ].join("｜");

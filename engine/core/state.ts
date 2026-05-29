@@ -20,7 +20,6 @@ export interface State {
   当前位置: string;
   身体状态: number;
   时间: TimeState;
-  疲劳: number;
   魔力负担: number;
   危险度: number;
 }
@@ -50,7 +49,6 @@ export type StatePatchPath =
   | "/时间/当天休息分钟"
   | "/时间/当天高压分钟"
   | "/时间/当天低压分钟"
-  | "/疲劳"
   | "/魔力负担"
   | "/危险度";
 
@@ -62,7 +60,7 @@ export interface PatchOp {
 
 // --- Constants ---
 
-export const CURRENT_STATE_SCHEMA_VERSION = 4;
+export const CURRENT_STATE_SCHEMA_VERSION = 5;
 
 const SESSION_KEY = "fsn-state";
 const DEBUG_STATE_PATH = join("state", "state.json");
@@ -84,7 +82,6 @@ const ALLOWED_PATCH_PATHS: readonly StatePatchPath[] = [
   "/时间/当天休息分钟",
   "/时间/当天高压分钟",
   "/时间/当天低压分钟",
-  "/疲劳",
   "/魔力负担",
   "/危险度",
 ];
@@ -209,7 +206,6 @@ function createInitialState(): State {
       当天高压分钟: 0,
       当天低压分钟: 0,
     },
-    疲劳: 0,
     魔力负担: 0,
     危险度: 1,
   };
@@ -239,9 +235,6 @@ function applyValidatedPatchOp(state: State, op: PatchOp): void {
       break;
     case "/时间/当天低压分钟":
       state.时间.当天低压分钟 = assertNonNegativeInteger(op.value, "当天低压分钟");
-      break;
-    case "/疲劳":
-      state.疲劳 = assertPercent(op.value, "疲劳");
       break;
     case "/魔力负担":
       state.魔力负担 = assertPercent(op.value, "魔力负担");
@@ -345,10 +338,10 @@ function assertState(raw: unknown): State {
   if (!isRecord(stateRaw)) {
     throw new Error(`非法状态: ${formatUnknown(raw)}。state 必须是对象。`);
   }
-  return assertStateV4(stateRaw);
+  return assertStateV5(stateRaw);
 }
 
-function assertStateV4(raw: Record<string, unknown>): State {
+function assertStateV5(raw: Record<string, unknown>): State {
   const metadata = assertMetadata(raw["元数据"]);
   return {
     元数据: {
@@ -360,7 +353,6 @@ function assertStateV4(raw: Record<string, unknown>): State {
     当前位置: assertLocation(raw["当前位置"]),
     身体状态: assertBodyStatus(raw["身体状态"]),
     时间: assertTimeState(raw),
-    疲劳: assertPercent(raw["疲劳"], "疲劳"),
     魔力负担: assertPercent(raw["魔力负担"], "魔力负担"),
     危险度: assertDangerLevel(raw["危险度"]),
   };

@@ -121,9 +121,6 @@ function buildPressureNotes(state: StateExport): string[] {
   if (state.危险度 >= 3) {
     notes.push("危险度 ≥ 3：禁止写成完全安全，必须保留即时威胁或环境压力。");
   }
-  if (state.疲劳 >= 25) {
-    notes.push("疲劳 ≥ 25：行动描写必须体现迟滞、疼痛、呼吸紊乱或注意力下降。");
-  }
   if (state.魔力负担 >= 25) {
     notes.push("魔力负担 ≥ 25：魔术回路/供魔压力必须进入描写，禁止把神秘当免费资源。");
   }

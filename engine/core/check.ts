@@ -2,7 +2,6 @@ import type { TimeActivityKind } from "./time";
 
 import {
   adjustBody,
-  adjustFatigue,
   adjustManaStrain,
   advanceTime,
   pressureThresholdHints,
@@ -14,7 +13,7 @@ export type CheckKind = "体能" | "隐匿" | "调查" | "社交" | "魔术" | "
 export type CheckDifficulty = "简单" | "普通" | "困难" | "极难" | "不可能";
 export type CheckAdvantage = "劣势" | "正常" | "优势";
 export type CheckRisk = "低" | "中" | "高" | "致命";
-export type CheckConsequence = "疲劳" | "受伤" | "魔力负担";
+export type CheckConsequence = "受伤" | "魔力负担";
 export type CheckOutcome = "大成功" | "成功" | "代价成功" | "失败" | "严重失败";
 
 export interface CheckInput {
@@ -108,17 +107,14 @@ function applyCheckEffects(state: State, input: CheckInput, outcome: CheckOutcom
   ];
 
   if (outcome === "大成功") {
-    effects.push(adjustFatigue(state, -Math.min(3, risk), "大成功节省体力"));
     return compactEffects(effects);
   }
 
   if (outcome === "成功") {
-    effects.push(adjustFatigue(state, Math.max(0, risk - 1), "成功行动的最低负荷"));
     return compactEffects(effects);
   }
 
   if (outcome === "代价成功") {
-    effects.push(adjustFatigue(state, 2 + risk, "代价成功的身体负荷"));
     effects.push(
       applyPrimaryConsequence(
         state,
@@ -131,14 +127,12 @@ function applyCheckEffects(state: State, input: CheckInput, outcome: CheckOutcom
   }
 
   if (outcome === "失败") {
-    effects.push(adjustFatigue(state, 3 + risk, "失败后的额外负荷"));
     effects.push(
       applyPrimaryConsequence(state, input.consequence, Math.max(4, basePressure + 2), "失败后果"),
     );
     return compactEffects(effects);
   }
 
-  effects.push(adjustFatigue(state, 5 + risk, "严重失败造成的透支"));
   effects.push(
     applyPrimaryConsequence(
       state,
@@ -157,8 +151,6 @@ function applyPrimaryConsequence(
   reason: string,
 ): StatEffect {
   switch (consequence) {
-    case "疲劳":
-      return adjustFatigue(state, amount, reason);
     case "受伤":
       return adjustBody(state, -amount, reason);
     case "魔力负担":
@@ -172,12 +164,6 @@ function applyPrimaryConsequence(
 
 function buildModifierEntries(state: State, kind: CheckKind): ModifierEntry[] {
   const entries: ModifierEntry[] = [];
-  if ((kind === "体能" || kind === "隐匿" || kind === "战斗") && state.疲劳 >= 50) {
-    entries.push({ amount: -2, reason: "疲劳 ≥ 50" });
-  }
-  if ((kind === "体能" || kind === "隐匿" || kind === "战斗") && state.疲劳 >= 80) {
-    entries.push({ amount: -3, reason: "疲劳 ≥ 80" });
-  }
   if ((kind === "体能" || kind === "战斗") && state.身体状态 <= 50) {
     entries.push({ amount: -2, reason: "身体状态 ≤ 50" });
   }
@@ -228,7 +214,6 @@ function toPatchOps(state: State): PatchOp[] {
     { op: "replace", path: "/时间/当天高压分钟", value: state.时间.当天高压分钟 },
     { op: "replace", path: "/时间/当天低压分钟", value: state.时间.当天低压分钟 },
     { op: "replace", path: "/身体状态", value: state.身体状态 },
-    { op: "replace", path: "/疲劳", value: state.疲劳 },
     { op: "replace", path: "/魔力负担", value: state.魔力负担 },
   ];
 }
@@ -386,10 +371,10 @@ function assertRisk(value: unknown): CheckRisk {
 }
 
 function assertConsequence(value: unknown): CheckConsequence {
-  if (value === "疲劳" || value === "受伤" || value === "魔力负担") {
+  if (value === "受伤" || value === "魔力负担") {
     return value;
   }
-  throw new Error(`非法失败后果: ${formatUnknown(value)}。可选: 疲劳/受伤/魔力负担。`);
+  throw new Error(`非法失败后果: ${formatUnknown(value)}。可选: 受伤/魔力负担。`);
 }
 
 function assertDuration(value: unknown): number {
