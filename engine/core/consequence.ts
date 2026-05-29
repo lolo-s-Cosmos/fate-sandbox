@@ -242,12 +242,12 @@ function applyPassiveRecovery(
     return [];
   }
   return compactEffects([
-    adjustFatigue(state, -Math.min(4, Math.floor(input.durationMinutes / 60)), "低压时间自然恢复"),
+    adjustFatigue(state, -Math.min(4, Math.floor(input.durationMinutes / 30)), "低压时间自然恢复"),
     input.involvesMystery
       ? undefined
       : adjustManaStrain(
           state,
-          -Math.min(2, Math.floor(input.durationMinutes / 120)),
+          -Math.min(2, Math.floor(input.durationMinutes / 60)),
           "非施法时间回路缓和",
         ),
   ]);
