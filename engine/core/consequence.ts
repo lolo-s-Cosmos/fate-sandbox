@@ -15,6 +15,7 @@ export type ConsequenceAction =
   | "移动"
   | "调查"
   | "社交"
+  | "日常"
   | "潜入"
   | "战斗"
   | "魔术"
@@ -106,7 +107,7 @@ function applyPressure(state: State, input: ConsequenceInput): StatEffect[] {
   const action = actionProfile(assertPressureAction(input.actionType));
   const risk = riskProfile(input.riskLevel);
   const activityKind = pressureActivityKind(input);
-  const durationFatigue = Math.floor(input.durationMinutes / 60);
+  const durationFatigue = input.actionType === "日常" ? 0 : Math.floor(input.durationMinutes / 60);
   const effects: StatEffect[] = [
     advanceTime(state, {
       minutes: input.durationMinutes,
@@ -298,6 +299,8 @@ function actionProfile(
   action: Exclude<ConsequenceAction, "休息" | "睡眠" | "医疗" | "魔术治疗" | "安全屋整备" | "补魔">,
 ): ActionProfile {
   switch (action) {
+    case "日常":
+      return { fatigue: 0, manaStrain: 0, danger: 0 };
     case "移动":
       return { fatigue: 3, manaStrain: 0, danger: 1 };
     case "调查":
@@ -425,6 +428,7 @@ function assertAction(value: unknown): ConsequenceAction {
     value === "移动" ||
     value === "调查" ||
     value === "社交" ||
+    value === "日常" ||
     value === "潜入" ||
     value === "战斗" ||
     value === "魔术" ||
@@ -439,7 +443,7 @@ function assertAction(value: unknown): ConsequenceAction {
     return value;
   }
   throw new Error(
-    `非法行动类型: ${formatUnknown(value)}。可选: 移动/调查/社交/潜入/战斗/魔术/逃跑/休息/睡眠/医疗/魔术治疗/安全屋整备/补魔。`,
+    `非法行动类型: ${formatUnknown(value)}。可选: 移动/调查/社交/日常/潜入/战斗/魔术/逃跑/休息/睡眠/医疗/魔术治疗/安全屋整备/补魔。`,
   );
 }
 

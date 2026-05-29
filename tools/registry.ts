@@ -74,6 +74,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
       "【必须调用的场景】\n" +
       "- 玩家采取可能产生风险、耗时、疲劳或魔力消耗的行动\n" +
       "- 战斗、潜入、调查、施法、逃跑、长距离移动、夜间行动\n" +
+      "- 吃饭、上课、坐车、闲聊、等待等 30 分钟以上的日常过渡（用「日常」）\n" +
       "- 休息、睡眠、医疗、魔术治疗、安全屋整备、补魔等恢复行为；恢复也会推进时间\n" +
       "- 任何你想写成「暂时安全」「没有代价」的场景，必须先调用本工具确认\n" +
       "- 玩家试图用一句话、善意或临场觉悟化解危机时\n\n" +
@@ -88,6 +89,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
           Type.Literal("移动"),
           Type.Literal("调查"),
           Type.Literal("社交"),
+          Type.Literal("日常"),
           Type.Literal("潜入"),
           Type.Literal("战斗"),
           Type.Literal("魔术"),
