@@ -100,7 +100,8 @@ describe("resolveConsequence", () => {
     });
 
     it("fires extreme penalty at 480-minute threshold", () => {
-      // Build up to 470 minutes
+      patchState([{ op: "replace", path: "/时间/当前时间", value: "2004-01-30T00:00:00.000Z" }]);
+      // Build up to 470 minutes without crossing the Asia/Tokyo game date.
       resolveConsequence(input({ actionType: "潜入", riskLevel: "中", durationMinutes: 470 }));
 
       // Cross 480

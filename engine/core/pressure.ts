@@ -1,5 +1,6 @@
 import type { State, StatePatchPath } from "./state";
 
+import { formatHumanTime } from "./date-time";
 import { advanceTimeSegment, type TimeActivityKind } from "./time";
 
 export interface StatEffect {
@@ -35,7 +36,7 @@ export function advanceTime(state: State, input: TimeEffectInput): StatEffect {
     reason: input.reason,
     narrativeHint:
       input.minutes >= 30
-        ? `时间流逝了 ${input.minutes} 分钟：${result.beforeTime} → ${result.afterTime}。`
+        ? `时间流逝了 ${input.minutes} 分钟：${formatHumanTime(result.beforeTime).display} → ${formatHumanTime(result.afterTime).display}。`
         : "时间只短暂推进；无需明说分钟数，只要让行动节奏连贯。",
   };
 }

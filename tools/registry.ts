@@ -11,6 +11,7 @@ import { getStatusTool } from "./state/get-status";
 import { patchStateTool } from "./state/patch-state";
 import { resolveCheckTool } from "./state/resolve-check";
 import { resolveConsequenceTool, type ConsequenceToolDetails } from "./state/resolve-consequence";
+import { resolveDailyTool } from "./state/resolve-daily";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -175,6 +176,34 @@ export function registerAllTools(pi: ExtensionAPI): void {
       const text = result.content[0];
       return new Text(text?.type === "text" ? text.text : "", 0, 0);
     },
+  });
+
+  pi.registerTool({
+    label: toolLabel,
+    name: "resolve_daily",
+    description:
+      "结算日常过渡造成的时间推进和轻微疲劳/恢复。用于把吃饭、上课、通勤、闲聊、等待等低风险生活段落从叙事里落到状态时间轴上。\n\n" +
+      "【必须调用的场景】\n" +
+      "- 玩家进行吃饭、上课、通勤、购物、洗澡、等待、闲聊、整理房间、普通休息等日常行动\n" +
+      "- 任何 10 分钟以上的低风险生活过渡\n" +
+      "- 你准备写「过了一会儿」「放学后」「吃完饭后」「等到晚上」之类时间跳转时\n" +
+      "- 玩家问能否顺手做一件不危险的小事，但这件事会消耗时间时\n\n" +
+      "【严禁的行为】\n" +
+      "- 用叙事直接跳过 10 分钟以上日常时间而不调用本工具\n" +
+      "- 把日常工具用于潜入、调查、战斗、施法、逃跑、睡眠、治疗、补魔等有专门代价的行动\n" +
+      "- 日常行动中夹带金钱、位置、身体状态等确定性变化但不另行调用 patch_state\n\n" +
+      "参数 activity 用一句短语描述日常行动；durationMinutes 为 1-1440 分钟；isPublic 表示是否可能被普通人、监控或组织记录。",
+    parameters: Type.Object({
+      activity: Type.String({ description: "日常行动，如 吃早饭、上课、通勤、等待、闲聊" }),
+      durationMinutes: Type.Union([Type.Integer(), Type.String()], {
+        description: "行动耗时，1-1440 分钟；可传整数或整数字符串",
+      }),
+      isPublic: Type.Optional(
+        Type.Boolean({ description: "是否可能被普通人、监控或组织记录；默认 true" }),
+      ),
+    }),
+    execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>
+      resolveDailyTool(params, ctx.sessionManager),
   });
 
   pi.registerTool({

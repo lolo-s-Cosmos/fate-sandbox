@@ -10,6 +10,8 @@ import type { TimeState } from "./time";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { normalizeIsoInstant, nowIso } from "./date-time";
+
 // --- Types ---
 
 export interface State {
@@ -103,7 +105,7 @@ export function patchState(ops: ReadonlyArray<PatchOp>): State {
     applyValidatedPatchOp(next, op);
   }
 
-  next.元数据.updatedAt = new Date().toISOString();
+  next.元数据.updatedAt = nowIso();
   setStore(next);
   return structuredClone(next);
 }
@@ -160,7 +162,7 @@ function writeStateDebugSnapshot(state: State): void {
 }
 
 function createInitialState(): State {
-  const now = new Date().toISOString();
+  const now = nowIso();
   return {
     元数据: {
       schemaVersion: CURRENT_STATE_SCHEMA_VERSION,
@@ -283,11 +285,7 @@ function assertIsoDateString(value: unknown, fieldName: string): string {
       `非法${fieldName}: ${formatUnknown(value)}。${fieldName}必须是 ISO 时间字符串。`,
     );
   }
-  const timestamp = Date.parse(value);
-  if (Number.isNaN(timestamp)) {
-    throw new Error(`非法${fieldName}: ${value}。${fieldName}必须能被 Date.parse 解析。`);
-  }
-  return new Date(timestamp).toISOString();
+  return normalizeIsoInstant(value, fieldName);
 }
 
 function coerceInteger(value: unknown, fieldName: string): number {
@@ -326,7 +324,7 @@ function assertStateV4(raw: Record<string, unknown>): State {
     元数据: {
       ...metadata,
       schemaVersion: CURRENT_STATE_SCHEMA_VERSION,
-      updatedAt: new Date().toISOString(),
+      updatedAt: nowIso(),
     },
     金钱: assertMoney(raw["金钱"]),
     当前位置: assertLocation(raw["当前位置"]),
