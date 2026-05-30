@@ -8,7 +8,9 @@ import { switchToolsetTool } from "./debug/switch-toolset";
 import { lookupTool } from "./lookup/lookup";
 import { getStatusTool } from "./state/get-status";
 import { patchStateTool } from "./state/patch-state";
+import { privateResolveTool } from "./state/private-resolve";
 import { recordMemoryTool } from "./state/record-memory";
+import { revealSecretTool } from "./state/reveal-secret";
 import { updateActorConditionTool } from "./state/update-actor-condition";
 import { updateEconomyTool } from "./state/update-economy";
 import { updateSceneTool } from "./state/update-scene";
@@ -216,6 +218,51 @@ export function registerAllTools(pi: ExtensionAPI): void {
     }),
     execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>
       updateServantFormTool(params, ctx.sessionManager),
+  });
+
+  pi.registerTool({
+    label: toolLabel,
+    name: "reveal_secret",
+    description:
+      "根据玩家可见 claim/evidence 尝试揭示隐藏事实；工具不接受 secret id。\n\n" +
+      "【必须调用的场景】\n" +
+      "- 玩家推理真名、宝具、隐藏身份或触发公开揭示条件\n" +
+      "- GM 准备把 foreshadowed 线索升级为已揭示事实\n\n" +
+      "【严禁的行为】\n" +
+      "- 要求列出 secret slots 或幕后真相\n" +
+      "- 证据不足时泄露正确答案",
+    parameters: Type.Object({
+      kind: Type.Union([Type.Literal("claim-reveal"), Type.Literal("observed-reveal")]),
+      actorId: Type.String(),
+      claim: Type.Optional(Type.String()),
+      trigger: Type.Optional(Type.String()),
+      evidence: Type.String(),
+    }),
+    execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>
+      revealSecretTool(params, ctx.sessionManager),
+  });
+
+  pi.registerTool({
+    label: toolLabel,
+    name: "private_resolve",
+    description:
+      "窄口私密结算：隐藏反应或隐藏相性；只返回玩家安全叙事约束。\n\n" +
+      "【必须调用的场景】\n" +
+      "- 需要隐藏事实参与 NPC 反应，但不能公开真相\n" +
+      "- 判断两个 actor 互动是否触发隐藏相性\n\n" +
+      "【严禁的行为】\n" +
+      "- 询问完整隐藏真相或幕后动机\n" +
+      "- 用它替代 reveal_secret",
+    parameters: Type.Object({
+      kind: Type.Union([Type.Literal("hidden-reaction"), Type.Literal("secret-compatibility")]),
+      actorId: Type.String(),
+      targetActorId: Type.Optional(Type.String()),
+      stimulus: Type.Optional(Type.String()),
+      publicContext: Type.Optional(Type.String()),
+      interaction: Type.Optional(Type.String()),
+    }),
+    execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>
+      privateResolveTool(params, ctx.sessionManager),
   });
 
   pi.registerTool({
