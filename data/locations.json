@@ -1,0 +1,124 @@
+{
+  "locations": [
+    {
+      "id": "fuyuki-city",
+      "name": "冬木市",
+      "category": "地点",
+      "summary": "位于日本地方都市的圣杯战争舞台，由新都与深山町等区域构成，地下灵脉与大圣杯系统牵引各阵营行动。",
+      "stateLocation": {
+        "region": "冬木市",
+        "site": "全域",
+        "detail": "未指定",
+        "boundary": "normal"
+      },
+      "notes": [
+        "2004 年第五次圣杯战争核心舞台",
+        "公共空间中神秘暴露会引来监督者、魔术协会或圣堂教会关注"
+      ]
+    },
+    {
+      "id": "homurahara-academy",
+      "name": "穗群原学园",
+      "category": "地点",
+      "summary": "卫宫士郎、远坂凛、间桐樱等人就读的学校；日常与圣杯战争异常交叠的高风险公共地点。",
+      "stateLocation": {
+        "region": "冬木市",
+        "site": "深山镇",
+        "detail": "穗群原学园",
+        "boundary": "normal"
+      },
+      "notes": ["白天有大量普通学生与教师", "血之结界等异常会造成大规模伤害与神秘泄漏"]
+    },
+    {
+      "id": "emiya-residence",
+      "name": "卫宫邸",
+      "category": "地点",
+      "summary": "卫宫士郎居住的传统宅邸，带有仓库、道场和日常生活空间；在 FSN 中常作为临时据点。",
+      "stateLocation": {
+        "region": "冬木市",
+        "site": "深山镇",
+        "detail": "卫宫邸",
+        "boundary": "normal"
+      },
+      "notes": ["适合日常、休息、密谈", "并非不可攻破的安全屋"]
+    },
+    {
+      "id": "tohsaka-residence",
+      "name": "远坂宅邸",
+      "category": "地点",
+      "summary": "远坂家的魔术工房与居所，坐落于冬木灵脉重要位置。",
+      "stateLocation": {
+        "region": "冬木市",
+        "site": "深山镇",
+        "detail": "远坂宅邸",
+        "boundary": "bounded-field"
+      },
+      "notes": ["有魔术防护与工房痕迹", "外人进入通常会触发警戒"]
+    },
+    {
+      "id": "fuyuki-church",
+      "name": "冬木教会",
+      "category": "地点",
+      "summary": "圣杯战争监督者活动据点，表面是教会，实际牵涉圣堂教会与战争规则执行。",
+      "stateLocation": {
+        "region": "冬木市",
+        "site": "新都",
+        "detail": "冬木教会",
+        "boundary": "normal"
+      },
+      "notes": ["理论上提供监督与庇护", "监督者立场未必等于安全"]
+    },
+    {
+      "id": "ryuudou-temple",
+      "name": "柳洞寺",
+      "category": "地点",
+      "summary": "冬木灵脉要地之一，山门、寺院与地下空间均可能成为圣杯战争战场。",
+      "stateLocation": {
+        "region": "冬木市",
+        "site": "円藏山",
+        "detail": "柳洞寺",
+        "boundary": "bounded-field"
+      },
+      "notes": ["结界与地势优势明显", "从山门到本堂的距离会影响遭遇节奏"]
+    },
+    {
+      "id": "matou-residence",
+      "name": "间桐宅邸",
+      "category": "地点",
+      "summary": "间桐家的阴暗宅邸，魔术虫、地下空间与家族秘密构成强烈危险源。",
+      "stateLocation": {
+        "region": "冬木市",
+        "site": "深山镇",
+        "detail": "间桐宅邸",
+        "boundary": "bounded-field"
+      },
+      "notes": ["普通拜访不等于安全", "地下空间与虫仓应视为高危区域"]
+    },
+    {
+      "id": "einzbern-castle",
+      "name": "爱因兹贝伦城",
+      "category": "地点",
+      "summary": "爱因兹贝伦在冬木郊外森林中的据点，远离市区，适合作为阵营堡垒与战场。",
+      "stateLocation": {
+        "region": "冬木市",
+        "site": "郊外森林",
+        "detail": "爱因兹贝伦城",
+        "boundary": "bounded-field"
+      },
+      "notes": ["地形封闭且利于伏击", "大型从者战斗可能破坏建筑结构"]
+    },
+    {
+      "id": "fuyuki-bridge",
+      "name": "冬木大桥",
+      "category": "地点",
+      "summary": "连接区域的重要交通节点，视野开阔，适合追逐、伏击或公共目击事件。",
+      "stateLocation": {
+        "region": "冬木市",
+        "site": "新都-深山镇之间",
+        "detail": "冬木大桥",
+        "boundary": "normal"
+      },
+      "notes": ["公共区域，神秘暴露代价高", "夜间风声、水面与车流会影响侦察"]
+    }
+  ]
+}

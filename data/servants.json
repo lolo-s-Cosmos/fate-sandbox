@@ -1,0 +1,160 @@
+{
+  "servants": [
+    {
+      "id": "artoria-pendragon-saber",
+      "name": "阿尔托莉雅·潘德拉贡",
+      "aliases": ["Saber", "骑士王", "亚瑟王"],
+      "className": "Saber",
+      "trueName": "阿尔托莉雅·潘德拉贡",
+      "parameters": {
+        "strength": "B",
+        "endurance": "C",
+        "agility": "C",
+        "mana": "B",
+        "luck": "B",
+        "noblePhantasm": "C"
+      },
+      "noblePhantasms": [
+        {
+          "name": "Excalibur",
+          "rank": "A++",
+          "kind": "对城宝具",
+          "summary": "星之圣剑。全力解放必须伴随真名与巨大魔力消耗。"
+        },
+        {
+          "name": "Avalon",
+          "rank": "EX",
+          "kind": "结界宝具",
+          "summary": "遥远的理想乡。通常不作为常规可用装备处理，必须由剧情与持有状态确认。"
+        }
+      ],
+      "notes": ["真名暴露会带来身份与弱点信息", "供魔不足时无法长期维持高强度战斗"]
+    },
+    {
+      "id": "emiya-archer",
+      "name": "卫宫",
+      "aliases": ["Archer", "红衣弓兵"],
+      "className": "Archer",
+      "trueName": "卫宫",
+      "parameters": {
+        "strength": "D",
+        "endurance": "C",
+        "agility": "C",
+        "mana": "B",
+        "luck": "E",
+        "noblePhantasm": "?"
+      },
+      "noblePhantasms": [
+        {
+          "name": "Unlimited Blade Works",
+          "rank": "E-~A++",
+          "kind": "固有结界",
+          "summary": "无限剑制。不是普通技能；展开需要条件、魔力和明确战术目的。"
+        }
+      ],
+      "notes": ["投影与战术经验常比单纯参数更关键", "真实身份属于重大隐藏事实"]
+    },
+    {
+      "id": "cu-chulainn-lancer",
+      "name": "库丘林",
+      "aliases": ["Lancer", "蓝色枪兵"],
+      "className": "Lancer",
+      "trueName": "库丘林",
+      "parameters": {
+        "strength": "B",
+        "endurance": "C",
+        "agility": "A",
+        "mana": "C",
+        "luck": "E",
+        "noblePhantasm": "B"
+      },
+      "noblePhantasms": [
+        {
+          "name": "Gae Bolg",
+          "rank": "B",
+          "kind": "对人宝具",
+          "summary": "逆转因果的刺穿死棘之枪。幸运、距离、发动条件与防御手段决定能否回避致命结果。"
+        }
+      ],
+      "notes": ["敏捷与战斗经验极高", "御主命令可能限制发挥"]
+    },
+    {
+      "id": "medusa-rider",
+      "name": "美杜莎",
+      "aliases": ["Rider"],
+      "className": "Rider",
+      "trueName": "美杜莎",
+      "parameters": {
+        "strength": "B",
+        "endurance": "D",
+        "agility": "A",
+        "mana": "B",
+        "luck": "E",
+        "noblePhantasm": "A+"
+      },
+      "noblePhantasms": [
+        {
+          "name": "Bellerophon",
+          "rank": "A+",
+          "kind": "对军宝具",
+          "summary": "骑英之缰绳。高速突击威力巨大，但需要骑乘、展开与魔力成本。"
+        }
+      ],
+      "notes": ["魔眼、机动与突袭强", "御主与供魔状态会显著影响表现"]
+    },
+    {
+      "id": "heracles-berserker",
+      "name": "赫拉克勒斯",
+      "aliases": ["Berserker"],
+      "className": "Berserker",
+      "trueName": "赫拉克勒斯",
+      "parameters": {
+        "strength": "A+",
+        "endurance": "A",
+        "agility": "A",
+        "mana": "A",
+        "luck": "B",
+        "noblePhantasm": "A"
+      },
+      "noblePhantasms": [
+        {
+          "name": "God Hand",
+          "rank": "B",
+          "kind": "对人宝具",
+          "summary": "十二试炼。低等级攻击无效并具备多重生命，必须严格按神秘与等级处理。"
+        }
+      ],
+      "notes": ["参数压制极强", "狂化限制交流与技巧表达"]
+    },
+    {
+      "id": "gilgamesh-archer",
+      "name": "吉尔伽美什",
+      "aliases": ["Archer", "英雄王"],
+      "className": "Archer",
+      "trueName": "吉尔伽美什",
+      "parameters": {
+        "strength": "B",
+        "endurance": "C",
+        "agility": "C",
+        "mana": "B",
+        "luck": "A",
+        "noblePhantasm": "EX"
+      },
+      "noblePhantasms": [
+        {
+          "name": "Gate of Babylon",
+          "rank": "E~A++",
+          "kind": "对人宝具",
+          "summary": "王之财宝。库存优势极强，但傲慢、相性和应对速度会影响结果。"
+        },
+        {
+          "name": "Ea",
+          "rank": "EX",
+          "kind": "对界宝具",
+          "summary": "乖离剑。对界级别，不能作为普通攻击轻率使用。"
+        }
+      ],
+      "notes": ["神秘与宝具层级极高", "性格缺陷是重要战术因素"]
+    }
+  ]
+}

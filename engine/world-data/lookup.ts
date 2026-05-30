@@ -25,10 +25,40 @@ interface WorldData {
   规则: Record<string, string>;
 }
 
+interface ServantDataFile {
+  servants: ServantEntry[];
+}
+
+interface ServantEntry {
+  id: string;
+  name: string;
+  aliases: string[];
+  className: string;
+  trueName: string;
+  parameters: Record<string, string>;
+  noblePhantasms: Array<{ name: string; rank: string; kind: string; summary: string }>;
+  notes: string[];
+}
+
+interface LocationDataFile {
+  locations: LocationEntry[];
+}
+
+interface LocationEntry {
+  id: string;
+  name: string;
+  category: string;
+  summary: string;
+  stateLocation: Record<string, string>;
+  notes: string[];
+}
+
 interface WorldDataStore {
   characters: Record<string, CharacterEntry>;
   world: WorldData;
   timelines: Record<string, string>;
+  servants: ServantEntry[];
+  locations: LocationEntry[];
 }
 
 interface LookupEntry {
@@ -87,13 +117,15 @@ function loadWorldDataStore(): WorldDataStore {
       join(__dirname, "..", "..", "data", "timelines.json"),
       assertStringValue,
     ),
+    servants: readServantData(join(__dirname, "..", "..", "data", "servants.json")),
+    locations: readLocationData(join(__dirname, "..", "..", "data", "locations.json")),
   };
 }
 
 function lookupByKind(store: WorldDataStore, kind: LookupKind, query: string): MatchedEntry[] {
   const handlers: Record<LookupKind, () => LookupEntry[]> = {
-    角色: () => characterEntries(store.characters),
-    地点: () => recordEntries(store.world.地点),
+    角色: () => [...characterEntries(store.characters), ...servantEntries(store.servants)],
+    地点: () => [...recordEntries(store.world.地点), ...locationEntries(store.locations)],
     设定: () => [...recordEntries(store.world.核心设定), ...recordEntries(store.world.规则)],
     时间线: () => recordEntries(store.timelines),
   };
@@ -113,6 +145,36 @@ function recordEntries(record: Record<string, string>): LookupEntry[] {
     key,
     text: value,
     searchableText: [key, value].join("\n"),
+  }));
+}
+
+function servantEntries(servants: ServantEntry[]): LookupEntry[] {
+  return servants.map((servant) => ({
+    key: servant.name,
+    text: JSON.stringify(servant, null, 2),
+    searchableText: [
+      servant.id,
+      servant.name,
+      servant.className,
+      servant.trueName,
+      ...servant.aliases,
+      ...servant.notes,
+    ].join("\n"),
+  }));
+}
+
+function locationEntries(locations: LocationEntry[]): LookupEntry[] {
+  return locations.map((location) => ({
+    key: location.name,
+    text: JSON.stringify(location, null, 2),
+    searchableText: [
+      location.id,
+      location.name,
+      location.category,
+      location.summary,
+      ...Object.values(location.stateLocation),
+      ...location.notes,
+    ].join("\n"),
   }));
 }
 
@@ -272,6 +334,18 @@ function readWorldData(path: string): WorldData {
   };
 }
 
+function readServantData(path: string): ServantEntry[] {
+  const raw = readJson(path);
+  const file = assertServantDataFile(raw, path);
+  return file.servants;
+}
+
+function readLocationData(path: string): LocationEntry[] {
+  const raw = readJson(path);
+  const file = assertLocationDataFile(raw, path);
+  return file.locations;
+}
+
 function readJsonRecord<T>(
   path: string,
   assertValue: (value: unknown, label: string) => T,
@@ -303,6 +377,86 @@ function assertCharacterEntry(value: unknown, label: string): CharacterEntry {
   };
 }
 
+function assertServantDataFile(value: unknown, label: string): ServantDataFile {
+  if (!isRecord(value)) {
+    throw new Error(`Invalid servant data ${label}: root must be an object.`);
+  }
+  const servantsRaw = value["servants"];
+  if (!Array.isArray(servantsRaw)) {
+    throw new Error(`Invalid servant data ${label}: servants must be an array.`);
+  }
+  return {
+    servants: servantsRaw.map((entry, index) =>
+      assertServantEntry(entry, `${label}.servants[${index}]`),
+    ),
+  };
+}
+
+function assertServantEntry(value: unknown, label: string): ServantEntry {
+  if (!isRecord(value)) {
+    throw new Error(`Invalid servant data ${label}: entry must be an object.`);
+  }
+  return {
+    id: assertStringValue(value["id"], `${label}.id`),
+    name: assertStringValue(value["name"], `${label}.name`),
+    aliases: assertStringArray(value["aliases"], `${label}.aliases`),
+    className: assertStringValue(value["className"], `${label}.className`),
+    trueName: assertStringValue(value["trueName"], `${label}.trueName`),
+    parameters: assertStringRecord(value["parameters"], `${label}.parameters`),
+    noblePhantasms: assertNoblePhantasmEntries(value["noblePhantasms"], `${label}.noblePhantasms`),
+    notes: assertStringArray(value["notes"], `${label}.notes`),
+  };
+}
+
+function assertNoblePhantasmEntries(
+  value: unknown,
+  label: string,
+): Array<{ name: string; rank: string; kind: string; summary: string }> {
+  if (!Array.isArray(value)) {
+    throw new Error(`Invalid servant data ${label}: noblePhantasms must be an array.`);
+  }
+  return value.map((entry, index) => {
+    if (!isRecord(entry)) {
+      throw new Error(`Invalid servant data ${label}[${index}]: entry must be an object.`);
+    }
+    return {
+      name: assertStringValue(entry["name"], `${label}[${index}].name`),
+      rank: assertStringValue(entry["rank"], `${label}[${index}].rank`),
+      kind: assertStringValue(entry["kind"], `${label}[${index}].kind`),
+      summary: assertStringValue(entry["summary"], `${label}[${index}].summary`),
+    };
+  });
+}
+
+function assertLocationDataFile(value: unknown, label: string): LocationDataFile {
+  if (!isRecord(value)) {
+    throw new Error(`Invalid location data ${label}: root must be an object.`);
+  }
+  const locationsRaw = value["locations"];
+  if (!Array.isArray(locationsRaw)) {
+    throw new Error(`Invalid location data ${label}: locations must be an array.`);
+  }
+  return {
+    locations: locationsRaw.map((entry, index) =>
+      assertLocationEntry(entry, `${label}.locations[${index}]`),
+    ),
+  };
+}
+
+function assertLocationEntry(value: unknown, label: string): LocationEntry {
+  if (!isRecord(value)) {
+    throw new Error(`Invalid location data ${label}: entry must be an object.`);
+  }
+  return {
+    id: assertStringValue(value["id"], `${label}.id`),
+    name: assertStringValue(value["name"], `${label}.name`),
+    category: assertStringValue(value["category"], `${label}.category`),
+    summary: assertStringValue(value["summary"], `${label}.summary`),
+    stateLocation: assertStringRecord(value["stateLocation"], `${label}.stateLocation`),
+    notes: assertStringArray(value["notes"], `${label}.notes`),
+  };
+}
+
 function assertStringRecord(value: unknown, label: string): Record<string, string> {
   if (!isRecord(value)) {
     throw new Error(`Invalid world data ${label}: value must be an object.`);
@@ -313,6 +467,13 @@ function assertStringRecord(value: unknown, label: string): Record<string, strin
     assertStringValue(entryValue, `${label}.${key}`),
   ]);
   return Object.fromEntries(entries);
+}
+
+function assertStringArray(value: unknown, label: string): string[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`Invalid data ${label}: value must be an array.`);
+  }
+  return value.map((entry, index) => assertStringValue(entry, `${label}[${index}]`));
 }
 
 function assertStringValue(value: unknown, label: string): string {
