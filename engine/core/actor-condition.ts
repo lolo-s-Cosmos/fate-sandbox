@@ -235,10 +235,11 @@ function transferTrackedItem(
     if (item === undefined) {
       throw new Error(`tracked item 不存在: ${event.itemId}`);
     }
-    if (event.holderActorId !== null && draft.public.actors[event.holderActorId] === undefined) {
-      throw new Error(`holder actor 不存在: ${event.holderActorId}`);
+    const holderId = event.holderActorId || null;
+    if (holderId !== null && draft.public.actors[holderId] === undefined) {
+      throw new Error(`holder actor 不存在: ${holderId}`);
     }
-    item.holderActorId = event.holderActorId;
+    item.holderActorId = holderId;
     item.location = null;
   });
   return { message: "重要物品持有者已更新。" };
@@ -249,20 +250,22 @@ function addTrackedItem(
 ): ActorConditionEventResult {
   assertNonEmptyString(event.label, "label");
   assertNonEmptyString(event.reason, "reason");
+  const holderId = event.holderActorId ?? null;
+  const ownerId = event.ownerActorId ?? null;
   updateState((draft) => {
-    if (event.holderActorId !== null && draft.public.actors[event.holderActorId] === undefined) {
-      throw new Error(`holder actor 不存在: ${event.holderActorId}`);
+    if (holderId !== null && draft.public.actors[holderId] === undefined) {
+      throw new Error(`holder actor 不存在: ${holderId}`);
     }
-    if (event.ownerActorId !== null && draft.public.actors[event.ownerActorId] === undefined) {
-      throw new Error(`owner actor 不存在: ${event.ownerActorId}`);
+    if (ownerId !== null && draft.public.actors[ownerId] === undefined) {
+      throw new Error(`owner actor 不存在: ${ownerId}`);
     }
     const id = createId("item");
     draft.public.trackedItems[id] = {
       id,
       label: event.label,
       kind: event.itemKind,
-      ownerActorId: event.ownerActorId,
-      holderActorId: event.holderActorId,
+      ownerActorId: ownerId,
+      holderActorId: holderId,
       location: null,
       condition: event.condition,
       visibility: event.visibility,
