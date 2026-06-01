@@ -18,6 +18,11 @@ void test("Fate rank comparison treats plus-minus as same-tier edge", () => {
   assert.equal(result.band, "edge");
 });
 
+void test("Fate rank validation accepts multi-plus ranks", () => {
+  assert.equal(assertFateRank("A++", "rank"), "A++");
+  assert.equal(assertFateRank("B+++", "rank"), "B+++");
+});
+
 void test("Fate rank validation rejects invalid rank grammar", () => {
   assert.throws(() => assertFateRank("S", "rank"), /非法 Fate rank/);
 });

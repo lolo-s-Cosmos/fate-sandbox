@@ -199,9 +199,17 @@ function writeActor(actor: PublicActorState, present: boolean, ally: boolean): v
         draft.public.scene.presentActorIds,
         actor.id,
       );
+    } else {
+      draft.public.scene.presentActorIds = draft.public.scene.presentActorIds.filter(
+        (presentActorId) => presentActorId !== actor.id,
+      );
     }
     if (ally) {
       draft.public.allyActorIds = appendUniqueActorId(draft.public.allyActorIds, actor.id);
+    } else {
+      draft.public.allyActorIds = draft.public.allyActorIds.filter(
+        (allyActorId) => allyActorId !== actor.id,
+      );
     }
   });
 }

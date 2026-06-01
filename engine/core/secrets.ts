@@ -11,6 +11,40 @@ import {
   updateState,
 } from "./state";
 
+export interface ServantSecretStringInput {
+  value: string;
+  revealConditions: string[];
+}
+
+export interface ServantSecretNoblePhantasmInput {
+  value: NoblePhantasm;
+  revealConditions: string[];
+}
+
+export interface ConfigureServantSecretsInput {
+  kind: "configure-servant-secrets";
+  actorId: ActorId;
+  trueName?: ServantSecretStringInput;
+  hiddenNoblePhantasms?: ServantSecretNoblePhantasmInput[];
+  reason: string;
+}
+
+export interface ConfigureActorSecretsInput {
+  kind: "configure-actor-secrets";
+  actorId: ActorId;
+  privateMotives?: ServantSecretStringInput[];
+  unrevealedAffiliations?: ServantSecretStringInput[];
+  reason: string;
+}
+
+export interface ConfigureServantSecretsResult {
+  message: string;
+}
+
+export interface ConfigureActorSecretsResult {
+  message: string;
+}
+
 export type RevealSecretEvent =
   | { kind: "claim-reveal"; actorId: ActorId; claim: string; evidence: string }
   | { kind: "observed-reveal"; actorId: ActorId; trigger: string; evidence: string };
@@ -24,6 +58,80 @@ export type RevealSecretOutcome =
 export interface RevealSecretResult {
   outcome: RevealSecretOutcome;
   playerSafeMessage: string;
+}
+
+export function configureServantSecrets(
+  input: ConfigureServantSecretsInput,
+): ConfigureServantSecretsResult {
+  assertNonEmptyString(input.reason, "reason");
+  assertNonEmptyString(input.actorId, "actorId");
+  if (input.trueName === undefined && (input.hiddenNoblePhantasms?.length ?? 0) === 0) {
+    throw new Error("configure-servant-secrets 必须提供 trueName 或 hiddenNoblePhantasms。");
+  }
+
+  updateState((draft) => {
+    const actor = draft.public.actors[input.actorId];
+    if (actor === undefined) {
+      throw new Error(`actor 不存在: ${input.actorId}`);
+    }
+    if (actor.servantForm === null) {
+      throw new Error(`actor 不是从者: ${input.actorId}`);
+    }
+
+    const existing =
+      draft.secrets.actorSecrets[input.actorId] ?? createEmptyActorSecretSlots(input.actorId);
+    if (input.trueName !== undefined) {
+      existing.trueName = buildStringSecretSlot(
+        existing.trueName,
+        `${input.actorId}-true-name`,
+        input.trueName,
+      );
+    }
+    for (const noblePhantasm of input.hiddenNoblePhantasms ?? []) {
+      upsertNoblePhantasmSecretSlot(existing.hiddenNoblePhantasms, input.actorId, noblePhantasm);
+    }
+    draft.secrets.actorSecrets[input.actorId] = existing;
+  });
+
+  return { message: `从者 secrets 已配置：${input.actorId}。` };
+}
+
+export function configureActorSecrets(
+  input: ConfigureActorSecretsInput,
+): ConfigureActorSecretsResult {
+  assertNonEmptyString(input.reason, "reason");
+  assertNonEmptyString(input.actorId, "actorId");
+  if (
+    (input.privateMotives?.length ?? 0) === 0 &&
+    (input.unrevealedAffiliations?.length ?? 0) === 0
+  ) {
+    throw new Error("configure-actor-secrets 必须提供 privateMotives 或 unrevealedAffiliations。");
+  }
+
+  updateState((draft) => {
+    const actor = draft.public.actors[input.actorId];
+    if (actor === undefined) {
+      throw new Error(`actor 不存在: ${input.actorId}`);
+    }
+
+    const existing =
+      draft.secrets.actorSecrets[input.actorId] ?? createEmptyActorSecretSlots(input.actorId);
+    appendStringSecretSlots(
+      existing.privateMotives,
+      input.actorId,
+      "motive",
+      input.privateMotives ?? [],
+    );
+    appendStringSecretSlots(
+      existing.unrevealedAffiliations,
+      input.actorId,
+      "affiliation",
+      input.unrevealedAffiliations ?? [],
+    );
+    draft.secrets.actorSecrets[input.actorId] = existing;
+  });
+
+  return { message: `actor secrets 已配置：${input.actorId}。` };
 }
 
 export function revealSecret(event: RevealSecretEvent): RevealSecretResult {
@@ -84,6 +192,97 @@ export function revealSecret(event: RevealSecretEvent): RevealSecretResult {
   }
 
   return result;
+}
+
+function createEmptyActorSecretSlots(actorId: ActorId): ActorSecretSlots {
+  return {
+    actorId,
+    hiddenNoblePhantasms: [],
+    privateMotives: [],
+    unrevealedAffiliations: [],
+  };
+}
+
+function buildStringSecretSlot(
+  existing: SecretSlot<string> | undefined,
+  id: string,
+  input: ServantSecretStringInput,
+): SecretSlot<string> {
+  return {
+    id: existing?.id ?? id,
+    value: assertNonEmptyString(input.value, "secret.value"),
+    revealState: existing?.revealState ?? "hidden",
+    revealConditions: mergeRevealConditions(
+      existing?.revealConditions ?? [],
+      input.revealConditions,
+    ),
+  };
+}
+
+function appendStringSecretSlots(
+  slots: Array<SecretSlot<string>>,
+  actorId: ActorId,
+  slotKind: string,
+  inputs: ServantSecretStringInput[],
+): void {
+  for (const input of inputs) {
+    const value = assertNonEmptyString(input.value, "secret.value");
+    const existingIndex = slots.findIndex((slot) => slot.value === value);
+    const existing = existingIndex === -1 ? undefined : slots[existingIndex];
+    const slot = buildStringSecretSlot(
+      existing,
+      `${actorId}-${slotKind}-${slugifySecretIdPart(value)}`,
+      input,
+    );
+    if (existingIndex === -1) {
+      slots.push(slot);
+    } else {
+      slots[existingIndex] = slot;
+    }
+  }
+}
+
+function upsertNoblePhantasmSecretSlot(
+  slots: Array<SecretSlot<NoblePhantasm>>,
+  actorId: ActorId,
+  input: ServantSecretNoblePhantasmInput,
+): void {
+  const name = assertNonEmptyString(input.value.name, "noblePhantasm.name");
+  const existingIndex = slots.findIndex((slot) => slot.value.name === name);
+  const existing = existingIndex === -1 ? undefined : slots[existingIndex];
+  const slot: SecretSlot<NoblePhantasm> = {
+    id: existing?.id ?? `${actorId}-np-${slugifySecretIdPart(name)}`,
+    value: input.value,
+    revealState: existing?.revealState ?? "hidden",
+    revealConditions: mergeRevealConditions(
+      existing?.revealConditions ?? [],
+      input.revealConditions,
+    ),
+  };
+  if (existingIndex === -1) {
+    slots.push(slot);
+  } else {
+    slots[existingIndex] = slot;
+  }
+}
+
+function mergeRevealConditions(existing: string[], incoming: string[]): string[] {
+  const merged: string[] = [];
+  for (const condition of [...existing, ...incoming]) {
+    const normalized = assertNonEmptyString(condition, "revealCondition");
+    if (!merged.includes(normalized)) {
+      merged.push(normalized);
+    }
+  }
+  return merged;
+}
+
+function slugifySecretIdPart(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\u4e00-\u9fff]+/gu, "-")
+    .replace(/^-|-$/gu, "");
 }
 
 function canRevealStringSlot(event: RevealSecretEvent, slot: SecretSlot<string>): boolean {

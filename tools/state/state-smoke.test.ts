@@ -5,6 +5,7 @@ import { describe, it } from "node:test";
 
 import { hydrateStateFromSessionEntries } from "../../engine/core/session-hydration";
 import { cloneState, resetState, sessionKey, toSessionEntry } from "../../engine/core/state";
+import { upsertActorTool } from "./upsert-actor";
 import { updateActorConditionTool } from "./update-actor-condition";
 import { updateEconomyTool } from "./update-economy";
 import { updateSceneTool } from "./update-scene";
@@ -65,6 +66,55 @@ describe("Fate state tool-level smoke flow", () => {
     assert.equal(hydrated.public.economy.accessibleFunds[0]?.amount, 48800);
     assert.equal(hydrated.public.actors.protagonist?.condition.wounds[0]?.severity, "minor");
     assert.deepEqual(hydrated.public, beforeHydration.public);
+  });
+
+  it("accepts runtime servant setup through upsert_actor tool", () => {
+    resetState();
+    const sessionManager = createMockSessionManager();
+
+    const result = upsertActorTool(
+      {
+        kind: "upsert-servant",
+        servant: {
+          id: "caster",
+          displayName: "Caster",
+          publicIdentity: "柳洞寺驻留的从者",
+          apparentAge: "不明",
+          outfit: { label: "深紫色长袍与兜帽", details: "遮住面容" },
+          demeanor: "谨慎、孤高",
+          className: "Caster",
+          trueNameDisplay: "Caster",
+          trueNameStatus: "hidden",
+          parameters: {
+            strength: "E",
+            endurance: "D",
+            agility: "C",
+            mana: "A+",
+            luck: "B",
+            noblePhantasm: "C",
+          },
+          classSkills: [{ name: "阵地作成", rank: "A", summary: "建造工房级别的魔术阵地" }],
+          personalSkills: [{ name: "高速神言", rank: "A", summary: "无需咏唱发动大魔术" }],
+          noblePhantasms: [],
+          spiritualCore: 100,
+          mana: 90,
+          spiritualCondition: "完好",
+          masterActorId: null,
+          masterName: "葛木宗一郎",
+          contractStatus: "masterless",
+          manaSupply: "sufficient",
+          currentOrder: "守卫柳洞寺山门",
+        },
+        present: false,
+        ally: false,
+        reason: "tool smoke test servant setup",
+      },
+      sessionManager,
+    );
+
+    assert.match(textOf(result), /从者已写入：caster/);
+    assert.equal(cloneState().public.actors["caster"]?.servantForm?.identity.className, "Caster");
+    assert.equal(sessionManager.entries.length, 1);
   });
 
   it("ignores old incompatible session entries until a valid Fate state appears", () => {

@@ -65,6 +65,37 @@ void test("updateActorCondition updates non-servant magecraft circuits", () => {
   assert.equal(actor?.magecraft?.circuits.status, "depleted");
 });
 
+void test("updateActorCondition updates wound treatment in place", () => {
+  resetState();
+
+  updateActorCondition({
+    kind: "add-wound",
+    actorId: "protagonist",
+    severity: "minor",
+    text: "右膝擦伤",
+    source: "石阶滑倒",
+    recoverable: true,
+  });
+  const woundId = getState().public.actors.protagonist?.condition.wounds[0]?.id;
+  if (woundId === undefined) {
+    throw new Error("expected wound id");
+  }
+
+  updateActorCondition({
+    kind: "update-wound",
+    actorId: "protagonist",
+    conditionId: woundId,
+    text: "右膝擦伤——已清洁包扎",
+    treatment: "消毒棉清创，消炎软膏，新绷带包扎",
+    reason: "正式处理擦伤",
+  });
+
+  const wounds = getState().public.actors.protagonist?.condition.wounds;
+  assert.equal(wounds?.length, 1);
+  assert.equal(wounds?.[0]?.text, "右膝擦伤——已清洁包扎");
+  assert.equal(wounds?.[0]?.treatment, "消毒棉清创，消炎软膏，新绷带包扎");
+});
+
 void test("updateActorCondition resolves recovered afflictions", () => {
   resetState();
 
@@ -163,6 +194,38 @@ void test("add-tracked-item creates item in trackedItems map", () => {
   assert.equal(items[0]?.condition, "intact");
   assert.equal(items[0]?.visibility, "player-known");
   assert.equal(items[0]?.notes.length, 2);
+});
+
+void test("update-tracked-item records item consumption", () => {
+  resetState();
+
+  updateActorCondition({
+    kind: "add-tracked-item",
+    label: "药妆店应急处理用品",
+    itemKind: "mundane",
+    holderActorId: "protagonist",
+    ownerActorId: "protagonist",
+    condition: "intact",
+    visibility: "player-known",
+    notes: ["宽绷带×1", "消毒棉×1包", "消炎软膏×1管"],
+    reason: "测试物品追踪",
+  });
+  const itemId = Object.values(getState().public.trackedItems)[0]?.id;
+  if (itemId === undefined) {
+    throw new Error("expected item id");
+  }
+
+  updateActorCondition({
+    kind: "update-tracked-item",
+    itemId,
+    condition: "damaged",
+    notes: ["绷带已裁一截", "消毒棉已开封", "软膏已使用一次"],
+    reason: "处理右膝擦伤消耗部分用品",
+  });
+
+  const item = getState().public.trackedItems[itemId];
+  assert.equal(item?.condition, "damaged");
+  assert.deepEqual(item?.notes, ["绷带已裁一截", "消毒棉已开封", "软膏已使用一次"]);
 });
 
 void test("add-tracked-item rejects invalid holder actor", () => {

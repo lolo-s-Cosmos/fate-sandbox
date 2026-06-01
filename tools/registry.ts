@@ -166,12 +166,13 @@ export function registerAllTools(pi: ExtensionAPI): void {
     label: toolLabel,
     name: "update_actor_condition",
     description:
-      "更新 actor 的伤势、异常、长期影响、外观装备，或转移 tracked item。\n\n" +
+      "更新 actor 的伤势、异常、长期影响、外观装备，或 tracked item。\n\n" +
       "【必须调用的场景】\n" +
       "- 玩家或已入场 actor 受伤、感染、诅咒、获得永久影响\n" +
+      "- 伤势治疗状态发生变化，需要就地更新伤势描述/treatment\n" +
       "- 伤势/异常状态已自然恢复或稳定，需要从当前状态中移除\n" +
       "- 更换外观/装备呈现\n" +
-      "- 重要物品跨 actor 转移\n" +
+      "- 重要物品跨 actor 转移、状态变化或消耗明细变化\n" +
       "- 人类或其他非从者 actor 的魔术回路状态、Od、纪律或隶属需要更新\n" +
       "- 将新获得的关键物加入 trackedItems 追踪列表（跨场景持续影响选择的物品）\n\n" +
       "【严禁的行为】\n" +
@@ -181,12 +182,14 @@ export function registerAllTools(pi: ExtensionAPI): void {
     parameters: Type.Object({
       kind: Type.Union([
         Type.Literal("add-wound"),
+        Type.Literal("update-wound"),
         Type.Literal("add-affliction"),
         Type.Literal("add-permanent-effect"),
         Type.Literal("update-magecraft-circuits"),
         Type.Literal("resolve-condition"),
         Type.Literal("change-outfit"),
         Type.Literal("transfer-tracked-item"),
+        Type.Literal("update-tracked-item"),
         Type.Literal("add-tracked-item"),
       ]),
       actorId: Type.Optional(Type.String()),
@@ -253,6 +256,9 @@ export function registerAllTools(pi: ExtensionAPI): void {
         Type.Union([Type.Literal("player-known"), Type.Literal("suspected")]),
       ),
       notes: Type.Optional(Type.Array(Type.String())),
+      treatment: Type.Optional(
+        Type.String({ description: "update-wound 可用：伤势当前治疗/处理状态" }),
+      ),
       conditionKind: Type.Optional(Type.Union([Type.Literal("wound"), Type.Literal("affliction")])),
       conditionId: Type.Optional(Type.String()),
       outcome: Type.Optional(Type.Union([Type.Literal("recovered"), Type.Literal("stabilized")])),
@@ -364,19 +370,70 @@ export function registerAllTools(pi: ExtensionAPI): void {
     label: toolLabel,
     name: "reveal_secret",
     description:
-      "根据玩家可见 claim/evidence 尝试揭示隐藏事实；工具不接受 secret id。\n\n" +
+      "根据玩家可见 claim/evidence 尝试揭示隐藏事实；或在 actor 首次入场时配置 secret slots。\n\n" +
       "【必须调用的场景】\n" +
+      "- 从者首次入场且使用 upsert_actor(kind=upsert-servant) 后：调用 kind=configure-servant-secrets 写入真名/隐藏宝具揭示条件\n" +
+      "- 重要非从者 NPC 首次入场且后续 private_resolve 需要隐藏反应时：调用 kind=configure-actor-secrets 写入 privateMotives/unrevealedAffiliations\n" +
       "- 玩家推理真名、宝具、隐藏身份或触发公开揭示条件\n" +
       "- GM 准备把 foreshadowed 线索升级为已揭示事实\n\n" +
       "【严禁的行为】\n" +
+      "- 对同一从者反复配置相同 secret；首次入场配置一次，后续只追加新隐藏宝具\n" +
       "- 要求列出 secret slots 或幕后真相\n" +
       "- 证据不足时泄露正确答案",
     parameters: Type.Object({
-      kind: Type.Union([Type.Literal("claim-reveal"), Type.Literal("observed-reveal")]),
+      kind: Type.Union([
+        Type.Literal("claim-reveal"),
+        Type.Literal("observed-reveal"),
+        Type.Literal("configure-servant-secrets"),
+        Type.Literal("configure-actor-secrets"),
+      ]),
       actorId: Type.String(),
       claim: Type.Optional(Type.String()),
       trigger: Type.Optional(Type.String()),
-      evidence: Type.String(),
+      evidence: Type.Optional(Type.String()),
+      trueName: Type.Optional(
+        Type.Object({
+          value: Type.String({ description: "隐藏真名，如 美狄亚" }),
+          revealConditions: Type.Array(
+            Type.String({ description: "玩家证据里出现任一关键词即可触发，如 科尔基斯" }),
+          ),
+        }),
+      ),
+      hiddenNoblePhantasms: Type.Optional(
+        Type.Array(
+          Type.Object({
+            value: Type.Object({
+              name: Type.String(),
+              rank: Type.String({ description: "Fate rank；非真正宝具/无宝具可填 none" }),
+              kind: Type.String({ description: "宝具类型，如 对魔术宝具" }),
+              status: Type.Union([
+                Type.Literal("hidden"),
+                Type.Literal("suspected"),
+                Type.Literal("revealed"),
+              ]),
+              summary: Type.String(),
+            }),
+            revealConditions: Type.Array(Type.String()),
+          }),
+        ),
+      ),
+      privateMotives: Type.Optional(
+        Type.Array(
+          Type.Object({
+            value: Type.String({ description: "NPC 隐藏动机；不会直接公开给玩家" }),
+            revealConditions: Type.Array(Type.String()),
+          }),
+        ),
+      ),
+      unrevealedAffiliations: Type.Optional(
+        Type.Array(
+          Type.Object({
+            value: Type.String({ description: "NPC 未公开隶属/身份；不会直接公开给玩家" }),
+            revealConditions: Type.Array(Type.String()),
+          }),
+        ),
+      ),
+      reason: Type.Optional(Type.String()),
     }),
     execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>
       revealSecretTool(params, ctx.sessionManager),
@@ -590,9 +647,13 @@ function servantSchema(): ReturnType<typeof Type.Object> {
       Type.Object({
         name: Type.String(),
         rank: Type.String({ description: "Fate rank" }),
-        type: Type.String({ description: "宝具类型，如 对魔术宝具" }),
-        status: Type.Union([Type.Literal("hidden"), Type.Literal("revealed")]),
-        description: Type.String(),
+        kind: Type.String({ description: "宝具类型，如 对魔术宝具" }),
+        status: Type.Union([
+          Type.Literal("hidden"),
+          Type.Literal("suspected"),
+          Type.Literal("revealed"),
+        ]),
+        summary: Type.String(),
       }),
     ),
     spiritualCore: Type.Integer({ description: "0-100 灵核完整度" }),

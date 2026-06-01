@@ -54,7 +54,12 @@ export type SceneThreatSeverity = "low" | "medium" | "high" | "lethal";
 export type ActorKind = "human" | "outsider" | "spirit" | "other";
 export type ActorStance = "self" | "ally" | "friendly" | "neutral" | "wary" | "hostile" | "unknown";
 export type FateRankBase = "E" | "D" | "C" | "B" | "A" | "EX";
-export type FateRank = FateRankBase | `${FateRankBase}+` | `${FateRankBase}-`;
+export type FateRank =
+  | FateRankBase
+  | `${FateRankBase}+`
+  | `${FateRankBase}++`
+  | `${FateRankBase}+++`
+  | `${FateRankBase}-`;
 export type Percent = number;
 export type ServantClass =
   | "Saber"
@@ -405,7 +410,7 @@ export interface ServantSkill {
 
 export interface NoblePhantasm {
   name: string;
-  rank: FateRank;
+  rank: FateRank | "none";
   kind: string;
   status: "hidden" | "suspected" | "revealed";
   summary: string;
@@ -1480,7 +1485,8 @@ function assertNoblePhantasm(raw: unknown): NoblePhantasm {
   }
   return {
     name: assertNonEmptyString(raw["name"], "noblePhantasm.name"),
-    rank: assertOneOf(raw["rank"], FATE_RANKS, "noblePhantasm.rank"),
+    rank:
+      raw["rank"] === "none" ? "none" : assertOneOf(raw["rank"], FATE_RANKS, "noblePhantasm.rank"),
     kind: assertNonEmptyString(raw["kind"], "noblePhantasm.kind"),
     status: assertOneOf(raw["status"], TRUE_NAME_STATUSES, "noblePhantasm.status"),
     summary: assertNonEmptyString(raw["summary"], "noblePhantasm.summary"),
@@ -1851,21 +1857,33 @@ const STANCES = ["self", "ally", "friendly", "neutral", "wary", "hostile", "unkn
 const FATE_RANKS = [
   "E",
   "E+",
+  "E++",
+  "E+++",
   "E-",
   "D",
   "D+",
+  "D++",
+  "D+++",
   "D-",
   "C",
   "C+",
+  "C++",
+  "C+++",
   "C-",
   "B",
   "B+",
+  "B++",
+  "B+++",
   "B-",
   "A",
   "A+",
+  "A++",
+  "A+++",
   "A-",
   "EX",
   "EX+",
+  "EX++",
+  "EX+++",
   "EX-",
 ] as const;
 const CIRCUIT_STATUSES = ["normal", "overheated", "depleted", "dormant", "damaged"] as const;

@@ -39,9 +39,9 @@ export function assertFateRank(value: unknown, fieldName: string): FateRank {
 }
 
 function parseFateRank(rank: string): { rank: FateRank; mainValue: number; modifier: number } {
-  const match = /^(E|D|C|B|A|EX)([+-])?$/.exec(rank);
+  const match = /^(E|D|C|B|A|EX)(\+{1,3}|-)?$/.exec(rank);
   if (match === null) {
-    throw new Error(`非法 Fate rank: ${rank}。允许 E/D/C/B/A/EX 与可选 +/-。`);
+    throw new Error(`非法 Fate rank: ${rank}。允许 E/D/C/B/A/EX 与可选 -、+、++、+++。`);
   }
   const base = match[1];
   if (!isFateRankMain(base)) {
@@ -55,6 +55,8 @@ function parseFateRank(rank: string): { rank: FateRank; mainValue: number; modif
 
 function parseModifier(modifier: string | undefined): number {
   if (modifier === "+") return 1;
+  if (modifier === "++") return 2;
+  if (modifier === "+++") return 3;
   if (modifier === "-") return -1;
   return 0;
 }
@@ -71,8 +73,8 @@ function isFateRankMain(value: unknown): value is FateRankMain {
 }
 
 function buildFateRank(base: FateRankMain, modifier: string | undefined): FateRank {
-  if (modifier === "+") {
-    return `${base}+`;
+  if (modifier === "+" || modifier === "++" || modifier === "+++") {
+    return `${base}${modifier}`;
   }
   if (modifier === "-") {
     return `${base}-`;

@@ -3,6 +3,12 @@ import test from "node:test";
 
 import { upsertActor } from "./actor";
 import { buildGmBrief } from "./gm-brief";
+import {
+  configureActorSecrets,
+  configureServantSecrets,
+  privateResolve,
+  revealSecret,
+} from "./secrets";
 import { getPublicState, getState, resetState } from "./state";
 
 void test("upsertActor adds an entered NPC from safe public projection", () => {
@@ -117,6 +123,125 @@ void test("upsertActor can replace protagonist setup skeleton", () => {
   assert.match(buildGmBrief(publicState), /玩家角色：卫宫士郎 \/ human \/ 卫宫士郎/);
 });
 
+void test("configureServantSecrets creates mergeable slots for runtime servants", () => {
+  resetState();
+  upsertTestCaster();
+
+  configureServantSecrets({
+    kind: "configure-servant-secrets",
+    actorId: "caster",
+    trueName: {
+      value: "美狄亚",
+      revealConditions: ["科尔基斯", "金羊皮"],
+    },
+    hiddenNoblePhantasms: [
+      {
+        value: {
+          name: "Rule Breaker",
+          rank: "C",
+          kind: "对魔术宝具",
+          status: "hidden",
+          summary: "短剑形宝具，可强制解除魔力契约。",
+        },
+        revealConditions: ["契约解除", "短剑"],
+      },
+    ],
+    reason: "测试从者 secrets 初始化",
+  });
+  configureServantSecrets({
+    kind: "configure-servant-secrets",
+    actorId: "caster",
+    hiddenNoblePhantasms: [
+      {
+        value: {
+          name: "Rule Breaker",
+          rank: "C",
+          kind: "对魔术宝具",
+          status: "hidden",
+          summary: "短剑形宝具，可强制解除魔力契约。",
+        },
+        revealConditions: ["背叛魔女"],
+      },
+    ],
+    reason: "测试追加宝具揭示条件",
+  });
+
+  const casterSecrets = getState().secrets.actorSecrets["caster"];
+  assert.equal(casterSecrets?.trueName?.value, "美狄亚");
+  assert.deepEqual(casterSecrets?.trueName?.revealConditions, ["科尔基斯", "金羊皮"]);
+  assert.equal(casterSecrets?.hiddenNoblePhantasms.length, 1);
+  assert.deepEqual(casterSecrets?.hiddenNoblePhantasms[0]?.revealConditions, [
+    "契约解除",
+    "短剑",
+    "背叛魔女",
+  ]);
+});
+
+void test("configured servant secrets can be revealed by evidence", () => {
+  resetState();
+  upsertTestCaster();
+  configureServantSecrets({
+    kind: "configure-servant-secrets",
+    actorId: "caster",
+    trueName: {
+      value: "美狄亚",
+      revealConditions: ["科尔基斯", "金羊皮"],
+    },
+    reason: "测试真名揭示槽位",
+  });
+
+  const result = revealSecret({
+    kind: "claim-reveal",
+    actorId: "caster",
+    claim: "美狄亚",
+    evidence: "她的神代魔术与科尔基斯传承、金羊皮逸话一致。",
+  });
+
+  const caster = getState().public.actors["caster"];
+  assert.equal(result.outcome, "revealed");
+  assert.equal(caster?.servantForm?.identity.trueName.status, "revealed");
+  assert.equal(caster?.servantForm?.identity.trueName.display, "美狄亚");
+});
+
+function upsertTestCaster(): void {
+  upsertActor({
+    kind: "upsert-servant",
+    servant: {
+      id: "caster",
+      displayName: "Caster",
+      publicIdentity: "柳洞寺驻留的从者",
+      apparentAge: "不明",
+      outfit: { label: "深紫色长袍与兜帽", details: "遮住面容" },
+      demeanor: "谨慎、孤高",
+      className: "Caster",
+      trueNameDisplay: "Caster",
+      trueNameStatus: "hidden",
+      parameters: {
+        strength: "E",
+        endurance: "D",
+        agility: "C",
+        mana: "A+",
+        luck: "B",
+        noblePhantasm: "C",
+      },
+      classSkills: [{ name: "阵地作成", rank: "A", summary: "建造工房级别的魔术阵地" }],
+      personalSkills: [{ name: "高速神言", rank: "A", summary: "无需咏唱发动大魔术" }],
+      noblePhantasms: [],
+      spiritualCore: 100,
+      mana: 90,
+      spiritualCondition: "完好",
+      masterActorId: null,
+      masterName: "葛木宗一郎",
+      contractStatus: "masterless",
+      manaSupply: "sufficient",
+      currentOrder: "守卫柳洞寺山门",
+    },
+    present: false,
+    ally: false,
+    reason: "测试从者入场",
+  });
+}
+
 void test("upsert-servant writes servant form with full parameter block", () => {
   resetState();
 
@@ -180,4 +305,181 @@ void test("upsert-servant writes servant form with full parameter block", () => 
   assert.equal(caster?.servantForm?.contract.status, "masterless");
   assert.equal(caster?.servantForm?.contract.masterName, "葛木宗一郎");
   assert.equal(caster?.magecraft, null);
+});
+
+void test("upsertActor removes non-present actors from current scene", () => {
+  resetState();
+  upsertTestCaster();
+  upsertActor({
+    kind: "upsert-servant",
+    servant: {
+      id: "assassin",
+      displayName: "Assassin",
+      publicIdentity: "柳洞寺山门守卫",
+      apparentAge: "青年",
+      outfit: { label: "淡紫色和服", details: "腰间佩有超长日本刀。" },
+      demeanor: "从容、古风",
+      className: "Assassin",
+      trueNameDisplay: "Assassin",
+      trueNameStatus: "hidden",
+      parameters: {
+        strength: "C-",
+        endurance: "E",
+        agility: "A+",
+        mana: "E",
+        luck: "A",
+        noblePhantasm: "E",
+      },
+      classSkills: [],
+      personalSkills: [],
+      noblePhantasms: [],
+      spiritualCore: 100,
+      mana: 70,
+      spiritualCondition: "稳定",
+      masterActorId: null,
+      masterName: "Caster",
+      contractStatus: "stable",
+      manaSupply: "sufficient",
+      currentOrder: "守卫柳洞寺山门",
+    },
+    present: false,
+    ally: false,
+    reason: "测试非当前场景从者不应残留 presentActorIds",
+  });
+
+  assert.deepEqual(getState().public.scene.presentActorIds, ["protagonist"]);
+});
+
+void test("configureActorSecrets enables hidden reactions for non-servant NPCs", () => {
+  resetState();
+  upsertActor({
+    kind: "upsert-public-npc",
+    npc: {
+      id: "sakura",
+      kind: "human",
+      displayName: "间桐樱",
+      publicIdentity: "穗群原学园一年生；卫宫士郎弓道部的后辈。",
+      apparentAge: "15岁",
+      outfit: { label: "冬季便服", details: "浅色毛衣与长裙。" },
+      demeanor: "温柔体贴，但偶尔会在家族话题前沉默。",
+      publicRoles: [{ kind: "social", label: "穗群原学园一年生" }],
+      relationshipToProtagonist: { stance: "friendly", summary: "常来卫宫宅帮忙的后辈。" },
+      ordinaryItems: ["卫宫宅备用钥匙"],
+    },
+    present: true,
+    ally: false,
+    reason: "测试非从者 NPC hidden reaction",
+  });
+
+  configureActorSecrets({
+    kind: "configure-actor-secrets",
+    actorId: "sakura",
+    privateMotives: [
+      {
+        value: "提及慎二会触发樱的细微紧张，但不得公开间桐家内幕。",
+        revealConditions: ["慎二", "哥哥", "间桐"],
+      },
+    ],
+    reason: "测试 Sakura 私密反应槽位",
+  });
+
+  const result = privateResolve({
+    kind: "hidden-reaction",
+    actorId: "sakura",
+    stimulus: "慎二",
+    publicContext: "士郎询问弓道部训练时提到慎二。",
+  });
+
+  assert.equal(result.outcome, "subtle-reaction");
+});
+
+void test("configureServantSecrets accepts multi-plus Fate ranks", () => {
+  resetState();
+  upsertTestCaster();
+
+  configureServantSecrets({
+    kind: "configure-servant-secrets",
+    actorId: "caster",
+    hiddenNoblePhantasms: [
+      {
+        value: {
+          name: "测试宝具",
+          rank: "A++",
+          kind: "对界宝具",
+          status: "hidden",
+          summary: "测试多加号 rank。",
+        },
+        revealConditions: ["测试宝具"],
+      },
+    ],
+    reason: "测试多加号 rank",
+  });
+
+  assert.equal(
+    getState().secrets.actorSecrets["caster"]?.hiddenNoblePhantasms[0]?.value.rank,
+    "A++",
+  );
+});
+
+void test("configureServantSecrets accepts non-noble-phantasm sword techniques", () => {
+  resetState();
+  upsertActor({
+    kind: "upsert-servant",
+    servant: {
+      id: "assassin",
+      displayName: "Assassin",
+      publicIdentity: "柳洞寺山门守卫",
+      apparentAge: "青年",
+      outfit: { label: "淡紫色和服", details: "腰间佩有超长日本刀。" },
+      demeanor: "从容、古风",
+      className: "Assassin",
+      trueNameDisplay: "Assassin",
+      trueNameStatus: "hidden",
+      parameters: {
+        strength: "C-",
+        endurance: "E",
+        agility: "A+",
+        mana: "E",
+        luck: "A",
+        noblePhantasm: "E",
+      },
+      classSkills: [],
+      personalSkills: [{ name: "燕返", rank: "none", summary: "宝具级剑技但非真正宝具。" }],
+      noblePhantasms: [],
+      spiritualCore: 100,
+      mana: 70,
+      spiritualCondition: "受山门束缚但灵基稳定",
+      masterActorId: null,
+      masterName: "Caster",
+      contractStatus: "stable",
+      manaSupply: "sufficient",
+      currentOrder: "守卫柳洞寺山门",
+    },
+    present: false,
+    ally: false,
+    reason: "测试非宝具剑技隐藏槽位",
+  });
+
+  configureServantSecrets({
+    kind: "configure-servant-secrets",
+    actorId: "assassin",
+    hiddenNoblePhantasms: [
+      {
+        value: {
+          name: "燕返",
+          rank: "none",
+          kind: "非宝具剑技",
+          status: "hidden",
+          summary: "宝具级剑技，但不是正式宝具。",
+        },
+        revealConditions: ["三道斩击", "燕返"],
+      },
+    ],
+    reason: "记录 Assassin 隐藏剑技线索",
+  });
+
+  assert.equal(
+    getState().secrets.actorSecrets["assassin"]?.hiddenNoblePhantasms[0]?.value.rank,
+    "none",
+  );
 });

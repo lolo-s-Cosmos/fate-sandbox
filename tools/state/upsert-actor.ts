@@ -1,4 +1,4 @@
-import type { ActorRegistryInput, PublicNpcInput } from "../../engine/core/actor";
+import type { ActorRegistryInput, PublicNpcInput, ServantInput } from "../../engine/core/actor";
 import type { PublicActorState } from "../../engine/core/state";
 
 import { upsertActor } from "../../engine/core/actor";
@@ -32,6 +32,14 @@ function assertActorRegistryInput(params: unknown): ActorRegistryInput {
       return {
         kind,
         npc: assertRecord(params["npc"], "npc") as unknown as PublicNpcInput,
+        present: params["present"] === true,
+        ally: params["ally"] === true,
+        reason: assertString(params["reason"], "reason"),
+      };
+    case "upsert-servant":
+      return {
+        kind,
+        servant: assertRecord(params["servant"], "servant") as unknown as ServantInput,
         present: params["present"] === true,
         ally: params["ally"] === true,
         reason: assertString(params["reason"], "reason"),
