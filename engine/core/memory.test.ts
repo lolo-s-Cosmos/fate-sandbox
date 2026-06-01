@@ -13,6 +13,7 @@ void test("recordMemory stores pinned facts in public campaign memory", () => {
     subject: "protagonist",
     text: "玩家确认自己是御主。",
     sourceEventId: null,
+    claims: [{ kind: "mundane", statement: "玩家确认自己是御主。", certainty: "confirmed" }],
   });
 
   const fact = getState().public.memory.pinnedFacts.find((entry) => entry.id === result.factId);
@@ -27,6 +28,7 @@ void test("recordMemory stores major events with consequences", () => {
     title: "契约成立",
     summary: "玩家与 Saber 缔结契约。",
     consequences: ["玩家成为御主。"],
+    claims: [{ kind: "mundane", statement: "玩家与 Saber 缔结契约。", certainty: "confirmed" }],
   });
 
   const event = getState().public.memory.eventLog.find((entry) => entry.id === result.eventId);
@@ -34,7 +36,7 @@ void test("recordMemory stores major events with consequences", () => {
   assert.deepEqual(event?.consequences, ["玩家成为御主。"]);
 });
 
-void test("recordMemory rejects sensitive confirmed memory without evidence", () => {
+void test("recordMemory requires structured claims", () => {
   resetState();
 
   assert.throws(
@@ -44,12 +46,35 @@ void test("recordMemory rejects sensitive confirmed memory without evidence", ()
         title: "柳洞寺确认情报",
         summary: "凛确认 Caster 正在柳洞寺。",
         consequences: ["Caster 位置已确认。"],
+        claims: [],
       }),
-    /公开记忆不能把敏感\/隐藏情报写成 confirmed fact/,
+    /必须提供 claims/,
   );
 });
 
-void test("recordMemory accepts explicitly worded sensitive hypotheses", () => {
+void test("recordMemory rejects non-mundane confirmed claims without evidence", () => {
+  resetState();
+
+  assert.throws(
+    () =>
+      recordMemory({
+        kind: "record-major-event",
+        title: "柳洞寺确认情报",
+        summary: "凛确认 Caster 正在柳洞寺。",
+        consequences: ["Caster 位置已确认。"],
+        claims: [
+          {
+            kind: "location",
+            statement: "凛确认 Caster 正在柳洞寺。",
+            certainty: "confirmed",
+          },
+        ],
+      }),
+    /非 mundane claim 必须提供 evidence/,
+  );
+});
+
+void test("recordMemory accepts explicitly worded hypotheses", () => {
   resetState();
 
   const result = recordMemory({
@@ -57,7 +82,13 @@ void test("recordMemory accepts explicitly worded sensitive hypotheses", () => {
     title: "关于柳洞寺的未证实猜测",
     summary: "士郎猜测 Caster 可能与柳洞寺有关，但没有证据确认。",
     consequences: ["该猜测未证实，不能作为行动事实。"],
-    certainty: "hypothesis",
+    claims: [
+      {
+        kind: "location",
+        statement: "士郎猜测 Caster 可能与柳洞寺有关。",
+        certainty: "hypothesis",
+      },
+    ],
   });
 
   const event = getState().public.memory.eventLog.find((entry) => entry.id === result.eventId);
@@ -75,7 +106,13 @@ void test("recordMemory rejects hypothesis worded as confirmed fact", () => {
         subject: "柳洞寺",
         text: "凛确认 Caster 正在柳洞寺。",
         sourceEventId: null,
-        certainty: "hypothesis",
+        claims: [
+          {
+            kind: "location",
+            statement: "凛确认 Caster 正在柳洞寺。",
+            certainty: "hypothesis",
+          },
+        ],
       }),
     /不能写成确认事实/,
   );

@@ -188,8 +188,14 @@ export function revealSecret(event: RevealSecretEvent): RevealSecretResult {
       title: "隐藏事实揭示",
       summary: result.playerSafeMessage,
       consequences: ["相关公开状态已更新。"],
-      certainty: "confirmed",
-      evidence: "reveal_secret 已验证玩家证据并更新公开状态。",
+      claims: [
+        {
+          kind: "world-fact",
+          statement: result.playerSafeMessage,
+          certainty: "confirmed",
+          evidence: "reveal_secret 已验证玩家证据并更新公开状态。",
+        },
+      ],
     });
   }
 

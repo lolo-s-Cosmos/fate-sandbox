@@ -70,11 +70,12 @@ void test("commitTurn rolls back earlier events when a later event fails", () =>
               title: "柳洞寺确认情报",
               summary: "凛确认 Caster 正在柳洞寺。",
               consequences: ["Caster 位置已确认。"],
+              claims: [],
             },
           },
         ],
       }),
-    /公开记忆不能把敏感\/隐藏情报写成 confirmed fact/,
+    /必须提供 claims/,
   );
 
   const state = getState();
@@ -293,8 +294,14 @@ void test("commitTurn can transition scene beat by objective summaries", () => {
           title: "柳洞寺外围侦察",
           summary: "从外围确认柳洞寺存在多层结界，山门是唯一入口。",
           consequences: ["后续接近柳洞寺必须避开山门正面突破"],
-          certainty: "observed",
-          evidence: "士郎与同行者在柳洞寺外围完成侦察并观察到结界与山门路径。",
+          claims: [
+            {
+              kind: "world-fact",
+              statement: "士郎与同行者在柳洞寺外围观察到结界与山门路径。",
+              certainty: "observed",
+              evidence: "士郎与同行者在柳洞寺外围完成侦察。",
+            },
+          ],
         },
       },
     ],
