@@ -7,6 +7,15 @@ import {
   type MoneyPurse,
 } from "./state";
 
+export type MoneyGainSource =
+  | "earned"
+  | "refund"
+  | "found"
+  | "gift"
+  | "withdrawal"
+  | "sale"
+  | "quest-reward";
+
 export type EconomyEvent =
   | {
       kind: "spend-money";
@@ -15,7 +24,15 @@ export type EconomyEvent =
       amount: number;
       reason: string;
     }
-  | { kind: "gain-money"; purseId?: string; ownerActorId?: ActorId; amount: number; reason: string }
+  | {
+      kind: "gain-money";
+      purseId?: string;
+      ownerActorId?: ActorId;
+      amount: number;
+      source: MoneyGainSource;
+      counterparty: string;
+      reason: string;
+    }
   | {
       kind: "add-purse";
       ownerActorId: ActorId;
@@ -42,6 +59,7 @@ export function updateEconomy(event: EconomyEvent): EconomyEventResult {
         event.reason,
       );
     case "gain-money":
+      assertAuditableGain(event);
       return changePurseAmount(
         event.purseId,
         event.ownerActorId,
@@ -75,6 +93,21 @@ function changePurseAmount(
     purse.amount = nextAmount;
   });
   return { message };
+}
+
+function assertAuditableGain(event: Extract<EconomyEvent, { kind: "gain-money" }>): void {
+  assertNonEmptyString(event.counterparty, "counterparty");
+  const amount = assertNonNegativeInteger(event.amount, "amount");
+  if (amount > 50000 && event.source === "found") {
+    throw new Error(
+      "大额资金增加不能标记为 found；必须提供可审计来源如 sale/withdrawal/gift/earned。不能用 gain-money 把现金设为目标数值。",
+    );
+  }
+  const reason = event.reason.toLowerCase();
+  const cheatingTerms = ["凭空", "作弊", "改成", "设为", "免费发财", "无代价", "999999"];
+  if (cheatingTerms.some((term) => reason.includes(term))) {
+    throw new Error("资金增加必须说明可审计来源；不能用 gain-money 把现金设为目标数值或凭空发财。");
+  }
 }
 
 function resolvePurse(

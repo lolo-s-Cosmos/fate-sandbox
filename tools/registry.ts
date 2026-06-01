@@ -204,6 +204,20 @@ export function registerAllTools(pi: ExtensionAPI): void {
       subject: Type.Optional(Type.String()),
       text: Type.Optional(Type.String()),
       sourceEventId: Type.Optional(Type.String()),
+      certainty: Type.Optional(
+        Type.Union([
+          Type.Literal("observed"),
+          Type.Literal("confirmed"),
+          Type.Literal("inferred"),
+          Type.Literal("rumor"),
+          Type.Literal("hypothesis"),
+        ]),
+      ),
+      evidence: Type.Optional(
+        Type.String({
+          description: "敏感/隐藏情报写入 confirmed/observed/inferred 时必须提供证据",
+        }),
+      ),
       title: Type.Optional(Type.String()),
       summary: Type.Optional(Type.String()),
       consequences: Type.Optional(Type.Array(Type.String())),
@@ -407,13 +421,14 @@ export function registerAllTools(pi: ExtensionAPI): void {
     label: toolLabel,
     name: "update_economy",
     description:
-      "更新 2004 年日本円经济状态；每笔资金必须指定 purse/account 与 reason。\n\n" +
+      "更新 2004 年日本円经济状态；每笔资金必须指定 purse/account 与 reason，资金增加必须说明可审计来源。\n\n" +
       "【必须调用的场景】\n" +
       "- 消费、获得现金、增加可访问资金账户或记录债务\n" +
       "- 食宿、装备、服务、情报等交易发生时\n\n" +
       "【严禁的行为】\n" +
       "- 把同行者资金说成玩家随身现金\n" +
-      "- 资金不足时默认免费兜底",
+      "- 资金不足时默认免费兜底\n" +
+      "- 用 gain-money 把现金设为目标数值或凭空发财；gain-money 必须提供 source 和 counterparty",
     parameters: Type.Object({
       kind: Type.Union([
         Type.Literal("spend-money"),
@@ -434,6 +449,18 @@ export function registerAllTools(pi: ExtensionAPI): void {
       ),
       debtorActorId: Type.Optional(Type.String()),
       creditor: Type.Optional(Type.String()),
+      source: Type.Optional(
+        Type.Union([
+          Type.Literal("earned"),
+          Type.Literal("refund"),
+          Type.Literal("found"),
+          Type.Literal("gift"),
+          Type.Literal("withdrawal"),
+          Type.Literal("sale"),
+          Type.Literal("quest-reward"),
+        ]),
+      ),
+      counterparty: Type.Optional(Type.String({ description: "gain-money 必填：付款方/来源说明" })),
       label: Type.Optional(Type.String()),
       amount: Type.Optional(Type.Union([Type.Integer(), Type.String()])),
       access: Type.Optional(

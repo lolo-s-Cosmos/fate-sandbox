@@ -33,3 +33,50 @@ void test("recordMemory stores major events with consequences", () => {
   assert.equal(event?.title, "契约成立");
   assert.deepEqual(event?.consequences, ["玩家成为御主。"]);
 });
+
+void test("recordMemory rejects sensitive confirmed memory without evidence", () => {
+  resetState();
+
+  assert.throws(
+    () =>
+      recordMemory({
+        kind: "record-major-event",
+        title: "柳洞寺确认情报",
+        summary: "凛确认 Caster 正在柳洞寺。",
+        consequences: ["Caster 位置已确认。"],
+      }),
+    /公开记忆不能把敏感\/隐藏情报写成 confirmed fact/,
+  );
+});
+
+void test("recordMemory accepts explicitly worded sensitive hypotheses", () => {
+  resetState();
+
+  const result = recordMemory({
+    kind: "record-major-event",
+    title: "关于柳洞寺的未证实猜测",
+    summary: "士郎猜测 Caster 可能与柳洞寺有关，但没有证据确认。",
+    consequences: ["该猜测未证实，不能作为行动事实。"],
+    certainty: "hypothesis",
+  });
+
+  const event = getState().public.memory.eventLog.find((entry) => entry.id === result.eventId);
+  assert.match(event?.summary ?? "", /猜测/);
+});
+
+void test("recordMemory rejects hypothesis worded as confirmed fact", () => {
+  resetState();
+
+  assert.throws(
+    () =>
+      recordMemory({
+        kind: "pin-fact",
+        scope: "world",
+        subject: "柳洞寺",
+        text: "凛确认 Caster 正在柳洞寺。",
+        sourceEventId: null,
+        certainty: "hypothesis",
+      }),
+    /不能写成确认事实/,
+  );
+});

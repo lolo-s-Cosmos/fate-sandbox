@@ -262,6 +262,8 @@ void test("commitTurn can transition scene beat by objective summaries", () => {
           title: "柳洞寺外围侦察",
           summary: "从外围确认柳洞寺存在多层结界，山门是唯一入口。",
           consequences: ["后续接近柳洞寺必须避开山门正面突破"],
+          certainty: "observed",
+          evidence: "士郎与同行者在柳洞寺外围完成侦察并观察到结界与山门路径。",
         },
       },
     ],

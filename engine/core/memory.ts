@@ -9,6 +9,8 @@ import {
   type MemoryFactId,
 } from "./state";
 
+export type MemoryCertainty = "observed" | "confirmed" | "inferred" | "rumor" | "hypothesis";
+
 export type MemoryEvent =
   | {
       kind: "pin-fact";
@@ -16,12 +18,16 @@ export type MemoryEvent =
       subject: string;
       text: string;
       sourceEventId: string | null;
+      certainty?: MemoryCertainty;
+      evidence?: string;
     }
   | {
       kind: "record-major-event";
       title: string;
       summary: string;
       consequences: string[];
+      certainty?: MemoryCertainty;
+      evidence?: string;
     }
   | {
       kind: "record-daily-summary";
@@ -50,6 +56,7 @@ export function recordMemory(event: MemoryEvent): MemoryEventResult {
 }
 
 function recordPinnedFact(event: Extract<MemoryEvent, { kind: "pin-fact" }>): MemoryEventResult {
+  assertPublicMemoryBoundary(event.text, event.certainty, event.evidence);
   const id = createId("fact");
   updateState((draft) => {
     draft.public.memory.pinnedFacts.push({
@@ -70,6 +77,11 @@ function recordPinnedFact(event: Extract<MemoryEvent, { kind: "pin-fact" }>): Me
 function recordMajorEvent(
   event: Extract<MemoryEvent, { kind: "record-major-event" }>,
 ): MemoryEventResult {
+  assertPublicMemoryBoundary(
+    [event.title, event.summary, ...event.consequences].join("\n"),
+    event.certainty,
+    event.evidence,
+  );
   const id = createId("event");
   updateState((draft) => {
     draft.public.memory.eventLog.push({
@@ -83,6 +95,39 @@ function recordMajorEvent(
     });
   });
   return { eventId: id };
+}
+
+function assertPublicMemoryBoundary(
+  text: string,
+  certainty: MemoryCertainty | undefined,
+  evidence: string | undefined,
+): void {
+  const normalized = text.toLowerCase();
+  const sensitiveTerms = ["caster", "assassin", "真名", "佐佐木小次郎", "美狄亚", "柳洞寺"];
+  if (!sensitiveTerms.some((term) => normalized.includes(term.toLowerCase()))) {
+    return;
+  }
+
+  const memoryCertainty = certainty ?? "confirmed";
+  if (memoryCertainty === "hypothesis" || memoryCertainty === "rumor") {
+    assertHypothesisWording(text);
+    return;
+  }
+
+  if (evidence === undefined || evidence.trim().length === 0) {
+    throw new Error(
+      "公开记忆不能把敏感/隐藏情报写成 confirmed fact；若只是玩家猜测，请使用 certainty=hypothesis，并写成“怀疑/猜测/可能”。若已确认，必须提供 evidence。",
+    );
+  }
+}
+
+function assertHypothesisWording(text: string): void {
+  if (/[确认確定]/u.test(text) && !/没有证据确认|未确认|不能确认/u.test(text)) {
+    throw new Error("hypothesis/rumor 记忆不能写成确认事实；请改写为怀疑/猜测/可能。");
+  }
+  if (!/[怀疑猜测可能推测未证实]/u.test(text)) {
+    throw new Error("hypothesis/rumor 记忆必须明确标注为怀疑、猜测、可能或未证实。");
+  }
 }
 
 function recordDailySummary(
