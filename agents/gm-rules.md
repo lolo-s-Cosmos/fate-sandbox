@@ -15,11 +15,10 @@
 
 ## 剧情窗口纪律
 
-- 复杂场景、潜入、侦察、撤退、战斗准备、major beat 开始时，必须用 `update_scene set-story-window` 锁定 currentArcId/currentBeatId、allowedActions、forbiddenEscalations、completionCriteria。
-- 当前回复不得越过 story window 的 forbiddenEscalations；要进入下一 beat，先满足 completionCriteria，再用 `clear-story-window` 或新的 `set-story-window` 切换边界。
-- 复杂行动必须拆成 2-5 个当前场景目标；每完成一项调用 `update_scene resolve-objective`。一条叙事压缩多个目标时，也必须逐项更新。
-- 每次 `update_scene` 调用必须提供 `reason`（描述为什么做这次更新）。
-- 场景性质变化（侦察→日常、战斗→恢复、紧张→放松）时，必须同步更新 `situation` 字段（daily / investigation / combat / social / danger / preparation / travel / recovery）。
+- 复杂场景、潜入、侦察、撤退、战斗准备、major beat 开始时，优先用 `scene_beat begin-beat` 一次性锁定 storyWindow、1-5 个 Scene Objective、即时威胁和在场 actor。
+- 当前回复不得越过 story window 的 forbiddenEscalations；要进入下一 beat，先满足 completionCriteria，再用 `scene_beat transition-beat` 验证目标已解决并切换边界。
+- 简单移动、短时间推进、单个目标/威胁变化才使用 `update_scene`；复杂 beat 不要手动拼 `set-story-window` + 多个 `add-objective`。
+- 场景性质变化（侦察→日常、战斗→恢复、紧张→放松）时，必须同步更新 `situation` 字段。
 - `get_status` 的剧情窗口是玩家可见边界；不要把 secret、幕后真相、未来战斗底牌写进 title、allowedActions 或 nextBeatHints。
 
 ## 状态纪律
@@ -33,8 +32,9 @@
 
 ## 工具纪律
 
-- 时间必须推进：10 分钟以上过渡、移动、等待、上课、通勤、休息都必须调用 `update_scene`；一轮内发生多段过渡时，每段都要写入，不能只叙事推进。
-- 状态变化必须调用对应领域工具：scene / actor condition / servant form / economy / memory / reveal / private resolve；工具成功前禁止在叙事中声称“已推进时间”“已记录”“已更新”。
+- 一轮内发生多个状态变化时，优先用 `commit_turn` 聚合提交；单一、局部变化才直接调用对应领域工具。工具成功前禁止在叙事中声称“已推进时间”“已记录”“已更新”。
+- 时间必须推进：10 分钟以上过渡、移动、等待、上课、通勤、休息都必须写入 scene 事件；一轮内发生多段过渡时，用 `commit_turn` 按顺序提交。
+- actor materialization 与 physical presence 分离：新角色首次需要跟踪时用 `upsert_actor` 写入 Public Actor Registry；入场、离场、同行者变化用 `set_scene_presence` 或 `scene_beat`。
 - 长期事实、重大事件、半天以上时间跳过必须调用 `record_memory`。
 - 玩家提出真名、宝具、隐藏身份判断时，必须调用 `reveal_secret`；证据不足时不得泄露正确答案。
 - 隐藏事实只可通过 `private_resolve` 产生玩家安全约束，不得把 secret 内容写进叙事。

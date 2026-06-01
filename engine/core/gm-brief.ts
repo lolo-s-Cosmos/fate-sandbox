@@ -21,7 +21,7 @@ export function buildGmBrief(publicState: PublicGameState): string {
     `当前目标：${formatObjectives(publicState)}`,
     `当前威胁：${formatThreats(publicState)}`,
     `最近重大记忆：${formatRecentEvents(publicState)}`,
-    "本轮工具纪律：状态变化必须调用对应 update 工具；不要输出 JSON、数值表、schema 字段。",
+    "本轮工具纪律：多状态变化优先 commit_turn；复杂 beat 优先 scene_beat；actor 入场/离场用 set_scene_presence。不要输出 JSON、数值表、schema 字段。",
   ].join("\n");
 }
 
