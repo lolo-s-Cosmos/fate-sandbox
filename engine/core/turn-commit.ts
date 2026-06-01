@@ -1,0 +1,96 @@
+import type { ActorConditionEvent, ActorConditionEventResult } from "./actor-condition";
+import type { EconomyEvent, EconomyEventResult } from "./economy";
+import type { MemoryEvent, MemoryEventResult } from "./memory";
+import type { SceneEvent, SceneEventResult } from "./scene";
+import type { ServantFormEvent, ServantFormEventResult } from "./servant";
+
+import { updateActorCondition } from "./actor-condition";
+import { updateEconomy } from "./economy";
+import { recordMemory } from "./memory";
+import { updateScene } from "./scene";
+import { updateServantForm } from "./servant";
+import { assertNonEmptyString, getState } from "./state";
+
+export type TurnCommitEvent =
+  | { kind: "scene"; event: SceneEvent }
+  | { kind: "actor-condition"; event: ActorConditionEvent }
+  | { kind: "servant-form"; event: ServantFormEvent }
+  | { kind: "economy"; event: EconomyEvent }
+  | { kind: "memory"; event: MemoryEvent };
+
+export interface TurnCommitInput {
+  summary: string;
+  events: TurnCommitEvent[];
+}
+
+export type TurnCommitEventResult =
+  | { kind: "scene"; result: SceneEventResult }
+  | { kind: "actor-condition"; result: ActorConditionEventResult }
+  | { kind: "servant-form"; result: ServantFormEventResult }
+  | { kind: "economy"; result: EconomyEventResult }
+  | { kind: "memory"; result: MemoryEventResult };
+
+export interface TurnCommitResult {
+  message: string;
+  results: TurnCommitEventResult[];
+  warnings: string[];
+}
+
+export function commitTurn(input: TurnCommitInput): TurnCommitResult {
+  const summary = assertNonEmptyString(input.summary, "summary");
+  if (input.events.length === 0) {
+    throw new Error("commit_turn 至少需要一个领域事件；若本轮没有状态变化，请不要调用。");
+  }
+
+  const results = input.events.map(applyTurnEvent);
+  const warnings = collectWarnings();
+  return {
+    message: formatMessage(summary, results, warnings),
+    results,
+    warnings,
+  };
+}
+
+function applyTurnEvent(event: TurnCommitEvent): TurnCommitEventResult {
+  switch (event.kind) {
+    case "scene":
+      return { kind: event.kind, result: updateScene(event.event) };
+    case "actor-condition":
+      return { kind: event.kind, result: updateActorCondition(event.event) };
+    case "servant-form":
+      return { kind: event.kind, result: updateServantForm(event.event) };
+    case "economy":
+      return { kind: event.kind, result: updateEconomy(event.event) };
+    case "memory":
+      return { kind: event.kind, result: recordMemory(event.event) };
+    default:
+      throw new Error("unreachable turn commit event kind");
+  }
+}
+
+function collectWarnings(): string[] {
+  const state = getState();
+  const warnings: string[] = [];
+  const storyWindow = state.public.scene.storyWindow;
+  if (storyWindow !== null) {
+    const unresolvedObjectives = state.public.scene.objectives.filter(
+      (objective) => objective.status !== "resolved",
+    );
+    if (unresolvedObjectives.length === 0) {
+      warnings.push(`剧情窗口仍在进行，但当前没有未解决的 Scene Objective：${storyWindow.title}。`);
+    }
+  }
+  return warnings;
+}
+
+function formatMessage(
+  summary: string,
+  results: TurnCommitEventResult[],
+  warnings: readonly string[],
+): string {
+  const lines = [`回合已提交：${summary}`, `领域事件：${results.length}`];
+  if (warnings.length > 0) {
+    lines.push("检查提醒：", ...warnings.map((warning) => `- ${warning}`));
+  }
+  return lines.join("\n");
+}

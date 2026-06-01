@@ -8,6 +8,7 @@ import { overrideLockedFactTool } from "./debug/override-locked-fact";
 import { resetStateTool } from "./debug/reset-state";
 import { switchToolsetTool } from "./debug/switch-toolset";
 import { lookupTool } from "./lookup/lookup";
+import { commitTurnTool } from "./state/commit-turn";
 import { getStatusTool } from "./state/get-status";
 import { patchStateTool } from "./state/patch-state";
 import { privateResolveTool } from "./state/private-resolve";
@@ -22,6 +23,38 @@ import { upsertActorTool } from "./state/upsert-actor";
 
 export function registerAllTools(pi: ExtensionAPI): void {
   const toolLabel = "FSN 沙盒";
+
+  pi.registerTool({
+    label: toolLabel,
+    name: "commit_turn",
+    description:
+      "每轮叙事结束时一次性提交本轮发生的领域事件；用于降低 GM 对多个状态工具顺序的注意力负担。\n\n" +
+      "【必须调用的场景】\n" +
+      "- 一轮回复同时改变时间/地点、Scene Objective、伤势、物品、资金、记忆或从者资源中的多个状态\n" +
+      "- 叙事已经发生购买、治疗、移动、揭示、消耗、战斗结算等 canonical Game State 变化\n" +
+      "- 复杂 beat 收口时需要按顺序提交多个 Domain Event Tool 的效果\n\n" +
+      "【严禁的行为】\n" +
+      "- 把它当裸 patch；events 必须是已有领域事件\n" +
+      "- 提交 Hidden Fact 到 Public Game State；秘密仍必须走 reveal_secret/private_resolve/record_offscreen_event\n" +
+      "- 没有状态变化时为了形式调用",
+    parameters: Type.Object({
+      summary: Type.String({ description: "本轮玩家可见状态变化摘要" }),
+      events: Type.Array(
+        Type.Object({
+          kind: Type.Union([
+            Type.Literal("scene"),
+            Type.Literal("actor-condition"),
+            Type.Literal("servant-form"),
+            Type.Literal("economy"),
+            Type.Literal("memory"),
+          ]),
+          event: Type.Unknown({ description: "对应领域事件载荷，与原工具参数相同" }),
+        }),
+      ),
+    }),
+    execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>
+      commitTurnTool(params, ctx.sessionManager),
+  });
 
   pi.registerTool({
     label: toolLabel,
