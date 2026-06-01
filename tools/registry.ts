@@ -416,7 +416,8 @@ export function registerAllTools(pi: ExtensionAPI): void {
       "- 重要 NPC 正式入场且只需要可被 scene/presence 引用：使用 kind=ensure-public-npc（幂等，不覆盖已有 actor）\n" +
       "- 重要 NPC 需要完整公开投影：使用 kind=upsert-public-npc（仅公开身份/外观/关系）\n" +
       "- 开局 setup 确认玩家角色身份后：使用 kind=setup-protagonist\n" +
-      "- 从者入场（有完整职阶/参数/技能/宝具）：使用 kind=upsert-servant\n\n" +
+      "- 从者入场（有完整职阶/参数/技能/宝具）：使用 kind=upsert-servant\n" +
+      "- 创建无主从者时 contractStatus 填 masterless，并省略 masterActorId/masterName，或填 null/none/无\n\n" +
       "【严禁的行为】\n" +
       "- 对普通 NPC 使用 upsert-servant\n" +
       "- 用 upsert-public-npc 写入魔术、真名、宝具、隐藏身份\n" +
@@ -880,8 +881,18 @@ function servantSchema(): ReturnType<typeof Type.Object> {
     spiritualCore: Type.Integer({ description: "0-100 灵核完整度" }),
     mana: Type.Integer({ description: "0-100 从者魔力余量" }),
     spiritualCondition: Type.String({ description: "灵核状态描述，如 完好" }),
-    masterActorId: Type.Union([Type.String(), Type.Null()]),
-    masterName: Type.Union([Type.String(), Type.Null()]),
+    masterActorId: Type.Optional(
+      Type.Union([
+        Type.String({ description: "当前御主 actor id；无主从者可省略、填 null 或填 none" }),
+        Type.Null(),
+      ]),
+    ),
+    masterName: Type.Optional(
+      Type.Union([
+        Type.String({ description: "当前御主玩家可见姓名；无主从者可省略、填 null 或填 无" }),
+        Type.Null(),
+      ]),
+    ),
     contractStatus: Type.Union([
       Type.Literal("stable"),
       Type.Literal("weak"),
@@ -1073,8 +1084,18 @@ function servantFormSchema(): ReturnType<typeof Type.Object> {
 
 function servantContractSchema(): ReturnType<typeof Type.Object> {
   return Type.Object({
-    masterActorId: Type.Union([Type.String(), Type.Null()]),
-    masterName: Type.Union([Type.String(), Type.Null()]),
+    masterActorId: Type.Optional(
+      Type.Union([
+        Type.String({ description: "当前御主 actor id；无主从者可省略、填 null 或填 none" }),
+        Type.Null(),
+      ]),
+    ),
+    masterName: Type.Optional(
+      Type.Union([
+        Type.String({ description: "当前御主玩家可见姓名；无主从者可省略、填 null 或填 无" }),
+        Type.Null(),
+      ]),
+    ),
     status: Type.Union([
       Type.Literal("stable"),
       Type.Literal("weak"),

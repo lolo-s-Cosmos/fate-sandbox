@@ -202,8 +202,8 @@ function upsertServant(
         permanentDefects: [],
       },
       contract: {
-        masterActorId: sv.masterActorId,
-        masterName: sv.masterName,
+        masterActorId: normalizeServantMasterActorId(sv),
+        masterName: normalizeServantMasterName(sv),
         status: sv.contractStatus,
         manaSupply: sv.manaSupply,
       },
@@ -241,6 +241,34 @@ function upsertServant(
 
   writeActor(actor);
   return { message: `从者已写入：${sv.id} (${sv.className})。` };
+}
+
+function normalizeServantMasterActorId(servant: ServantInput): ActorId | null {
+  if (servant.contractStatus !== "masterless") {
+    return assertNonEmptyString(servant.masterActorId, "servant.masterActorId");
+  }
+  if (
+    servant.masterActorId === undefined ||
+    servant.masterActorId === null ||
+    servant.masterActorId === "none"
+  ) {
+    return null;
+  }
+  return assertNonEmptyString(servant.masterActorId, "servant.masterActorId");
+}
+
+function normalizeServantMasterName(servant: ServantInput): string | null {
+  if (servant.contractStatus !== "masterless") {
+    return assertNonEmptyString(servant.masterName, "servant.masterName");
+  }
+  if (
+    servant.masterName === undefined ||
+    servant.masterName === null ||
+    servant.masterName === "无"
+  ) {
+    return null;
+  }
+  return assertNonEmptyString(servant.masterName, "servant.masterName");
 }
 
 function writeActor(actor: PublicActorState): void {
