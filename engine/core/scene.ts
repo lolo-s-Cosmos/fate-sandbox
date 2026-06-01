@@ -19,6 +19,7 @@ const MAX_BEAT_OBJECTIVES = 5;
 
 export type SceneEvent =
   | { kind: "move-location"; location: LocationState; elapsedMinutes: number; reason: string }
+  | { kind: "set-location"; location: LocationState; reason: string }
   | { kind: "set-situation"; situation: SituationKind; reason: string }
   | { kind: "set-story-window"; storyWindow: StoryWindowState; reason: string }
   | { kind: "clear-story-window"; reason: string }
@@ -223,6 +224,8 @@ export function updateScene(event: SceneEvent): SceneEventResult {
   switch (event.kind) {
     case "move-location":
       return moveLocation(event);
+    case "set-location":
+      return setLocation(event);
     case "set-situation":
       return setSituation(event);
     case "set-story-window":
@@ -253,6 +256,13 @@ function moveLocation(event: Extract<SceneEvent, { kind: "move-location" }>): Sc
     draft.public.scene.location = event.location;
   });
   return { message: `地点已更新，经过 ${elapsedMinutes} 分钟。` };
+}
+
+function setLocation(event: Extract<SceneEvent, { kind: "set-location" }>): SceneEventResult {
+  updateState((draft) => {
+    draft.public.scene.location = event.location;
+  });
+  return { message: "地点已修正。" };
 }
 
 function setSituation(event: Extract<SceneEvent, { kind: "set-situation" }>): SceneEventResult {

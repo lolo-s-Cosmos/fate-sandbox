@@ -45,6 +45,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
         Type.Object({
           kind: Type.Union([
             Type.Literal("scene"),
+            Type.Literal("scene-presence"),
             Type.Literal("scene-beat"),
             Type.Literal("actor-condition"),
             Type.Literal("servant-form"),
@@ -53,7 +54,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
           ]),
           event: Type.Unknown({
             description:
-              "对应领域事件载荷；scene-beat 使用 {kind:'begin-beat'|'transition-beat', input:{...}}",
+              "对应领域事件载荷；scene-presence 使用 {presentActorIds, allyActorIds}，也可兼容 scene event kind='set-scene-presence'；scene-beat 使用 {kind:'begin-beat'|'transition-beat', input:{...}}",
           }),
         }),
       ),
@@ -139,10 +140,12 @@ export function registerAllTools(pi: ExtensionAPI): void {
       "按领域事件更新时间、地点、场景态势、剧情窗口、目标、威胁。\n\n" +
       "【必须调用的场景】\n" +
       "- 玩家移动地点或时间推进，且本轮没有其他状态变化\n" +
+      "- 用户/续局明确声明当前地点与状态不一致，只需修正地点且不推进时间：用 kind=set-location\n" +
       "- 场景态势切换为日常、调查、社交、战斗、仪式、逃跑、整备\n" +
       "- 单个当前目标/威胁变化；复杂 beat 用 scene_beat，多事件收口用 commit_turn\n\n" +
       "【严禁的行为】\n" +
       "- 用叙事直接跳过时间或改变地点但不调用工具\n" +
+      "- 用 set-location 表示剧情中的移动；剧情移动必须用 move-location 并提供 elapsedMinutes > 0\n" +
       "- 在复杂 beat 中手动拼 set-story-window/add-objective；改用 scene_beat\n" +
       "- 一轮内同时移动、完成目标、记录 memory，却绕过 commit_turn\n" +
       "- 越过当前 storyWindow.forbiddenEscalations 或未满足 completionCriteria 就提前进入下一战斗\n" +
@@ -151,6 +154,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
     parameters: Type.Object({
       kind: Type.Union([
         Type.Literal("move-location"),
+        Type.Literal("set-location"),
         Type.Literal("set-situation"),
         Type.Literal("set-story-window"),
         Type.Literal("clear-story-window"),

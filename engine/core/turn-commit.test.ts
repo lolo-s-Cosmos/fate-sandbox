@@ -229,6 +229,50 @@ void test("commitTurn accepts flat scene beat events from tool input", () => {
   assert.equal(result.results.length, 1);
 });
 
+void test("commitTurn accepts scene presence events", () => {
+  resetState();
+
+  const result = commitTurn({
+    summary: "凛暂时离场，樱留在厨房。",
+    events: [
+      {
+        kind: "scene-presence",
+        event: {
+          presentActorIds: ["protagonist"],
+          allyActorIds: [],
+        },
+      },
+    ],
+  });
+
+  const state = getState();
+  assert.deepEqual(state.public.scene.presentActorIds, ["protagonist"]);
+  assert.deepEqual(state.public.allyActorIds, []);
+  assert.equal(result.results[0]?.kind, "scene-presence");
+});
+
+void test("commitTurn routes scene set-scene-presence to scene presence", () => {
+  resetState();
+
+  const result = commitTurn({
+    summary: "模型把 presence 当成 scene event。",
+    events: [
+      {
+        kind: "scene",
+        event: {
+          kind: "set-scene-presence",
+          presentActorIds: ["protagonist"],
+          allyActorIds: [],
+        },
+      },
+    ],
+  });
+
+  const state = getState();
+  assert.deepEqual(state.public.scene.presentActorIds, ["protagonist"]);
+  assert.equal(result.results[0]?.kind, "scene-presence");
+});
+
 void test("commitTurn can transition scene beat by objective summaries", () => {
   resetState();
 

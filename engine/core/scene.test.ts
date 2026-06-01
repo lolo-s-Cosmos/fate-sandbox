@@ -24,6 +24,25 @@ void test("updateScene moves location and advances clock", () => {
   assert.equal(state.public.clock.currentAt, "2004-01-30T07:30:00.000Z");
 });
 
+void test("updateScene can correct current location without advancing time", () => {
+  resetState();
+
+  updateScene({
+    kind: "set-location",
+    location: {
+      region: "冬木市",
+      site: "新都",
+      detail: "公园长椅旁",
+      boundary: "normal",
+    },
+    reason: "续局声明当前位置为新都公园",
+  });
+
+  const state = getState();
+  assert.equal(state.public.scene.location.detail, "公园长椅旁");
+  assert.equal(state.public.clock.currentAt, "2004-01-30T07:00:00.000Z");
+});
+
 void test("updateScene rejects zero elapsed movement", () => {
   resetState();
 

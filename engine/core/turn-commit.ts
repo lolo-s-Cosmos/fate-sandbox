@@ -1,3 +1,4 @@
+import type { ScenePresenceInput, ScenePresenceResult } from "./actor";
 import type { ActorConditionEvent, ActorConditionEventResult } from "./actor-condition";
 import type { EconomyEvent, EconomyEventResult } from "./economy";
 import type { MemoryEvent, MemoryEventResult } from "./memory";
@@ -13,6 +14,7 @@ import type {
 } from "./scene";
 import type { ServantFormEvent, ServantFormEventResult } from "./servant";
 
+import { setScenePresence } from "./actor";
 import { updateActorCondition } from "./actor-condition";
 import { updateEconomy } from "./economy";
 import { recordMemory } from "./memory";
@@ -33,7 +35,8 @@ type SceneBeatTurnInputEvent =
   | (WithOptionalReason<SceneBeatMoveInput> & { kind: "move-location" });
 
 export type TurnCommitEvent =
-  | { kind: "scene"; event: WithOptionalReason<SceneEvent> }
+  | { kind: "scene"; event: WithOptionalReason<SceneEvent | ScenePresenceSceneEvent> }
+  | { kind: "scene-presence"; event: WithOptionalReason<ScenePresenceInput> }
   | { kind: "scene-beat"; event: SceneBeatTurnInputEvent }
   | { kind: "actor-condition"; event: WithOptionalReason<ActorConditionEvent> }
   | { kind: "servant-form"; event: WithOptionalReason<ServantFormEvent> }
@@ -47,6 +50,7 @@ export interface TurnCommitInput {
 
 export type TurnCommitHydratedEvent =
   | { kind: "scene"; event: SceneEvent }
+  | { kind: "scene-presence"; event: ScenePresenceInput }
   | { kind: "scene-beat"; event: SceneBeatTurnEvent }
   | { kind: "actor-condition"; event: ActorConditionEvent }
   | { kind: "servant-form"; event: ServantFormEvent }
@@ -60,11 +64,14 @@ export interface TurnCommitHydratedInput {
 
 export type TurnCommitEventResult =
   | { kind: "scene"; result: SceneEventResult }
+  | { kind: "scene-presence"; result: ScenePresenceResult }
   | { kind: "scene-beat"; result: SceneBeatResult | SceneBeatTransitionResult }
   | { kind: "actor-condition"; result: ActorConditionEventResult }
   | { kind: "servant-form"; result: ServantFormEventResult }
   | { kind: "economy"; result: EconomyEventResult }
   | { kind: "memory"; result: MemoryEventResult };
+
+type ScenePresenceSceneEvent = ScenePresenceInput & { kind: "set-scene-presence" };
 
 export interface TurnCommitResult {
   message: string;
@@ -86,7 +93,14 @@ function hydrateTurnCommitInput(input: TurnCommitInput): TurnCommitHydratedInput
 
 function hydrateTurnCommitEvent(event: TurnCommitEvent, summary: string): TurnCommitHydratedEvent {
   switch (event.kind) {
-    case "scene":
+    case "scene": {
+      const hydratedEvent = withDefaultReason(event.event, summary);
+      if (hydratedEvent.kind === "set-scene-presence") {
+        return { kind: "scene-presence", event: toScenePresenceInput(hydratedEvent) };
+      }
+      return { kind: event.kind, event: hydratedEvent };
+    }
+    case "scene-presence":
       return { kind: event.kind, event: withDefaultReason(event.event, summary) };
     case "scene-beat":
       return { kind: event.kind, event: withSceneBeatDefaultReason(event.event, summary) };
@@ -132,6 +146,14 @@ function withSceneBeatDefaultReason(
   }
 }
 
+function toScenePresenceInput(event: ScenePresenceSceneEvent): ScenePresenceInput {
+  return {
+    presentActorIds: event.presentActorIds,
+    allyActorIds: event.allyActorIds,
+    reason: event.reason,
+  };
+}
+
 function commitHydratedTurn(input: TurnCommitHydratedInput): TurnCommitResult {
   if (input.events.length === 0) {
     throw new Error("commit_turn 至少需要一个领域事件；若本轮没有状态变化，请不要调用。");
@@ -150,6 +172,8 @@ function applyTurnEvent(event: TurnCommitHydratedEvent): TurnCommitEventResult {
   switch (event.kind) {
     case "scene":
       return { kind: event.kind, result: updateScene(event.event) };
+    case "scene-presence":
+      return { kind: event.kind, result: setScenePresence(event.event) };
     case "scene-beat":
       return {
         kind: event.kind,
