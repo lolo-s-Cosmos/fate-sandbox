@@ -51,6 +51,37 @@ void test("commitTurn rejects empty commits", () => {
   );
 });
 
+void test("commitTurn rolls back earlier events when a later event fails", () => {
+  resetState();
+
+  assert.throws(
+    () =>
+      commitTurn({
+        summary: "测试事务回滚。",
+        events: [
+          {
+            kind: "economy",
+            event: { kind: "spend-money", ownerActorId: "protagonist", amount: 1000 },
+          },
+          {
+            kind: "memory",
+            event: {
+              kind: "record-major-event",
+              title: "柳洞寺确认情报",
+              summary: "凛确认 Caster 正在柳洞寺。",
+              consequences: ["Caster 位置已确认。"],
+            },
+          },
+        ],
+      }),
+    /公开记忆不能把敏感\/隐藏情报写成 confirmed fact/,
+  );
+
+  const state = getState();
+  assert.equal(state.public.economy.accessibleFunds[0]?.amount, 50000);
+  assert.equal(state.public.memory.eventLog.length, 0);
+});
+
 void test("commitTurn warns when a story window has no active objectives", () => {
   resetState();
 

@@ -88,6 +88,33 @@ void test("updateEconomy requires a counterparty for gained money", () => {
   );
 });
 
+void test("updateEconomy rejects zero amount changes", () => {
+  resetState();
+
+  assert.throws(
+    () =>
+      updateEconomy({
+        kind: "gain-money",
+        purseId: "purse-protagonist-cash",
+        amount: 0,
+        source: "earned",
+        counterparty: "藤村大河",
+        reason: "报酬",
+      }),
+    /必须大于 0/,
+  );
+  assert.throws(
+    () =>
+      updateEconomy({
+        kind: "spend-money",
+        purseId: "purse-protagonist-cash",
+        amount: 0,
+        reason: "测试零额支出",
+      }),
+    /必须大于 0/,
+  );
+});
+
 void test("updateEconomy rejects overspending", () => {
   resetState();
 

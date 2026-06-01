@@ -574,6 +574,16 @@ export function updateState(mutator: (draft: State) => void): State {
   return cloneState();
 }
 
+export function transactState<T>(operation: () => T): T {
+  const before = cloneState();
+  try {
+    return operation();
+  } catch (error) {
+    setStore(before);
+    throw error;
+  }
+}
+
 export function resetState(): State {
   const fresh = createInitialState();
   setStore(fresh);

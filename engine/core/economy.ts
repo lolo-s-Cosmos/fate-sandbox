@@ -7,6 +7,14 @@ import {
   type MoneyPurse,
 } from "./state";
 
+function assertPositiveInteger(value: unknown, fieldName: string): number {
+  const amount = assertNonNegativeInteger(value, fieldName);
+  if (amount === 0) {
+    throw new Error(`非法${fieldName}: 0。必须大于 0。`);
+  }
+  return amount;
+}
+
 export type MoneyGainSource =
   | "earned"
   | "refund"
@@ -54,7 +62,7 @@ export function updateEconomy(event: EconomyEvent): EconomyEventResult {
       return changePurseAmount(
         event.purseId,
         event.ownerActorId,
-        -assertNonNegativeInteger(event.amount, "amount"),
+        -assertPositiveInteger(event.amount, "amount"),
         "资金已支出。",
         event.reason,
       );
@@ -63,7 +71,7 @@ export function updateEconomy(event: EconomyEvent): EconomyEventResult {
       return changePurseAmount(
         event.purseId,
         event.ownerActorId,
-        assertNonNegativeInteger(event.amount, "amount"),
+        assertPositiveInteger(event.amount, "amount"),
         "资金已增加。",
         event.reason,
       );
@@ -97,7 +105,7 @@ function changePurseAmount(
 
 function assertAuditableGain(event: Extract<EconomyEvent, { kind: "gain-money" }>): void {
   assertNonEmptyString(event.counterparty, "counterparty");
-  const amount = assertNonNegativeInteger(event.amount, "amount");
+  const amount = assertPositiveInteger(event.amount, "amount");
   if (amount > 50000 && event.source === "found") {
     throw new Error(
       "大额资金增加不能标记为 found；必须提供可审计来源如 sale/withdrawal/gift/earned。不能用 gain-money 把现金设为目标数值。",
@@ -161,7 +169,7 @@ function addPurse(event: Extract<EconomyEvent, { kind: "add-purse" }>): EconomyE
       id: createId("purse"),
       ownerActorId: event.ownerActorId,
       label: assertNonEmptyString(event.label, "label"),
-      amount: assertNonNegativeInteger(event.amount, "amount"),
+      amount: assertPositiveInteger(event.amount, "amount"),
       access: event.access,
     });
   });
@@ -177,7 +185,7 @@ function addDebt(event: Extract<EconomyEvent, { kind: "add-debt" }>): EconomyEve
       id: createId("debt"),
       debtorActorId: event.debtorActorId,
       creditor: assertNonEmptyString(event.creditor, "creditor"),
-      amount: assertNonNegativeInteger(event.amount, "amount"),
+      amount: assertPositiveInteger(event.amount, "amount"),
       reason: assertNonEmptyString(event.reason, "reason"),
     });
   });

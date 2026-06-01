@@ -18,7 +18,7 @@ import { updateEconomy } from "./economy";
 import { recordMemory } from "./memory";
 import { beginSceneBeat, moveToSceneBeat, transitionSceneBeat, updateScene } from "./scene";
 import { updateServantForm } from "./servant";
-import { assertNonEmptyString, getState } from "./state";
+import { assertNonEmptyString, getState, transactState } from "./state";
 
 type WithOptionalReason<T> = T extends { reason: string }
   ? Omit<T, "reason"> & { reason?: string }
@@ -73,7 +73,7 @@ export interface TurnCommitResult {
 }
 
 export function commitTurn(input: TurnCommitInput): TurnCommitResult {
-  return commitHydratedTurn(hydrateTurnCommitInput(input));
+  return transactState(() => commitHydratedTurn(hydrateTurnCommitInput(input)));
 }
 
 function hydrateTurnCommitInput(input: TurnCommitInput): TurnCommitHydratedInput {
