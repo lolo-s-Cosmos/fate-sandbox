@@ -63,6 +63,26 @@ void test("recordMemory requires structured claims", () => {
   }, /必须提供 claims/);
 });
 
+void test("recordMemory accepts missing major event consequences as empty", () => {
+  resetState();
+
+  const result = recordMemory({
+    kind: "record-major-event",
+    title: "新都采购急救物资",
+    summary: "卫宫士郎与远坂凛在新都商业街采购急救物资并返回卫宫宅。",
+    claims: [
+      {
+        kind: "mundane",
+        statement: "卫宫士郎在新都商业街购买了急救物资。",
+        certainty: "observed",
+      },
+    ],
+  });
+
+  const event = getState().public.memory.eventLog.find((entry) => entry.id === result.eventId);
+  assert.deepEqual(event?.consequences, []);
+});
+
 void test("recordMemory rejects non-mundane confirmed claims without evidence", () => {
   resetState();
 

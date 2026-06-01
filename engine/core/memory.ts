@@ -47,7 +47,7 @@ export type MemoryEvent =
       kind: "record-major-event";
       title: string;
       summary: string;
-      consequences: string[];
+      consequences?: string[];
       claims: MemoryClaim[];
     }
   | {
@@ -106,12 +106,17 @@ function recordMajorEvent(
       time: draft.public.clock.currentAt,
       title: assertNonEmptyString(event.title, "title"),
       summary: assertNonEmptyString(event.summary, "summary"),
-      consequences: event.consequences.map((consequence) =>
-        assertNonEmptyString(consequence, "consequences[]"),
-      ),
+      consequences: normalizeConsequences(event.consequences),
     });
   });
   return { eventId: id };
+}
+
+function normalizeConsequences(consequences: readonly string[] | undefined): string[] {
+  if (consequences === undefined) {
+    return [];
+  }
+  return consequences.map((consequence) => assertNonEmptyString(consequence, "consequences[]"));
 }
 
 function validateClaims(claims: readonly MemoryClaim[] | undefined): void {
