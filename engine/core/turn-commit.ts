@@ -59,6 +59,7 @@ function commitCanonicalTurn(input: TurnCommitInput): TurnCommitResult {
   }
 
   const results = input.events.map(applyTurnEvent);
+  assertNoCompletedOpenStoryWindow();
   const warnings = collectWarnings();
   return {
     message: formatMessage(summary, results, warnings),
@@ -101,6 +102,26 @@ function applySceneBeatEvent(
     default:
       throw new Error("unreachable scene beat event kind");
   }
+}
+
+function assertNoCompletedOpenStoryWindow(): void {
+  const state = getState();
+  const storyWindow = state.public.scene.storyWindow;
+  if (storyWindow === null) {
+    return;
+  }
+  const activeObjectives = state.public.scene.objectives.filter(
+    (objective) => objective.status !== "resolved",
+  );
+  if (activeObjectives.length > 0) {
+    return;
+  }
+  throw new Error(
+    [
+      `无法提交回合：当前 Scene Beat「${storyWindow.title}」没有未解决的 Scene Objective。`,
+      "请在同一个 commit_turn 中使用 scene-beat transition-beat 关闭当前 beat，或改用 finish_current_beat。",
+    ].join("\n"),
+  );
 }
 
 function collectWarnings(): string[] {

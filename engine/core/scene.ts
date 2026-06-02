@@ -149,6 +149,9 @@ function beginSceneBeatOnDraft(
   objectiveIds: SceneObjectiveId[],
   threatIds: SceneThreatId[],
 ): void {
+  if (draft.public.scene.storyWindow !== null) {
+    throw new Error(formatActiveBeatExistsError(draft.public.scene.storyWindow));
+  }
   draft.public.scene.storyWindow = input.storyWindow;
   if (input.situation !== undefined) {
     draft.public.scene.situation = input.situation;
@@ -282,6 +285,9 @@ function setStoryWindow(
   event: Extract<SceneEvent, { kind: "set-story-window" }>,
 ): SceneEventResult {
   updateState((draft) => {
+    if (draft.public.scene.storyWindow !== null) {
+      throw new Error(formatActiveBeatExistsError(draft.public.scene.storyWindow));
+    }
     draft.public.scene.storyWindow = event.storyWindow;
   });
   return { message: `剧情窗口已更新：${event.storyWindow.title}。` };
@@ -416,6 +422,13 @@ function findObjectiveBySummary(
   return objectives.find(
     (entry) => entry.summary.includes(summary) || summary.includes(entry.summary),
   );
+}
+
+function formatActiveBeatExistsError(storyWindow: StoryWindowState): string {
+  return [
+    `无法开始新的 Scene Beat：当前已有 active beat ${storyWindow.currentBeatId}（${storyWindow.title}）。`,
+    "同一时间只能有一个 active storyWindow；请先使用 finish_current_beat 完成当前 beat，或用 transitionSceneBeat 关闭当前 beat 后再开启下一个。",
+  ].join("\n");
 }
 
 function formatUnresolvedObjectivesError(

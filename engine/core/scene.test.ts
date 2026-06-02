@@ -195,6 +195,166 @@ void test("moveToSceneBeat moves location advances clock and opens beat atomical
   assert.equal(result.threatIds.length, 1);
 });
 
+void test("beginSceneBeat rejects opening over an active beat", () => {
+  resetState();
+
+  beginSceneBeat({
+    storyWindow: {
+      currentArcId: "B1",
+      currentBeatId: "active-beat",
+      title: "当前 beat",
+      allowedActions: ["观察"],
+      forbiddenEscalations: [],
+      completionCriteria: ["记录"],
+      nextBeatHints: [],
+    },
+    objectives: ["记录"],
+    reason: "设置当前 beat",
+  });
+
+  assert.throws(
+    () =>
+      beginSceneBeat({
+        storyWindow: {
+          currentArcId: "B1",
+          currentBeatId: "second-beat",
+          title: "第二个 beat",
+          allowedActions: ["观察"],
+          forbiddenEscalations: [],
+          completionCriteria: ["记录"],
+          nextBeatHints: [],
+        },
+        objectives: ["记录"],
+        reason: "不能叠开 beat",
+      }),
+    /当前已有 active beat active-beat/,
+  );
+
+  assert.equal(getState().public.scene.storyWindow?.currentBeatId, "active-beat");
+});
+
+void test("moveToSceneBeat rejects opening over an active beat", () => {
+  resetState();
+
+  beginSceneBeat({
+    storyWindow: {
+      currentArcId: "B1",
+      currentBeatId: "active-beat",
+      title: "当前 beat",
+      allowedActions: ["观察"],
+      forbiddenEscalations: [],
+      completionCriteria: ["记录"],
+      nextBeatHints: [],
+    },
+    objectives: ["记录"],
+    reason: "设置当前 beat",
+  });
+
+  assert.throws(
+    () =>
+      moveToSceneBeat({
+        storyWindow: {
+          currentArcId: "B1",
+          currentBeatId: "second-beat",
+          title: "第二个 beat",
+          allowedActions: ["观察"],
+          forbiddenEscalations: [],
+          completionCriteria: ["记录"],
+          nextBeatHints: [],
+        },
+        objectives: ["记录"],
+        location: {
+          region: "冬木市",
+          site: "深山镇",
+          detail: "商店街",
+          boundary: "normal",
+        },
+        elapsedMinutes: 10,
+        reason: "不能移动时叠开 beat",
+      }),
+    /当前已有 active beat active-beat/,
+  );
+
+  const state = getState();
+  assert.equal(state.public.scene.storyWindow?.currentBeatId, "active-beat");
+  assert.equal(state.public.clock.currentAt, "2004-01-30T07:00:00.000Z");
+});
+
+void test("updateScene set-story-window rejects replacing an active beat", () => {
+  resetState();
+
+  beginSceneBeat({
+    storyWindow: {
+      currentArcId: "B1",
+      currentBeatId: "active-beat",
+      title: "当前 beat",
+      allowedActions: ["观察"],
+      forbiddenEscalations: [],
+      completionCriteria: ["记录"],
+      nextBeatHints: [],
+    },
+    objectives: ["记录"],
+    reason: "设置当前 beat",
+  });
+
+  assert.throws(
+    () =>
+      updateScene({
+        kind: "set-story-window",
+        storyWindow: {
+          currentArcId: "B1",
+          currentBeatId: "manual-second-beat",
+          title: "手动第二 beat",
+          allowedActions: ["观察"],
+          forbiddenEscalations: [],
+          completionCriteria: ["记录"],
+          nextBeatHints: [],
+        },
+        reason: "不能手动覆盖 active beat",
+      }),
+    /当前已有 active beat active-beat/,
+  );
+});
+
+void test("transitionSceneBeat can close current beat and open the next beat", () => {
+  resetState();
+
+  beginSceneBeat({
+    storyWindow: {
+      currentArcId: "B1",
+      currentBeatId: "active-beat",
+      title: "当前 beat",
+      allowedActions: ["观察"],
+      forbiddenEscalations: [],
+      completionCriteria: ["记录"],
+      nextBeatHints: [],
+    },
+    objectives: ["记录"],
+    reason: "设置当前 beat",
+  });
+
+  transitionSceneBeat({
+    completedBeatId: "active-beat",
+    resolveAllObjectives: true,
+    nextBeat: {
+      storyWindow: {
+        currentArcId: "B1",
+        currentBeatId: "next-beat",
+        title: "下一个 beat",
+        allowedActions: ["整理"],
+        forbiddenEscalations: [],
+        completionCriteria: ["整理完成"],
+        nextBeatHints: [],
+      },
+      objectives: ["整理完成"],
+      reason: "线性切换 beat",
+    },
+    reason: "完成当前 beat",
+  });
+
+  assert.equal(getState().public.scene.storyWindow?.currentBeatId, "next-beat");
+});
+
 void test("beginSceneBeat rejects beats without objectives", () => {
   resetState();
 
