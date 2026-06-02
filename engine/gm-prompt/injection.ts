@@ -4,6 +4,12 @@ import { fileURLToPath } from "node:url";
 
 import { buildGmBrief } from "../core/gm-brief";
 import { getPublicState } from "../core/state";
+import {
+  loadPromptPreset,
+  type PromptPreset,
+  type PromptPresetModule,
+  type PromptSlot,
+} from "./preset";
 
 export interface TextMessage {
   role: "user";
@@ -13,19 +19,12 @@ export interface TextMessage {
 
 export interface PromptAssets {
   system: string;
-  context: string;
-  rules: string;
-  think: string;
-  style: string;
-  render: string;
-  outputContract: string;
+  preset: PromptPreset;
 }
 
 interface UserProfile {
   text: string;
 }
-
-type PromptSlot = "pre-history" | "post-last-user" | "final-contract";
 
 interface PromptModule {
   id: string;
@@ -36,23 +35,17 @@ interface PromptModule {
 }
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = join(__dirname, "..", "..");
 
 let cachedAssets: PromptAssets | null = null;
 let cachedUserProfile: UserProfile | null = null;
+const cachedFileSources = new Map<string, string>();
 
 export function loadPromptAssets(): PromptAssets {
   if (cachedAssets === null) {
     cachedAssets = {
-      system: readFileSync(join(__dirname, "..", "..", "agents", "gm-system.md"), "utf-8"),
-      context: readFileSync(join(__dirname, "..", "..", "agents", "gm-context.md"), "utf-8"),
-      rules: readFileSync(join(__dirname, "..", "..", "agents", "gm-rules.md"), "utf-8"),
-      think: readFileSync(join(__dirname, "..", "..", "agents", "gm-think.md"), "utf-8"),
-      style: readFileSync(join(__dirname, "..", "..", "agents", "gm-style.md"), "utf-8"),
-      render: readFileSync(join(__dirname, "..", "..", "agents", "gm-render.md"), "utf-8"),
-      outputContract: readFileSync(
-        join(__dirname, "..", "..", "agents", "gm-output-contract.md"),
-        "utf-8",
-      ),
+      system: readFileSync(join(PROJECT_ROOT, "agents", "gm-system.md"), "utf-8"),
+      preset: loadPromptPreset(PROJECT_ROOT),
     };
   }
   return cachedAssets;
@@ -86,66 +79,40 @@ export function injectGmPromptMessages<TMessage>(
 }
 
 function buildPromptModules(): PromptModule[] {
-  const assets = loadPromptAssets();
-  const modules: PromptModule[] = [
-    {
-      id: "world-context",
-      slot: "pre-history",
-      priority: 10,
-      header: "world_context",
-      body: assets.context,
-    },
-    {
-      id: "player-character",
-      slot: "pre-history",
-      priority: 20,
-      header: "player_character",
-      body: loadUserProfile().text,
-    },
-    {
-      id: "writing-guide",
-      slot: "pre-history",
-      priority: 30,
-      header: "writing_guide",
-      body: assets.style,
-    },
-    {
-      id: "render-protocol",
-      slot: "pre-history",
-      priority: 40,
-      header: "render_protocol",
-      body: assets.render,
-    },
-    {
-      id: "mechanical-state",
-      slot: "post-last-user",
-      priority: 10,
-      header: "mechanical_state",
-      body: buildStatePressureText(),
-    },
-    {
-      id: "hard-rules",
-      slot: "post-last-user",
-      priority: 20,
-      header: "hard_rules",
-      body: assets.rules,
-    },
-    {
-      id: "story-driver",
-      slot: "post-last-user",
-      priority: 30,
-      header: "story_driver",
-      body: assets.think,
-    },
-    {
-      id: "output-contract",
-      slot: "final-contract",
-      priority: 10,
-      header: "output_contract",
-      body: assets.outputContract,
-    },
-  ];
-  return modules.filter((module) => module.body.length > 0);
+  return loadPromptAssets()
+    .preset.modules.filter((module) => module.enabled)
+    .map(resolvePromptModule)
+    .filter((module) => module.body.length > 0);
+}
+
+function resolvePromptModule(module: PromptPresetModule): PromptModule {
+  return {
+    id: module.id,
+    slot: module.slot,
+    priority: module.priority,
+    header: module.header,
+    body: resolvePromptModuleBody(module),
+  };
+}
+
+function resolvePromptModuleBody(module: PromptPresetModule): string {
+  if (module.source.kind === "file") {
+    return readPromptFile(module.source.path);
+  }
+  if (module.source.name === "player-character") {
+    return loadUserProfile().text;
+  }
+  return buildStatePressureText();
+}
+
+function readPromptFile(path: string): string {
+  const cached = cachedFileSources.get(path);
+  if (cached !== undefined) {
+    return cached;
+  }
+  const content = readFileSync(join(PROJECT_ROOT, path), "utf-8");
+  cachedFileSources.set(path, content);
+  return content;
 }
 
 function buildSlotMessages(slot: PromptSlot): TextMessage[] {
@@ -201,7 +168,7 @@ function loadUserProfile(): UserProfile {
 }
 
 function readUserProfile(): UserProfile {
-  const path = join(__dirname, "..", "..", "data", "user.json");
+  const path = join(PROJECT_ROOT, "data", "user.json");
   const raw = readFileSync(path, "utf-8");
   const parsed = parseJsonObject(raw, path);
   const name = parsed["姓名"];

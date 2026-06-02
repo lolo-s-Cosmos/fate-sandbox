@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "modules": [
+    {
+      "id": "world-context",
+      "enabled": true,
+      "slot": "pre-history",
+      "priority": 10,
+      "header": "world_context",
+      "source": "agents/gm-context.md"
+    },
+    {
+      "id": "player-character",
+      "enabled": true,
+      "slot": "pre-history",
+      "priority": 20,
+      "header": "player_character",
+      "source": "runtime:player-character"
+    },
+    {
+      "id": "writing-guide",
+      "enabled": true,
+      "slot": "pre-history",
+      "priority": 30,
+      "header": "writing_guide",
+      "source": "agents/gm-style.md"
+    },
+    {
+      "id": "render-protocol",
+      "enabled": true,
+      "slot": "pre-history",
+      "priority": 40,
+      "header": "render_protocol",
+      "source": "agents/gm-render.md"
+    },
+    {
+      "id": "mechanical-state",
+      "enabled": true,
+      "slot": "post-last-user",
+      "priority": 10,
+      "header": "mechanical_state",
+      "source": "runtime:state-brief"
+    },
+    {
+      "id": "hard-rules",
+      "enabled": true,
+      "slot": "post-last-user",
+      "priority": 20,
+      "header": "hard_rules",
+      "source": "agents/gm-rules.md"
+    },
+    {
+      "id": "story-driver",
+      "enabled": true,
+      "slot": "post-last-user",
+      "priority": 30,
+      "header": "story_driver",
+      "source": "agents/gm-think.md"
+    },
+    {
+      "id": "output-contract",
+      "enabled": true,
+      "slot": "final-contract",
+      "priority": 10,
+      "header": "output_contract",
+      "source": "agents/gm-output-contract.md"
+    }
+  ]
+}
