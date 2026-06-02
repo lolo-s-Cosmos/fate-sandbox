@@ -493,15 +493,13 @@ export function registerAllTools(pi: ExtensionAPI): void {
       "- 用 upsert-public-npc 写入魔术、真名、宝具、隐藏身份\n" +
       "- 把世界角色数据库全量塞进 state；只写本局需要追踪的 actor",
     parameters: Type.Object({
-      kind: Type.Union([
-        Type.Literal("setup-protagonist"),
-        Type.Literal("ensure-public-npc"),
-        Type.Literal("upsert-public-npc"),
-        Type.Literal("upsert-servant"),
-      ]),
+      kind: Type.String({
+        description:
+          "允许: setup-protagonist, ensure-public-npc, upsert-public-npc, upsert-servant",
+      }),
       actor: Type.Optional(publicActorSchema()),
-      npc: Type.Optional(Type.Union([publicNpcSchema(), publicNpcSkeletonSchema()])),
-      servant: Type.Optional(servantSchema()),
+      npc: Type.Optional(loosePublicNpcSchema()),
+      servant: Type.Optional(looseServantSchema()),
       reason: Type.String(),
     }),
     execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>
@@ -794,85 +792,27 @@ function storyWindowSchema(): ReturnType<typeof Type.Object> {
   });
 }
 
-function publicNpcSchema(): ReturnType<typeof Type.Object> {
+function loosePublicNpcSchema(): ReturnType<typeof Type.Object> {
   return Type.Object({
-    id: Type.String(),
-    kind: Type.Union([
-      Type.Literal("human"),
-      Type.Literal("outsider"),
-      Type.Literal("spirit"),
-      Type.Literal("other"),
-    ]),
-    displayName: Type.String({ description: "玩家可见称呼/姓名" }),
-    publicIdentity: Type.String({ description: "玩家当前可知身份摘要；不得写隐藏身份" }),
-    apparentAge: Type.String(),
-    outfit: Type.Object({ label: Type.String(), details: Type.String() }),
-    demeanor: Type.String({ description: "玩家可见举止；不得写私密动机" }),
-    publicRoles: Type.Array(
-      Type.Union([
-        Type.Object({ kind: Type.Literal("social"), label: Type.String() }),
-        Type.Object({
-          kind: Type.Literal("faction"),
-          factionId: Type.String(),
-          label: Type.String(),
-        }),
-      ]),
+    id: Type.Optional(Type.String({ description: "upsert-public-npc 使用：actor id" })),
+    actorId: Type.Optional(Type.String({ description: "ensure-public-npc 使用：actor id" })),
+    kind: Type.Optional(
+      Type.String({ description: "upsert-public-npc 使用：human / outsider / spirit / other" }),
     ),
-    relationshipToProtagonist: Type.Object({
-      stance: Type.Union([
-        Type.Literal("self"),
-        Type.Literal("ally"),
-        Type.Literal("friendly"),
-        Type.Literal("neutral"),
-        Type.Literal("wary"),
-        Type.Literal("hostile"),
-        Type.Literal("unknown"),
-      ]),
-      summary: Type.String(),
-    }),
-    ordinaryItems: Type.Array(Type.String()),
-  });
-}
-
-function publicNpcSkeletonSchema(): ReturnType<typeof Type.Object> {
-  return Type.Object({
-    actorId: Type.String({ description: "actor id，如 tohsaka-rin；已存在时不会覆盖 actor" }),
     npcKind: Type.Optional(
-      Type.Union([
-        Type.Literal("human"),
-        Type.Literal("outsider"),
-        Type.Literal("spirit"),
-        Type.Literal("other"),
-      ]),
+      Type.String({ description: "ensure-public-npc 使用：human / outsider / spirit / other" }),
     ),
     displayName: Type.String({ description: "玩家可见称呼/姓名" }),
     publicIdentity: Type.String({ description: "玩家当前可知身份摘要；不得写隐藏身份" }),
     apparentAge: Type.Optional(Type.String()),
     outfit: Type.Optional(Type.Object({ label: Type.String(), details: Type.String() })),
     demeanor: Type.Optional(Type.String({ description: "玩家可见举止；不得写私密动机" })),
-    publicRoles: Type.Optional(
-      Type.Array(
-        Type.Union([
-          Type.Object({ kind: Type.Literal("social"), label: Type.String() }),
-          Type.Object({
-            kind: Type.Literal("faction"),
-            factionId: Type.String(),
-            label: Type.String(),
-          }),
-        ]),
-      ),
-    ),
+    publicRoles: Type.Optional(Type.Array(looseActorRoleSchema())),
     relationshipToProtagonist: Type.Optional(
       Type.Object({
-        stance: Type.Union([
-          Type.Literal("self"),
-          Type.Literal("ally"),
-          Type.Literal("friendly"),
-          Type.Literal("neutral"),
-          Type.Literal("wary"),
-          Type.Literal("hostile"),
-          Type.Literal("unknown"),
-        ]),
+        stance: Type.String({
+          description: "self / ally / friendly / neutral / wary / hostile / unknown",
+        }),
         summary: Type.String(),
       }),
     ),
@@ -880,7 +820,17 @@ function publicNpcSkeletonSchema(): ReturnType<typeof Type.Object> {
   });
 }
 
-function servantSchema(): ReturnType<typeof Type.Object> {
+function looseActorRoleSchema(): ReturnType<typeof Type.Object> {
+  return Type.Object({
+    kind: Type.String({ description: "social / faction / master" }),
+    label: Type.Optional(Type.String()),
+    factionId: Type.Optional(Type.String()),
+    commandSpells: Type.Optional(Type.Object({ total: Type.Integer(), remaining: Type.Integer() })),
+    contractedServantIds: Type.Optional(Type.Array(Type.String())),
+  });
+}
+
+function looseServantSchema(): ReturnType<typeof Type.Object> {
   return Type.Object({
     id: Type.String({ description: "从者 actor id，如 caster 或 assassin" }),
     displayName: Type.String({ description: "玩家可见称呼，如 Caster 或 佐佐木小次郎" }),
@@ -888,21 +838,11 @@ function servantSchema(): ReturnType<typeof Type.Object> {
     apparentAge: Type.String(),
     outfit: Type.Object({ label: Type.String(), details: Type.String() }),
     demeanor: Type.String(),
-    className: Type.Union([
-      Type.Literal("Saber"),
-      Type.Literal("Archer"),
-      Type.Literal("Lancer"),
-      Type.Literal("Rider"),
-      Type.Literal("Caster"),
-      Type.Literal("Assassin"),
-      Type.Literal("Berserker"),
-    ]),
+    className: Type.String({
+      description: "Saber / Archer / Lancer / Rider / Caster / Assassin / Berserker",
+    }),
     trueNameDisplay: Type.String({ description: "真名显示文本；hidden 时填职阶名如 Caster" }),
-    trueNameStatus: Type.Union([
-      Type.Literal("hidden"),
-      Type.Literal("suspected"),
-      Type.Literal("revealed"),
-    ]),
+    trueNameStatus: Type.String({ description: "hidden / suspected / revealed" }),
     parameters: Type.Object({
       strength: Type.String({ description: "Fate rank，如 B 或 A+" }),
       endurance: Type.String(),
@@ -930,64 +870,24 @@ function servantSchema(): ReturnType<typeof Type.Object> {
         name: Type.String(),
         rank: Type.String({ description: "Fate rank" }),
         kind: Type.String({ description: "宝具类型，如 对魔术宝具" }),
-        status: Type.Union([
-          Type.Literal("hidden"),
-          Type.Literal("suspected"),
-          Type.Literal("revealed"),
-        ]),
+        status: Type.String({ description: "hidden / suspected / revealed" }),
         summary: Type.String(),
       }),
     ),
     spiritualCore: Type.Integer({ description: "0-100 灵核完整度" }),
     mana: Type.Integer({ description: "0-100 从者魔力余量" }),
     spiritualCondition: Type.String({ description: "灵核状态描述，如 完好" }),
-    masterActorId: Type.Optional(
-      Type.Union([
-        Type.String({ description: "当前御主 actor id；无主从者可省略、填 null 或填 none" }),
-        Type.Null(),
-      ]),
-    ),
-    masterName: Type.Optional(
-      Type.Union([
-        Type.String({ description: "当前御主玩家可见姓名；无主从者可省略、填 null 或填 无" }),
-        Type.Null(),
-      ]),
-    ),
-    contractStatus: Type.Union([
-      Type.Literal("stable"),
-      Type.Literal("weak"),
-      Type.Literal("cut"),
-      Type.Literal("masterless"),
-    ]),
-    manaSupply: Type.Union([
-      Type.Literal("sufficient"),
-      Type.Literal("strained"),
-      Type.Literal("starved"),
-    ]),
+    masterActorId: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+    masterName: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+    contractStatus: Type.String({ description: "stable / weak / cut / masterless" }),
+    manaSupply: Type.String({ description: "sufficient / strained / starved" }),
     currentOrder: Type.String({ description: "当前御主命令或自主行动目标" }),
-    publicRoles: Type.Optional(
-      Type.Array(
-        Type.Union([
-          Type.Object({ kind: Type.Literal("social"), label: Type.String() }),
-          Type.Object({
-            kind: Type.Literal("faction"),
-            factionId: Type.String(),
-            label: Type.String(),
-          }),
-        ]),
-      ),
-    ),
+    publicRoles: Type.Optional(Type.Array(looseActorRoleSchema())),
     relationshipToProtagonist: Type.Optional(
       Type.Object({
-        stance: Type.Union([
-          Type.Literal("self"),
-          Type.Literal("ally"),
-          Type.Literal("friendly"),
-          Type.Literal("neutral"),
-          Type.Literal("wary"),
-          Type.Literal("hostile"),
-          Type.Literal("unknown"),
-        ]),
+        stance: Type.String({
+          description: "self / ally / friendly / neutral / wary / hostile / unknown",
+        }),
         summary: Type.String(),
       }),
     ),

@@ -44,6 +44,48 @@ void test("upsertActorTool normalizes placeholder master fields for masterless s
   assert.equal(contract?.masterName, null);
 });
 
+void test("upsertActorTool reports invalid servant enums in domain language", () => {
+  resetState();
+
+  assert.throws(
+    () =>
+      upsertActorTool(
+        {
+          kind: "upsert-servant",
+          servant: {
+            ...baseMasterlessServant(),
+            contractStatus: "free",
+          },
+          reason: "测试非法契约状态",
+        },
+        createNoopSessionManager(),
+      ),
+    /非法 servant\.contractStatus: free。允许值: stable, weak, cut, masterless。/,
+  );
+});
+
+void test("upsertActorTool reports invalid npc relationship stance in domain language", () => {
+  resetState();
+
+  assert.throws(
+    () =>
+      upsertActorTool(
+        {
+          kind: "ensure-public-npc",
+          npc: {
+            actorId: "tohsaka-rin",
+            displayName: "远坂凛",
+            publicIdentity: "穗群原学园学生",
+            relationshipToProtagonist: { stance: "close", summary: "关系尚未明确。" },
+          },
+          reason: "测试非法关系 stance",
+        },
+        createNoopSessionManager(),
+      ),
+    /非法 npc\.relationshipToProtagonist\.stance: close。允许值: self, ally, friendly, neutral, wary, hostile, unknown。/,
+  );
+});
+
 function baseMasterlessServant(): Record<string, unknown> {
   return {
     id: "masterless-caster",
