@@ -15,6 +15,8 @@ export interface PromptAssets {
   system: string;
   context: string;
   rules: string;
+  think: string;
+  style: string;
 }
 
 interface UserProfile {
@@ -32,6 +34,8 @@ export function loadPromptAssets(): PromptAssets {
       system: readFileSync(join(__dirname, "..", "..", "agents", "gm-system.md"), "utf-8"),
       context: readFileSync(join(__dirname, "..", "..", "agents", "gm-context.md"), "utf-8"),
       rules: readFileSync(join(__dirname, "..", "..", "agents", "gm-rules.md"), "utf-8"),
+      think: readFileSync(join(__dirname, "..", "..", "agents", "gm-think.md"), "utf-8"),
+      style: readFileSync(join(__dirname, "..", "..", "agents", "gm-style.md"), "utf-8"),
     };
   }
   return cachedAssets;
@@ -60,6 +64,8 @@ export function injectGmPromptMessages<TMessage>(
     lastUserMessage,
     buildStatePressureMessage(),
     buildRulesMessage(),
+    buildThinkMessage(),
+    buildStyleMessage(),
     ...messages.slice(lastUserIndex + 1),
   ];
 }
@@ -88,12 +94,30 @@ function buildContextMessage(): TextMessage {
 }
 
 function buildRulesMessage(): TextMessage {
-  const text =
-    `[以下是你必须严格遵守的叙事铁则——视为最高优先级指令]\n\n${loadPromptAssets().rules}\n\n---\n以上铁则已加载完毕。\n` +
-    "请注意：上述所有规则均为硬性约束。你的思考和最终输出请优先使用中文。";
+  return buildInjectedUserMessage(
+    "[硬规则模块 — 最高优先级，决定世界与机械边界]",
+    loadPromptAssets().rules,
+  );
+}
+
+function buildThinkMessage(): TextMessage {
+  return buildInjectedUserMessage(
+    "[内部检查模块 — 只用于自检，禁止写进最终回复]",
+    loadPromptAssets().think,
+  );
+}
+
+function buildStyleMessage(): TextMessage {
+  return buildInjectedUserMessage(
+    "[最终叙事风格模块 — 在不违反硬规则的前提下，按此模块组织正文]",
+    loadPromptAssets().style,
+  );
+}
+
+function buildInjectedUserMessage(header: string, body: string): TextMessage {
   return {
     role: "user",
-    content: [{ type: "text", text }],
+    content: [{ type: "text", text: `${header}\n\n${body}` }],
     timestamp: 0,
   };
 }
