@@ -136,7 +136,7 @@ function withSceneBeatDefaultReason(
   switch (event.kind) {
     case "begin-beat": {
       const input = "input" in event ? event.input : event;
-      return { kind: event.kind, input: withDefaultReason(input, summary) };
+      return { kind: event.kind, input: withSceneBeatInputDefaultReason(input, summary) };
     }
     case "transition-beat": {
       const input = "input" in event ? event.input : event;
@@ -144,11 +144,49 @@ function withSceneBeatDefaultReason(
     }
     case "move-location": {
       const input = "input" in event ? event.input : event;
-      return { kind: event.kind, input: withDefaultReason(input, summary) };
+      return { kind: event.kind, input: withSceneBeatMoveDefaultReason(input, summary) };
     }
     default:
       throw new Error("unreachable scene beat event kind");
   }
+}
+
+function withSceneBeatInputDefaultReason(
+  input: WithOptionalReason<SceneBeatInput>,
+  summary: string,
+): SceneBeatInput {
+  const hydratedInput = withDefaultReason(input, summary);
+  return {
+    ...hydratedInput,
+    objectives: normalizeSceneBeatObjectives(
+      hydratedInput.objectives,
+      hydratedInput.storyWindow?.completionCriteria,
+    ),
+  };
+}
+
+function withSceneBeatMoveDefaultReason(
+  input: WithOptionalReason<SceneBeatMoveInput>,
+  summary: string,
+): SceneBeatMoveInput {
+  const hydratedInput = withDefaultReason(input, summary);
+  return {
+    ...hydratedInput,
+    objectives: normalizeSceneBeatObjectives(
+      hydratedInput.objectives,
+      hydratedInput.storyWindow?.completionCriteria,
+    ),
+  };
+}
+
+function normalizeSceneBeatObjectives(
+  objectives: readonly string[] | undefined,
+  completionCriteria: readonly string[] | undefined,
+): string[] {
+  if (objectives !== undefined && objectives.length > 0) {
+    return [...objectives];
+  }
+  return completionCriteria === undefined ? [] : [...completionCriteria];
 }
 
 function withTransitionBeatDefaultReason(
@@ -161,7 +199,7 @@ function withTransitionBeatDefaultReason(
   }
   return {
     ...transitionInput,
-    nextBeat: withDefaultReason(nextBeat, transitionInput.reason),
+    nextBeat: withSceneBeatInputDefaultReason(nextBeat, transitionInput.reason),
   };
 }
 

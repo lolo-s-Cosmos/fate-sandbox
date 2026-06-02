@@ -55,6 +55,100 @@ void test("commitTurnTool accepts missing summary and split flat scene beat fiel
   assert.match(result.content[0]?.text ?? "", /领域事件：2/);
 });
 
+void test("commitTurnTool fills missing scene beat objectives from completion criteria", () => {
+  resetState();
+
+  const result = commitTurnTool(
+    {
+      summary: "开启缺少 objectives 的 beat。",
+      events: [
+        {
+          kind: "scene-beat",
+          event: {
+            kind: "begin-beat",
+            input: {
+              storyWindow: {
+                currentArcId: "B5",
+                currentBeatId: "missing-objectives",
+                title: "缺少目标字段的 beat",
+                allowedActions: ["观察"],
+                forbiddenEscalations: ["不得跳过玩家回应"],
+                completionCriteria: ["确认下一步行动"],
+                nextBeatHints: [],
+              },
+            },
+          },
+        },
+      ],
+    },
+    createNoopSessionManager(),
+  );
+
+  assert.match(result.content[0]?.text ?? "", /回合已提交/);
+});
+
+void test("commitTurnTool fills transition next beat objectives from completion criteria", () => {
+  resetState();
+
+  commitTurnTool(
+    {
+      summary: "开启收口 beat。",
+      events: [
+        {
+          kind: "scene-beat",
+          event: {
+            kind: "begin-beat",
+            input: {
+              storyWindow: {
+                currentArcId: "B5",
+                currentBeatId: "wrapup",
+                title: "真名与宝具揭示收口",
+                allowedActions: ["整理线索"],
+                forbiddenEscalations: ["不得继续追击"],
+                completionCriteria: ["真名揭示成立"],
+                nextBeatHints: [],
+              },
+            },
+          },
+        },
+      ],
+    },
+    createNoopSessionManager(),
+  );
+
+  const result = commitTurnTool(
+    {
+      summary: "收口并进入下一 beat。",
+      events: [
+        {
+          kind: "scene-beat",
+          event: {
+            kind: "transition-beat",
+            input: {
+              completedBeatId: "wrapup",
+              resolveAllObjectives: true,
+              nextBeat: {
+                storyWindow: {
+                  currentArcId: "B5",
+                  currentBeatId: "after-reveal",
+                  title: "揭示后的短暂停顿",
+                  allowedActions: ["观察反应"],
+                  forbiddenEscalations: ["不得跳过玩家回应"],
+                  completionCriteria: ["确认下一步行动"],
+                  nextBeatHints: [],
+                },
+              },
+            },
+          },
+        },
+      ],
+    },
+    createNoopSessionManager(),
+  );
+
+  assert.match(result.content[0]?.text ?? "", /回合已提交/);
+});
+
 function createNoopSessionManager(): unknown {
   return { appendCustomEntry: () => "entry-test" };
 }
