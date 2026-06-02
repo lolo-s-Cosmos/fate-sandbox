@@ -18,6 +18,7 @@ import { recordOffscreenEventTool } from "./state/record-offscreen-event";
 import { revealSecretTool } from "./state/reveal-secret";
 import { sceneBeatTool } from "./state/scene-beat";
 import { setScenePresenceTool } from "./state/set-scene-presence";
+import { startSceneBeatTool } from "./state/start-scene-beat";
 import { updateActorConditionTool } from "./state/update-actor-condition";
 import { updateEconomyTool } from "./state/update-economy";
 import { updateSceneTool } from "./state/update-scene";
@@ -158,13 +159,55 @@ export function registerAllTools(pi: ExtensionAPI): void {
 
   pi.registerTool({
     label: toolLabel,
+    name: "start_scene_beat",
+    description:
+      "以叙事意图开启复杂 Scene Beat；这是常用 macro tool，会自动生成 beat id、继承当前 arc，并建立 storyWindow/objectives/threats/presence。\n\n" +
+      "【必须调用的场景】\n" +
+      "- 进入新的调查、潜入、对峙、撤退、战斗准备等复杂场景，需要 1-5 个当前目标\n" +
+      "- 不想手写 storyWindow.currentArcId/currentBeatId/allowedActions 等账本字段\n" +
+      "- 进入复杂 beat 的同时发生移动或时间推进：同时提供 location 和 elapsedMinutes\n\n" +
+      "【严禁的行为】\n" +
+      "- 用它记录长期目标或幕后真相；长期后果写 memory，秘密走 reveal/private_resolve/offscreen\n" +
+      "- 只有简单移动或几分钟日常过渡时调用；简单变化用 update_scene\n" +
+      "- location 和 elapsedMinutes 只提供其一；同步移动必须两者都有",
+    parameters: Type.Object({
+      title: Type.String(),
+      objectives: Type.Array(Type.String({ description: "当前 beat 的 1-5 个玩家可见目标" })),
+      purpose: Type.String({ description: "为什么进入这个 beat；也会作为事务 summary/reason" }),
+      arcId: Type.Optional(
+        Type.String({ description: "可选；省略时继承当前 arc，没有当前 arc 时使用 main" }),
+      ),
+      beatId: Type.Optional(Type.String({ description: "可选；省略时自动生成" })),
+      allowedActions: Type.Optional(Type.Array(Type.String())),
+      forbiddenEscalations: Type.Optional(Type.Array(Type.String())),
+      completionCriteria: Type.Optional(Type.Array(Type.String())),
+      nextBeatHints: Type.Optional(Type.Array(Type.String())),
+      threats: Type.Optional(
+        Type.Array(
+          Type.Object({
+            summary: Type.String(),
+            severity: threatSeveritySchema(),
+          }),
+        ),
+      ),
+      presentActorIds: Type.Optional(Type.Array(Type.String())),
+      allyActorIds: Type.Optional(Type.Array(Type.String())),
+      situation: Type.Optional(situationSchema()),
+      location: Type.Optional(locationSchema()),
+      elapsedMinutes: Type.Optional(Type.Union([Type.Integer(), Type.String()])),
+    }),
+    execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>
+      startSceneBeatTool(params, ctx.sessionManager),
+  });
+  pi.registerTool({
+    label: toolLabel,
     name: "scene_beat",
     description:
       "以剧情 beat 为单位管理 storyWindow、Scene Objective、即时威胁和在场 actor；可选同步移动和推进时间，避免用多个 update_scene 调用手动拼工作流。\n\n" +
       "【必须调用的场景】\n" +
       "- 复杂场景进入新 beat，需要同时建立剧情窗口和 1-5 个 Scene Objective\n" +
       "- 进入复杂 beat 的同时发生地点移动或时间推进：使用 kind=move-location\n" +
-      "- beat 完成，需要验证所有 Scene Objective 已解决后切换或清除窗口；若本轮叙事已满足全部目标，transition-beat 可省略 resolvedObjectiveIds/resolvedObjectiveSummaries，默认全部解决\n" +
+      "- beat 完成，需要验证所有 Scene Objective 已解决后切换或清除窗口；若本轮叙事已满足所有目标，transition-beat 可省略 resolvedObjectiveIds/resolvedObjectiveSummaries，默认全部解决\n" +
       "- 场景切换伴随在场 actor / 同行者变化\n\n" +
       "【严禁的行为】\n" +
       "- 用它记录长期目标；长期后果应写入 record_memory\n" +

@@ -15,10 +15,10 @@
 
 ## 剧情窗口纪律
 
-- 复杂场景、潜入、侦察、撤退、战斗准备、major beat 开始时，优先用 `scene_beat begin-beat` 一次性锁定 storyWindow、1-5 个 Scene Objective、即时威胁和在场 actor。
+- 复杂场景、潜入、侦察、撤退、战斗准备、major beat 开始时，优先用 `start_scene_beat` 一次性锁定当前 beat 的 title、1-5 个 Scene Objective、即时威胁和在场 actor；只有需要完整控制底层 storyWindow 时才用 `scene_beat begin-beat`。
 - 当前回复不得越过 story window 的 forbiddenEscalations；要进入下一 beat，先满足 completionCriteria，再优先用 `finish_current_beat` 收口当前 storyWindow。
 - 只有单独完成/切换 beat、且没有 memory 或 presence 等其他变化时，才直接调用 `scene_beat transition-beat`；非常规多事件组合才使用 `commit_turn`。
-- 简单移动、短时间推进、单个目标/威胁变化才使用 `update_scene`；复杂 beat 不要手动拼 `set-story-window` + 多个 `add-objective`。
+- 简单移动、短时间推进、单个目标/威胁变化才使用 `update_scene`；复杂 beat 不要手动拼 `set-story-window` + 多个 `add-objective`，优先用 `start_scene_beat`。
 - 场景性质变化（侦察→日常、战斗→恢复、紧张→放松）时，必须同步更新 `situation` 字段。
 - `get_status` 的剧情窗口是玩家可见边界；不要把 secret、幕后真相、未来战斗底牌写进 title、allowedActions 或 nextBeatHints。
 
