@@ -59,11 +59,12 @@ function commitCanonicalTurn(input: TurnCommitInput): TurnCommitResult {
   }
 
   const results = input.events.map(applyTurnEvent);
-  assertNoCompletedOpenStoryWindow();
+  const autoCloseResult = closeCompletedOpenStoryWindow();
+  const finalResults = autoCloseResult === null ? results : [...results, autoCloseResult];
   const warnings = collectWarnings();
   return {
-    message: formatMessage(summary, results, warnings),
-    results,
+    message: formatMessage(summary, finalResults, warnings),
+    results: finalResults,
     warnings,
   };
 }
@@ -104,24 +105,25 @@ function applySceneBeatEvent(
   }
 }
 
-function assertNoCompletedOpenStoryWindow(): void {
+function closeCompletedOpenStoryWindow(): TurnCommitEventResult | null {
   const state = getState();
   const storyWindow = state.public.scene.storyWindow;
   if (storyWindow === null) {
-    return;
+    return null;
   }
   const activeObjectives = state.public.scene.objectives.filter(
     (objective) => objective.status !== "resolved",
   );
   if (activeObjectives.length > 0) {
-    return;
+    return null;
   }
-  throw new Error(
-    [
-      `无法提交回合：当前 Scene Beat「${storyWindow.title}」没有未解决的 Scene Objective。`,
-      "请在同一个 commit_turn 中使用 scene-beat transition-beat 关闭当前 beat，或改用 finish_current_beat。",
-    ].join("\n"),
-  );
+  return {
+    kind: "scene",
+    result: updateScene({
+      kind: "clear-story-window",
+      reason: `Scene Beat「${storyWindow.title}」的目标已全部解决，自动收束当前剧情窗口。`,
+    }),
+  };
 }
 
 function collectWarnings(): string[] {

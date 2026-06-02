@@ -42,7 +42,7 @@ void test("commitTurn applies multiple domain events in order", () => {
   assert.match(result.message, /回合已提交/);
 });
 
-void test("commitTurn rejects resolving the last beat objective without closing the beat", () => {
+void test("commitTurn auto-closes a beat after resolving the last objective", () => {
   resetState();
 
   commitTurn({
@@ -70,25 +70,26 @@ void test("commitTurn rejects resolving the last beat objective without closing 
     ],
   });
 
-  assert.throws(
-    () =>
-      commitTurn({
-        summary: "只解决目标但不关闭 beat。",
-        events: [
-          {
-            kind: "scene",
-            event: {
-              kind: "resolve-objective",
-              objectiveSummary: "确认线索",
-              reason: "线索确认",
-            },
-          },
-        ],
-      }),
-    /请在同一个 commit_turn 中使用 scene-beat transition-beat/,
-  );
+  const result = commitTurn({
+    summary: "解决最后目标。",
+    events: [
+      {
+        kind: "scene",
+        event: {
+          kind: "resolve-objective",
+          objectiveSummary: "确认线索",
+          reason: "线索确认",
+        },
+      },
+    ],
+  });
 
-  assert.equal(getState().public.scene.objectives[0]?.status, "active");
+  assert.equal(getState().public.scene.objectives[0]?.status, "resolved");
+  assert.equal(getState().public.scene.storyWindow, null);
+  assert.equal(result.results.length, 2);
+  const autoClose = result.results[1];
+  assert.equal(autoClose?.kind, "scene");
+  assert.match(autoClose.result.message, /剧情窗口已清除/);
 });
 
 void test("commitTurn rejects empty commits", () => {
@@ -137,34 +138,33 @@ void test("commitTurn rolls back earlier events when a later event fails", () =>
   assert.equal(state.public.memory.eventLog.length, 0);
 });
 
-void test("commitTurn rejects a story window with no active objectives", () => {
+void test("commitTurn auto-closes a story window with no active objectives", () => {
   resetState();
 
-  assert.throws(
-    () =>
-      commitTurn({
-        summary: "开启只有边界的剧情窗口。",
-        events: [
-          {
-            kind: "scene",
-            event: {
-              kind: "set-story-window",
-              storyWindow: {
-                currentArcId: "B2",
-                currentBeatId: "wrapup",
-                title: "收尾",
-                allowedActions: ["撤退"],
-                forbiddenEscalations: ["不得开战"],
-                completionCriteria: ["安全离开"],
-                nextBeatHints: [],
-              },
-              reason: "锁定 beat",
-            },
+  const result = commitTurn({
+    summary: "开启只有边界的剧情窗口。",
+    events: [
+      {
+        kind: "scene",
+        event: {
+          kind: "set-story-window",
+          storyWindow: {
+            currentArcId: "B2",
+            currentBeatId: "wrapup",
+            title: "收尾",
+            allowedActions: ["撤退"],
+            forbiddenEscalations: ["不得开战"],
+            completionCriteria: ["安全离开"],
+            nextBeatHints: [],
           },
-        ],
-      }),
-    /没有未解决的 Scene Objective/,
-  );
+          reason: "锁定 beat",
+        },
+      },
+    ],
+  });
+
+  assert.equal(getState().public.scene.storyWindow, null);
+  assert.equal(result.results.length, 2);
 });
 
 void test("commitTurn can move into a scene beat", () => {
