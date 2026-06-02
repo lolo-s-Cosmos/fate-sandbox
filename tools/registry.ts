@@ -40,7 +40,11 @@ export function registerAllTools(pi: ExtensionAPI): void {
       "- 提交 Hidden Fact 到 Public Game State；秘密仍必须走 reveal_secret/private_resolve/record_offscreen_event\n" +
       "- 没有状态变化时为了形式调用",
     parameters: Type.Object({
-      summary: Type.String({ description: "本轮玩家可见状态变化摘要" }),
+      summary: Type.Optional(
+        Type.String({
+          description: "本轮玩家可见状态变化摘要；省略时工具会从事件 reason 自动生成",
+        }),
+      ),
       events: Type.Array(
         Type.Object({
           kind: Type.Union([
