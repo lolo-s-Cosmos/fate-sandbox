@@ -61,7 +61,12 @@ void test("commitTurn rolls back earlier events when a later event fails", () =>
         events: [
           {
             kind: "economy",
-            event: { kind: "spend-money", ownerActorId: "protagonist", amount: 1000 },
+            event: {
+              kind: "spend-money",
+              ownerActorId: "protagonist",
+              amount: 1000,
+              reason: "测试支出",
+            },
           },
           {
             kind: "memory",
@@ -155,7 +160,7 @@ void test("commitTurn can move into a scene beat", () => {
   assert.equal(result.results.length, 1);
 });
 
-void test("commitTurn fills missing nested reasons from summary", () => {
+void test("commitTurn applies canonical nested domain events", () => {
   resetState();
 
   const result = commitTurn({
@@ -172,6 +177,7 @@ void test("commitTurn fills missing nested reasons from summary", () => {
             boundary: "normal",
           },
           elapsedMinutes: 40,
+          reason: "移动到新都",
         },
       },
       {
@@ -180,6 +186,7 @@ void test("commitTurn fills missing nested reasons from summary", () => {
           kind: "spend-money",
           purseId: "purse-protagonist-cash",
           amount: 3800,
+          reason: "采购基础物资",
         },
       },
     ],
@@ -191,7 +198,7 @@ void test("commitTurn fills missing nested reasons from summary", () => {
   assert.equal(result.results.length, 2);
 });
 
-void test("commitTurn accepts flat scene beat events from tool input", () => {
+void test("commitTurn accepts canonical scene beat events", () => {
   resetState();
 
   const result = commitTurn({
@@ -201,23 +208,26 @@ void test("commitTurn accepts flat scene beat events from tool input", () => {
         kind: "scene-beat",
         event: {
           kind: "move-location",
-          storyWindow: {
-            currentArcId: "B1",
-            currentBeatId: "shinto-investigation",
-            title: "新都魔力痕迹调查",
-            allowedActions: ["调查"],
-            forbiddenEscalations: ["不得交战"],
-            completionCriteria: ["确认一处痕迹"],
-            nextBeatHints: [],
+          input: {
+            storyWindow: {
+              currentArcId: "B1",
+              currentBeatId: "shinto-investigation",
+              title: "新都魔力痕迹调查",
+              allowedActions: ["调查"],
+              forbiddenEscalations: ["不得交战"],
+              completionCriteria: ["确认一处痕迹"],
+              nextBeatHints: [],
+            },
+            objectives: ["确认一处痕迹"],
+            location: {
+              region: "冬木市",
+              site: "新都",
+              detail: "商业街北侧小路",
+              boundary: "normal",
+            },
+            elapsedMinutes: 25,
+            reason: "进入新都调查 beat",
           },
-          objectives: ["确认一处痕迹"],
-          location: {
-            region: "冬木市",
-            site: "新都",
-            detail: "商业街北侧小路",
-            boundary: "normal",
-          },
-          elapsedMinutes: 25,
         },
       },
     ],
@@ -240,6 +250,7 @@ void test("commitTurn accepts scene presence events", () => {
         event: {
           presentActorIds: ["protagonist"],
           allyActorIds: [],
+          reason: "凛暂时离场",
         },
       },
     ],
@@ -251,29 +262,7 @@ void test("commitTurn accepts scene presence events", () => {
   assert.equal(result.results[0]?.kind, "scene-presence");
 });
 
-void test("commitTurn routes scene set-scene-presence to scene presence", () => {
-  resetState();
-
-  const result = commitTurn({
-    summary: "模型把 presence 当成 scene event。",
-    events: [
-      {
-        kind: "scene",
-        event: {
-          kind: "set-scene-presence",
-          presentActorIds: ["protagonist"],
-          allyActorIds: [],
-        },
-      },
-    ],
-  });
-
-  const state = getState();
-  assert.deepEqual(state.public.scene.presentActorIds, ["protagonist"]);
-  assert.equal(result.results[0]?.kind, "scene-presence");
-});
-
-void test("commitTurn transition beat defaults to resolving all objectives", () => {
+void test("commitTurn transitions beat and applies canonical movement", () => {
   resetState();
 
   commitTurn({
@@ -310,6 +299,8 @@ void test("commitTurn transition beat defaults to resolving all objectives", () 
           kind: "transition-beat",
           input: {
             completedBeatId: "night-scan",
+            resolveAllObjectives: true,
+            reason: "观测目标已完成",
           },
         },
       },
@@ -324,6 +315,7 @@ void test("commitTurn transition beat defaults to resolving all objectives", () 
             boundary: "normal",
           },
           elapsedMinutes: 45,
+          reason: "移动到新都",
         },
       },
     ],
@@ -335,7 +327,7 @@ void test("commitTurn transition beat defaults to resolving all objectives", () 
   assert.equal(result.results.length, 2);
 });
 
-void test("commitTurn fills transition next beat reason from summary", () => {
+void test("commitTurn transitions into canonical next beat", () => {
   resetState();
 
   commitTurn({
@@ -373,6 +365,7 @@ void test("commitTurn fills transition next beat reason from summary", () => {
           input: {
             completedBeatId: "reveal-wrapup",
             resolveAllObjectives: true,
+            reason: "揭示成立并进入后续观察 beat",
             nextBeat: {
               storyWindow: {
                 currentArcId: "B5",
@@ -384,6 +377,7 @@ void test("commitTurn fills transition next beat reason from summary", () => {
                 nextBeatHints: [],
               },
               objectives: ["确认下一步行动"],
+              reason: "进入揭示后的短暂停顿",
             },
           },
         },
