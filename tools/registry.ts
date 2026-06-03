@@ -76,6 +76,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
     description:
       "每轮叙事结束时一次性提交本轮发生的领域事件；用于降低 GM 对多个状态工具顺序的注意力负担。\n\n" +
       "【必须调用的场景】\n" +
+      "- 用户要求等待、休息、睡眠、过夜、守夜到某个时段，且本轮还有 condition / servant / memory 等状态变化：必须在 events 中包含 scene advance-time；没有其他变化时用 update_scene kind=advance-time\n" +
       "- 一轮回复同时改变时间/地点、Scene Objective、伤势、物品、资金、记忆或从者资源中的多个状态\n" +
       "- 叙事已经发生购买、治疗、移动、揭示、消耗、战斗结算等 canonical Game State 变化\n" +
       "- 复杂 beat 收口时需要按顺序提交内部 scene-beat transition、移动、memory 等多个事件；常规收口优先用 finish_current_beat\n\n" +
@@ -97,7 +98,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
           }),
           event: Type.Unknown({
             description:
-              "对应领域事件载荷；scene-presence 使用 {presentActorIds, allyActorIds}，也可兼容 scene event kind='set-scene-presence'；scene-beat 使用 {kind:'begin-beat'|'transition-beat'|'move-location', input:{...}}。transition-beat 未提供 resolvedObjectiveIds/resolvedObjectiveSummaries 时默认解决当前 beat 全部目标；resolve-objective 可用 objectiveSummary，不要传 undefined",
+              "对应领域事件载荷；等待/休息/过夜用 scene {kind:'advance-time', elapsedMinutes, reason}；scene-presence 使用 {presentActorIds, allyActorIds}，也可兼容 scene event kind='set-scene-presence'；scene-beat 使用 {kind:'begin-beat'|'transition-beat'|'move-location', input:{...}}。transition-beat 未提供 resolvedObjectiveIds/resolvedObjectiveSummaries 时默认解决当前 beat 全部目标；resolve-objective 可用 objectiveSummary，不要传 undefined",
           }),
         }),
       ),
@@ -246,12 +247,14 @@ export function registerAllTools(pi: ExtensionAPI): void {
     description:
       "按领域事件更新时间、地点、场景态势、剧情窗口、目标、威胁。\n\n" +
       "【必须调用的场景】\n" +
+      "- 用户要求等待、休息、睡眠、过夜、守夜到某个时段，且本轮没有其他状态变化：用 kind=advance-time，只提供 elapsedMinutes，不要伪造地点移动\n" +
       "- 玩家移动地点或时间推进，且本轮没有其他状态变化\n" +
       "- 用户/续局明确声明当前地点与状态不一致，只需修正地点且不推进时间：用 kind=set-location\n" +
       "- 场景态势切换为日常、调查、社交、战斗、仪式、逃跑、整备\n" +
       "- 单个当前目标/威胁变化；复杂 beat 开始用 start_scene_beat，当前 beat 收口用 finish_current_beat，多事件非常规组合用 commit_turn\n\n" +
       "【严禁的行为】\n" +
       "- 用叙事直接跳过时间或改变地点但不调用工具\n" +
+      "- 只有等待/休息/过夜时不要用 move-location；必须用 advance-time 或 commit_turn 内的 scene advance-time\n" +
       "- 用 set-location 表示剧情中的移动；剧情移动必须用 move-location 并提供 elapsedMinutes > 0\n" +
       "- 在复杂 beat 中手动拼 set-story-window/add-objective；改用 start_scene_beat\n" +
       "- 一轮内同时移动、完成目标、记录 memory，却绕过 commit_turn\n" +
@@ -260,6 +263,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
       "- 把长期目标塞进 scene；场景结束后应写入 memory",
     parameters: Type.Object({
       kind: Type.Union([
+        Type.Literal("advance-time"),
         Type.Literal("move-location"),
         Type.Literal("set-location"),
         Type.Literal("set-situation"),

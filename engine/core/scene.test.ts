@@ -4,6 +4,17 @@ import test from "node:test";
 import { beginSceneBeat, moveToSceneBeat, transitionSceneBeat, updateScene } from "./scene";
 import { getState, resetState } from "./state";
 
+void test("updateScene advances time without changing location", () => {
+  resetState();
+
+  updateScene({ kind: "advance-time", elapsedMinutes: 420, reason: "过夜守到清晨" });
+
+  const state = getState();
+  assert.equal(state.public.clock.currentAt, "2004-01-30T14:00:00.000Z");
+  assert.equal(state.public.scene.location.detail, "穗群原学园·校门外");
+  assert.equal(state.public.scene.lastResolvedAt, "2004-01-30T14:00:00.000Z");
+});
+
 void test("updateScene moves location and advances clock", () => {
   resetState();
 

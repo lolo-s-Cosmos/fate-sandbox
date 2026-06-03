@@ -281,6 +281,26 @@ void test("commitTurnTool ignores blank objectiveId when objectiveSummary is pre
   assert.match(result.content[0]?.text ?? "", /回合已提交/);
 });
 
+void test("commitTurnTool accepts flat advance-time event", () => {
+  resetState();
+
+  const result = commitTurnTool(
+    {
+      summary: "灵体化守夜到清晨。",
+      events: [
+        {
+          kind: "advance-time",
+          elapsedMinutes: 420,
+          reason: "Saber 灵体化守夜至清晨",
+        },
+      ],
+    },
+    createNoopSessionManager(),
+  );
+
+  assert.match(result.content[0]?.text ?? "", /回合已提交/);
+});
+
 function createNoopSessionManager(): unknown {
   return { appendCustomEntry: () => "entry-test" };
 }

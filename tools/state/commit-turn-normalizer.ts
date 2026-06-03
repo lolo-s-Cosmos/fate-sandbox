@@ -116,6 +116,7 @@ function inferTurnEventKindFromPayload(event: Record<string, unknown>): TurnComm
   const payload = isRecord(event["event"]) ? event["event"] : event;
   const domainKind = normalizeKindText(payload["kind"]);
   switch (domainKind) {
+    case "advance-time":
     case "move-location":
     case "set-location":
     case "set-situation":

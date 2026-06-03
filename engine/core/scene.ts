@@ -18,6 +18,7 @@ const MIN_BEAT_OBJECTIVES = 1;
 const MAX_BEAT_OBJECTIVES = 5;
 
 export type SceneEvent =
+  | { kind: "advance-time"; elapsedMinutes: number; reason: string }
   | { kind: "move-location"; location: LocationState; elapsedMinutes: number; reason: string }
   | { kind: "set-location"; location: LocationState; reason: string }
   | { kind: "set-situation"; situation: SituationKind; reason: string }
@@ -231,6 +232,8 @@ export function transitionSceneBeat(input: SceneBeatTransitionInput): SceneBeatT
 export function updateScene(event: SceneEvent): SceneEventResult {
   assertNonEmptyString(event.reason, "reason");
   switch (event.kind) {
+    case "advance-time":
+      return advanceTime(event);
     case "move-location":
       return moveLocation(event);
     case "set-location":
@@ -252,6 +255,18 @@ export function updateScene(event: SceneEvent): SceneEventResult {
     default:
       throw new Error("unreachable scene event kind");
   }
+}
+
+function advanceTime(event: Extract<SceneEvent, { kind: "advance-time" }>): SceneEventResult {
+  const elapsedMinutes = assertPositiveElapsedMinutes(event.elapsedMinutes);
+  updateState((draft) => {
+    const nextTime = Temporal.Instant.from(draft.public.clock.currentAt)
+      .add({ minutes: elapsedMinutes })
+      .toString();
+    draft.public.clock.currentAt = nextTime;
+    draft.public.scene.lastResolvedAt = nextTime;
+  });
+  return { message: `时间已推进 ${elapsedMinutes} 分钟。` };
 }
 
 function moveLocation(event: Extract<SceneEvent, { kind: "move-location" }>): SceneEventResult {
