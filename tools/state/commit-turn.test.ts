@@ -241,6 +241,46 @@ void test("commitTurnTool infers domain event kind from flat payload", () => {
   assert.match(result.content[0]?.text ?? "", /回合已提交/);
 });
 
+void test("commitTurnTool ignores blank objectiveId when objectiveSummary is present", () => {
+  resetState();
+
+  commitTurnTool(
+    {
+      summary: "开启目标选择 beat。",
+      events: [
+        {
+          kind: "scene-beat",
+          event: {
+            kind: "begin-beat",
+            title: "目标选择测试",
+            objectives: ["确认门外是否安全"],
+          },
+        },
+      ],
+    },
+    createNoopSessionManager(),
+  );
+
+  const result = commitTurnTool(
+    {
+      summary: "解决目标。",
+      events: [
+        {
+          kind: "scene",
+          event: {
+            kind: "resolve-objective",
+            objectiveId: "",
+            objectiveSummary: "确认门外是否安全",
+          },
+        },
+      ],
+    },
+    createNoopSessionManager(),
+  );
+
+  assert.match(result.content[0]?.text ?? "", /回合已提交/);
+});
+
 function createNoopSessionManager(): unknown {
   return { appendCustomEntry: () => "entry-test" };
 }

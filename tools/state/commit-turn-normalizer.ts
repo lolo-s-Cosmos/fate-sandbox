@@ -167,7 +167,7 @@ function normalizeSceneTurnEvent(
   event: Record<string, unknown>,
   summary: string,
 ): TurnCommitEvent {
-  const payload = withReason(extractDomainEvent(event, "scene.event"), summary);
+  const payload = normalizeSceneEventPayload(withReason(extractDomainEvent(event, "scene.event"), summary));
   if (payload["kind"] === "set-scene-presence") {
     return {
       kind: "scene-presence",
@@ -175,6 +175,19 @@ function normalizeSceneTurnEvent(
     };
   }
   return { kind: "scene", event: payload as unknown as SceneEvent };
+}
+
+function normalizeSceneEventPayload(
+  payload: Record<string, unknown> & { reason: string },
+): Record<string, unknown> & { reason: string } {
+  if (payload["kind"] !== "resolve-objective") {
+    return payload;
+  }
+  return {
+    ...payload,
+    objectiveId: normalizeOptionalString(payload["objectiveId"]) ?? undefined,
+    objectiveSummary: normalizeOptionalString(payload["objectiveSummary"]) ?? undefined,
+  };
 }
 
 function normalizeScenePresenceInput(

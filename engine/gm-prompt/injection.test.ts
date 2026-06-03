@@ -38,6 +38,8 @@ void test("injectGmPromptMessages inserts slot-based prompt stack", () => {
   assert.match(texts[6] ?? "", /<render_protocol>/);
   assert.equal(texts[7], "继续。");
   assert.match(texts[8] ?? "", /<mechanical_state>/);
+  assert.match(texts[8] ?? "", /目标选择规则/);
+  assert.match(texts[8] ?? "", /逐字复制上方 summary/);
   assert.match(texts[9] ?? "", /<tool_policy>/);
   assert.match(texts[10] ?? "", /<hard_rules>/);
   assert.match(texts[11] ?? "", /<story_driver>/);
