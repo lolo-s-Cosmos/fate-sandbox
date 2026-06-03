@@ -27,54 +27,146 @@ export function normalizeTurnCommitInput(params: unknown): TurnCommitInput {
 
 function normalizeTurnCommitEvent(value: unknown, summary: string): TurnCommitEvent {
   const event = assertRecord(value, "events[]");
-  const kind = event["kind"];
-  switch (kind) {
+  const normalizedKind = normalizeTurnEventKind(event["kind"], event);
+  switch (normalizedKind) {
     case "scene":
       return normalizeSceneTurnEvent(event, summary);
     case "scene-presence":
       return {
-        kind,
+        kind: normalizedKind,
         event: normalizeScenePresenceInput(
-          assertRecord(event["event"], "scene-presence.event"),
+          extractDomainEvent(event, "scene-presence.event"),
           summary,
         ),
       };
     case "scene-beat":
-      return { kind, event: normalizeSceneBeatTurnEvent(event, summary) };
+      return { kind: normalizedKind, event: normalizeSceneBeatTurnEvent(event, summary) };
     case "actor-condition":
       return {
-        kind,
+        kind: normalizedKind,
         event: normalizeActorConditionEvent(
-          withReason(assertRecord(event["event"], "actor-condition.event"), summary),
+          withReason(extractDomainEvent(event, "actor-condition.event"), summary),
           summary,
         ),
       };
     case "servant-form":
       return {
-        kind,
+        kind: normalizedKind,
         event: trustDomainEvent<ServantFormEvent>(
-          withReason(assertRecord(event["event"], "servant-form.event"), summary),
+          withReason(extractDomainEvent(event, "servant-form.event"), summary),
         ),
       };
     case "economy":
       return {
-        kind,
+        kind: normalizedKind,
         event: trustDomainEvent<EconomyEvent>(
-          withReason(assertRecord(event["event"], "economy.event"), summary),
+          withReason(extractDomainEvent(event, "economy.event"), summary),
         ),
       };
     case "memory":
-      return { kind, event: assertRecord(event["event"], "memory.event") as unknown as MemoryEvent };
+      return { kind: normalizedKind, event: normalizeMemoryTurnEvent(event) };
     default:
-      throw new Error(`非法 commit_turn event.kind: ${formatUnknown(kind)}。`);
+      throw new Error(
+        `非法 commit_turn event.kind: ${formatUnknown(event["kind"])}。允许: scene / scene-presence / scene-beat / actor-condition / servant-form / economy / memory。`,
+      );
   }
+}
+
+function normalizeTurnEventKind(rawKind: unknown, event: Record<string, unknown>): TurnCommitEvent["kind"] {
+  const kind = normalizeKindText(rawKind);
+  switch (kind) {
+    case "scene":
+    case "update-scene":
+    case "scene-event":
+      return "scene";
+    case "scene-presence":
+    case "set-scene-presence":
+    case "presence":
+      return "scene-presence";
+    case "scene-beat":
+    case "start-scene-beat":
+    case "finish-current-beat":
+    case "beat":
+      return "scene-beat";
+    case "actor-condition":
+    case "update-actor-condition":
+    case "condition":
+      return "actor-condition";
+    case "servant-form":
+    case "update-servant-form":
+    case "servant":
+      return "servant-form";
+    case "economy":
+    case "update-economy":
+    case "money":
+      return "economy";
+    case "memory":
+    case "record-memory":
+    case "record-major-event":
+    case "record-pinned-fact":
+    case "record-daily-summary":
+      return "memory";
+    default:
+      return inferTurnEventKindFromPayload(event);
+  }
+}
+
+function inferTurnEventKindFromPayload(event: Record<string, unknown>): TurnCommitEvent["kind"] {
+  const payload = isRecord(event["event"]) ? event["event"] : event;
+  const domainKind = normalizeKindText(payload["kind"]);
+  switch (domainKind) {
+    case "move-location":
+    case "set-location":
+    case "set-situation":
+    case "set-story-window":
+    case "clear-story-window":
+    case "add-objective":
+    case "resolve-objective":
+    case "add-threat":
+    case "clear-threat":
+      return "scene";
+    case "set-scene-presence":
+      return "scene-presence";
+    case "begin-beat":
+    case "transition-beat":
+      return "scene-beat";
+    case "record-major-event":
+    case "record-pinned-fact":
+    case "record-daily-summary":
+      return "memory";
+    case "spend-money":
+    case "gain-money":
+      return "economy";
+    default:
+      throw new Error(
+        `非法 commit_turn event.kind: ${formatUnknown(event["kind"])}。允许: scene / scene-presence / scene-beat / actor-condition / servant-form / economy / memory。`,
+      );
+  }
+}
+
+function normalizeKindText(value: unknown): string {
+  if (typeof value !== "string") {
+    return "";
+  }
+  return value.trim().toLowerCase().replace(/_/g, "-");
+}
+
+function extractDomainEvent(event: Record<string, unknown>, fieldName: string): Record<string, unknown> {
+  if (isRecord(event["event"])) {
+    return event["event"];
+  }
+  return assertRecord(event, fieldName);
+}
+
+function normalizeMemoryTurnEvent(event: Record<string, unknown>): MemoryEvent {
+  return extractDomainEvent(event, "memory.event") as unknown as MemoryEvent;
 }
 
 function normalizeSceneTurnEvent(
   event: Record<string, unknown>,
   summary: string,
 ): TurnCommitEvent {
-  const payload = withReason(assertRecord(event["event"], "scene.event"), summary);
+  const payload = withReason(extractDomainEvent(event, "scene.event"), summary);
   if (payload["kind"] === "set-scene-presence") {
     return {
       kind: "scene-presence",
@@ -99,7 +191,7 @@ function normalizeSceneBeatTurnEvent(
   event: Record<string, unknown>,
   summary: string,
 ): SceneBeatTurnEvent {
-  const payload = assertRecord(event["event"], "scene-beat.event");
+  const payload = extractDomainEvent(event, "scene-beat.event");
   const beatKind = payload["kind"];
   const input = isRecord(payload["input"]) ? payload["input"] : payload;
   switch (beatKind) {

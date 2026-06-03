@@ -91,15 +91,10 @@ export function registerAllTools(pi: ExtensionAPI): void {
       ),
       events: Type.Array(
         Type.Object({
-          kind: Type.Union([
-            Type.Literal("scene"),
-            Type.Literal("scene-presence"),
-            Type.Literal("scene-beat"),
-            Type.Literal("actor-condition"),
-            Type.Literal("servant-form"),
-            Type.Literal("economy"),
-            Type.Literal("memory"),
-          ]),
+          kind: Type.String({
+            description:
+              "领域事件类别。推荐值: scene / scene-presence / scene-beat / actor-condition / servant-form / economy / memory；也兼容 update-scene、set-scene-presence、record-memory 等常见别名。",
+          }),
           event: Type.Unknown({
             description:
               "对应领域事件载荷；scene-presence 使用 {presentActorIds, allyActorIds}，也可兼容 scene event kind='set-scene-presence'；scene-beat 使用 {kind:'begin-beat'|'transition-beat'|'move-location', input:{...}}。transition-beat 未提供 resolvedObjectiveIds/resolvedObjectiveSummaries 时默认解决当前 beat 全部目标；resolve-objective 可用 objectiveSummary，不要传 undefined",

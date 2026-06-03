@@ -149,6 +149,75 @@ void test("commitTurnTool fills transition next beat objectives from completion 
   assert.match(result.content[0]?.text ?? "", /回合已提交/);
 });
 
+void test("commitTurnTool accepts common event kind aliases", () => {
+  resetState();
+
+  const result = commitTurnTool(
+    {
+      summary: "别名事件提交。",
+      events: [
+        {
+          kind: "update-scene",
+          event: {
+            kind: "move-location",
+            elapsedMinutes: 15,
+            location: {
+              boundary: "normal",
+              detail: "礼拜堂门口",
+              region: "冬木市",
+              site: "冬木教会",
+            },
+          },
+        },
+        {
+          kind: "record-memory",
+          event: {
+            kind: "record-major-event",
+            title: "抵达教会",
+            summary: "玩家抵达冬木教会门口。",
+            claims: [
+              {
+                kind: "mundane",
+                statement: "玩家抵达冬木教会门口。",
+                certainty: "observed",
+              },
+            ],
+          },
+        },
+      ],
+    },
+    createNoopSessionManager(),
+  );
+
+  assert.match(result.content[0]?.text ?? "", /回合已提交/);
+  assert.match(result.content[0]?.text ?? "", /领域事件：2/);
+});
+
+void test("commitTurnTool infers domain event kind from flat payload", () => {
+  resetState();
+
+  const result = commitTurnTool(
+    {
+      summary: "扁平事件提交。",
+      events: [
+        {
+          kind: "move-location",
+          elapsedMinutes: 15,
+          location: {
+            boundary: "normal",
+            detail: "住宅区入口",
+            region: "斯诺菲尔德",
+            site: "住宅区",
+          },
+        },
+      ],
+    },
+    createNoopSessionManager(),
+  );
+
+  assert.match(result.content[0]?.text ?? "", /回合已提交/);
+});
+
 function createNoopSessionManager(): unknown {
   return { appendCustomEntry: () => "entry-test" };
 }
