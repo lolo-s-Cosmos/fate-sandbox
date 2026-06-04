@@ -1,26 +1,64 @@
 # FSN Compaction Policy
 
-Compact the conversation history itself. Do not inspect, summarize, validate, or mirror project files or git state. Runtime state may be provided only as exclusion reference.
+Compact the conversation history itself, not the campaign state, project files, git history, or a coding task log.
 
-The goal is to preserve only conversation-local memory that would otherwise be lost after compaction.
+Runtime state may be provided only as exclusion reference. If something appears to be an established campaign fact, a completed scene event, a tool result already applied to state, or a durable rule, omit it unless it is required to continue the currently unfinished user request.
 
-If a `<current_state_for_exclusion>` block is present, use it only to identify facts already stored in runtime state. Do not copy that state block into the summary.
+## Preserve only
 
-Preserve:
+1. The current unfinished user request or split-turn context.
+2. User corrections to the assistant's framing.
+3. Conversation-level decisions about workflow, memory, compaction, prompts, or narrative direction that are not obviously persisted elsewhere.
+4. Open loops that require the next assistant response.
+5. Artifact conclusions discussed in chat only when they remain actionable.
 
-- the user's current intent and unresolved questions;
-- decisions made in the conversation that still matter for future replies;
-- corrections the user made to the assistant's framing;
-- open loops, next conversational steps, and pending implementation requests;
-- artifact conclusions discussed in chat, only if their actionable consequence has not been resolved in chat;
-- meta-decisions about how the assistant should handle memory, compaction, prompts, or workflow.
+## Do not preserve
 
-Do not preserve:
+- Long campaign chronology.
+- Setup steps.
+- Scene-by-scene completed progress.
+- Tool/schema error history unless the active topic is tool debugging.
+- Files read, files modified, commands run, quality gates, commits, pushes, or git status.
+- State snapshots or long lists of state facts.
+- Repeated durable prompt/data/state rules.
+- Exhaustive character, location, item, or offscreen-event facts.
+- A checklist of completed tool actions.
 
-- file contents or state snapshots;
-- git status, commit history, or quality gate history;
-- durable prompt/data/state rules merely because they were mentioned;
-- implementation details that no longer affect the next conversation step;
-- long chronological logs of edits, commands, or tool outputs.
+## Required output shape
 
-If a topic was resolved in the conversation, summarize it only as a short decision if it affects future behavior. Otherwise omit it.
+Use only these sections, and omit any section that has nothing important:
+
+### Conversation Memory
+
+3-8 bullets. Keep only conversation-local memory that will matter after compaction.
+
+### Current Pending Turn
+
+Only if there is an unfinished user request, split turn, or immediate next response obligation. Include enough context for the next assistant message and nothing else.
+
+### User Corrections / Preferences
+
+Only corrections or preferences that are not already obvious from the current prompt or durable project rules.
+
+### Open Loops
+
+Only unresolved conversational loops.
+
+## Hard bans
+
+Do not use these sections or formats:
+
+- Goal
+- Progress
+- Done
+- In Progress
+- Blocked
+- Files Read
+- Files Modified
+- Key Decisions as a broad project ledger
+- Critical Context as a giant lore dump
+- Tool/schema gotchas
+- chronological campaign recap
+- checkbox task history
+
+Target length: 800-1500 words maximum. Prefer much shorter when there is no unfinished turn.
