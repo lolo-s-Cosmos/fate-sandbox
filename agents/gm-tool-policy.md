@@ -23,11 +23,13 @@
 以下情况必须调用对应 subagent；subagent 只给审计或后台候选，主 GM 仍负责状态落地与玩家可见正文。调用 subagent 时必须显式使用 `agentScope: "project"`，严禁调用 user-scope subagent。
 
 - 世界线调性跑偏、悬疑拖长但没有明确行动情报、beat 空转：必须先调用 `timeline-showrunner`，再继续正文。
+- 连续两轮的推进或 offscreen 结果只有新闻、广播、媒体口径、巡逻变多、监测阈值、封锁升级，而没有可交互的原作生态钩子：必须先调用 `timeline-showrunner` 检查 `worldMotion`。
 - 玩家明确忽略、搁置或绕开同一个悬疑钩子后，GM 仍想再次描写它抢镜：必须先调用 `timeline-showrunner`；未经审计，不得反复重提该钩子。
 - 关键 NPC 被写成纯线索容器、纯受害者或纯等待状态：必须调用 `timeline-showrunner` 检查 NPC autonomy。
 - 时间推进超过 10-30 分钟、休息、睡眠、治疗、躲藏或过夜：必须调用 `parallel-line` 推进 1 条相关后台阵营，除非本轮没有任何世界背面行动空间并在内部计划中明确跳过理由。
 - 当前 beat 收束、arc transition、或玩家获得安全空窗：必须调用 `parallel-line` 结算世界背面。
 - 调用 `parallel-line` 前必须查看最近 2-3 条 offscreen 事件；输入必须包含 `recentOffscreenEvents`，并用 `excludedActorIds` / `excludedPressureTypes` 排除刚用过的阵营和压力类型。不要连续让任何单一后台生态位（权力机构、教会、魔术协会、从者、普通社会、地点环境等）垄断后台。
+- 如果主 GM 不确定下一条 `parallel-line` 应该换到哪个生态位，先调用 `timeline-showrunner`，让它给 `pressurePalette` / `worldMotion.requiredAction`，再调用 `parallel-line`。
 - 子 agent 输出不得直接成为 canonical state；需要落地时由主 GM 审核后使用 `record_offscreen_event`、公开 clue/threat/memory 或普通领域工具。
 
 ## 边界

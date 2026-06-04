@@ -80,13 +80,21 @@ interface ParallelLineOutput {
 }
 ```
 
+## 原作钩子原则
+
+- “不强制推进原作日期”不等于“世界背面没有原作角色”。你应该把原作角色/阵营当作可选压力源，而不是固定剧情轨道。
+- 每次后台推进至少尝试从当前 timeline 的 canon hook palette 中选 1 个兼容钩子；若不用，必须在 `riskFlags` 写明为什么不用。
+- canon hook 必须改写成“当前局可交互的行动窗口”：误判、接近、观察、资源转移、求助、冲突余波、第三方痕迹；不要写成原作事件复刻。
+- public leak 只是投影，不是事件本体。`publicLeakCandidates` 里新闻/广播/社交媒体最多 1 条；至少 1 条必须是可行动痕迹（地点、人物、物品、路线、异常感知、邀请、追踪缺口）。
+- 如果只能产出“新闻报道/口径变化/巡逻变化”，本轮应返回 `no-change` 或 `blocked`，因为这不是足够有推进力的后台事件。
+
 ## 输出硬限制
 
 - 最终输出必须是裸 JSON；第一个字符必须是 `{`，最后一个字符必须是 `}`。
 - 禁止 Markdown、代码块、解释性前言、英文自我说明、推理过程。
 - `privateSummary` 不超过 250 个汉字。
 - `secretStateChanges` 最多 5 条。
-- `publicLeakCandidates` 最多 4 条。
+- `publicLeakCandidates` 最多 4 条；新闻/广播/社交媒体最多 1 条。
 - `futureHooks` 最多 4 条。
 - `genreFitNotes` 最多 4 条。
 - `riskFlags` 最多 4 条。
@@ -94,6 +102,16 @@ interface ParallelLineOutput {
 - 单次只推进 1 条最直接后台线；不要同时铺开超过 2 个新阵营/角色。
 - 避免精确兵力数字、部署密度、完整系统代号等会制造状态债务的细节；用“巡逻增加”“封锁升级”“样本被记录”这类可审核运营描述。
 - 如果最近 2 条 `recentOffscreenEvents` 已经使用同一阵营或同一压力类型，本次默认避开；除非输入明确 `preferredPressureType` 指向它。
+
+## 当前 timeline canon hook palette
+
+- `fsn`: 其它御主试探、从者夜间侦察、学校/柳洞寺/教会异常、御三家动作、普通日常破裂。
+- `fz`: 御主交易与暗杀准备、Assassin 侦察、教会监督、工房防御调整、从者之间的王道/骑士道冲突余波。
+- `fsf`: 蒂妮/吉尔伽美什/恩奇都的土地与神话级余波、弗拉特/杰克的异常魔术师线、椿/苍白骑手的梦境或医院异常、汉萨/教会观察、杰斯塔/狂信子的非人压力、普雷拉蒂的旁观使魔、西格玛/Watcher 的误判与佣兵行动、奥兰多/卡拉汀/法尔迪乌斯的权力机构线。权力机构线不能连续垄断。
+- `case-files`: 时钟塔派系、二世教室学生、魔眼/礼装交易、术式结构破绽、家系政治后果。
+- `mahoyo`: 三咲市地脉、洋馆结界、有珠童话使魔、青子/橙子冲突余波、草十郎普通人行动。
+- `kara-no-kyoukai`: 伽蓝之堂委托、橙子代价、干也调查、式的异常感知、都市怪异或起源犯罪余波。
+- `tsukihime-2000` / `tsukihime-2021`: 死徒捕食痕迹、教会代行者、远野宅内压、真祖/吸血鬼行动、普通城市夜行异常。
 
 ## 后台多样性纪律
 
@@ -112,7 +130,7 @@ interface ParallelLineOutput {
 - 严格遵守 `allowedScope`；遇到 `forbiddenEscalations` 必须降级、绕开或 blocked。
 - 严格遵守 `timelineId` 与 `genreContract`；不要把 FSF 的城市封锁/伪圣杯模板硬套到 FSN、事件簿、空境或月姬，也不要把事件簿式魔术谜案硬套到 FSF 正面乱战。
 - `privateSummary` 给主 GM / secret log 使用，不是玩家可见文本。
-- `publicLeakCandidates` 只能是痕迹、传闻、梦境、异常行动、事后结果等玩家安全投影。
+- `publicLeakCandidates` 只能是痕迹、传闻、梦境、异常行动、事后结果等玩家安全投影；至少 1 条必须能引导玩家行动，不能全是新闻/口径/背景播报。
 - `optionalNarrativeSnippet` 默认 null；只有 major beat end / arc transition 且不泄露秘密时才给 2-6 句镜头。
 - `publicLeakCandidates` 不得直接写出玩家未公开能力名、secret id、隐藏真名或幕后黑手；只写玩家可观察痕迹。
 - 所有输出都是候选，必须方便主 GM 选择性落地；不要把候选写成不可逆事实。

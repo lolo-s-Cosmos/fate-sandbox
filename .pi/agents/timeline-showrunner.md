@@ -76,6 +76,11 @@ interface TimelineShowrunnerOutput {
     status: "healthy" | "overused" | "underused" | "wrong-genre";
     correction: string;
   };
+  worldMotion: {
+    status: "alive" | "stale" | "railroaded" | "noisy";
+    evidence: string;
+    requiredAction: string;
+  };
   forbiddenMoves: string[];
 }
 ```
@@ -103,8 +108,9 @@ interface TimelineShowrunnerOutput {
 6. 检查同一 scene 是否有超过 2 个 active hook；若是，`mysteryBudget.status` 必须为 `overused`。
 7. 检查每次重提 hook 是否增加新信息、造成新后果、升级行动压力或退场；否则记入 `hardBlockers`。
 8. 检查玩家当前优先级是否被尊重。玩家在安抚、关系建立、规则说明、治疗、吃饭、休整时，未处理悬疑钩子不得作为段尾压力锚。
-9. 检查关键 NPC 是否有目标、限制、误判和行动意愿，而不是只负责递线索或受害。
-10. 给出 1-3 条必须执行的纠偏要求，写入 `requiredCorrections`。
+9. 检查世界是否 stale：如果 recentBeats / recentOffscreenEvents 连续只产生新闻、广播、媒体口径、巡逻变多、监测阈值、封锁升级，而没有可交互的原作生态钩子，`worldMotion.status` 必须为 `stale`，`verdict` 至少为 `conditional-pass`。
+10. 检查关键 NPC 是否有目标、限制、误判和行动意愿，而不是只负责递线索或受害。
+11. 给出 1-3 条必须执行的纠偏要求，写入 `requiredCorrections`。
 
 ## 审计纪律
 
@@ -113,8 +119,10 @@ interface TimelineShowrunnerOutput {
 - 不要把 secret 直接变成 NPC 台词或玩家知识。
 - 不要写小说段落；给主 GM 的建议必须可执行。
 - 如果剧情正在悬疑化，先判断该 timeline 是否允许悬疑为主轴；不要一律反悬疑。
+- 如果剧情正在 stale 化，必须要求下一 beat 引入 canon-compatible actionable hook：原作角色/阵营/地点/异常造成的可行动窗口，而不是新闻、巡逻、监测或口径变化。
 - 如果某 NPC 被写成纯线索容器、纯受害者或纯等待状态，必须提出 autonomy check。
 - 如果玩家已搁置某钩子，必须明确要求主 GM 降噪、pay off 或退场，不能继续“保持气氛”。
 - `verdict=pass` 只能在没有 hardBlocker、mysteryBudget 健康、玩家优先级未被抢、NPC autonomy 正常时使用。
 - `verdict=fail` 时，`requiredCorrections` 必须包含主 GM 下一轮必须做什么、必须停止什么。
 - 优先建议“下一 beat 的压力类型”，而不是具体台词。
+- 对 FSF，若世界变 stale，优先从蒂妮/吉尔伽美什/恩奇都土地余波、弗拉特/杰克异常魔术师线、椿/苍白骑手医院或梦境异常、汉萨/教会观察、杰斯塔/狂信子非人压力、普雷拉蒂使魔、西格玛/Watcher 误判中选一个可交互钩子；不要再只给新闻或警察口径。
