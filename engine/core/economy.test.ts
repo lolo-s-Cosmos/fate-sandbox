@@ -130,6 +130,23 @@ void test("updateEconomy rejects overspending", () => {
   );
 });
 
+void test("updateEconomy renames a purse without changing funds", () => {
+  resetState();
+
+  updateEconomy({
+    kind: "rename-purse",
+    purseId: "purse-protagonist-cash",
+    label: "绫香的钱包",
+    reason: "修正资金账户显示名",
+  });
+
+  const purse = getState().public.economy.accessibleFunds.find(
+    (entry) => entry.id === "purse-protagonist-cash",
+  );
+  assert.equal(purse?.label, "绫香的钱包");
+  assert.equal(purse?.amount, 50000);
+});
+
 void test("updateEconomy reports available purse ids for an unknown purse", () => {
   resetState();
 

@@ -574,7 +574,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
     description:
       "更新 2004 年日本円经济状态；每笔资金必须指定 purse/account 与 reason，资金增加必须说明可审计来源。\n\n" +
       "【必须调用的场景】\n" +
-      "- 消费、获得现金、增加可访问资金账户或记录债务\n" +
+      "- 消费、获得现金、增加可访问资金账户、修正资金账户名称或记录债务\n" +
       "- 食宿、装备、服务、情报等交易发生时\n\n" +
       "【严禁的行为】\n" +
       "- 把同行者资金说成玩家随身现金\n" +
@@ -585,6 +585,7 @@ export function registerAllTools(pi: ExtensionAPI): void {
         Type.Literal("spend-money"),
         Type.Literal("gain-money"),
         Type.Literal("add-purse"),
+        Type.Literal("rename-purse"),
         Type.Literal("add-debt"),
       ]),
       purseId: Type.Optional(
@@ -612,7 +613,9 @@ export function registerAllTools(pi: ExtensionAPI): void {
         ]),
       ),
       counterparty: Type.Optional(Type.String({ description: "gain-money 必填：付款方/来源说明" })),
-      label: Type.Optional(Type.String()),
+      label: Type.Optional(
+        Type.String({ description: "add-purse / rename-purse 必填：资金账户玩家可见名称" }),
+      ),
       amount: Type.Optional(Type.Union([Type.Integer(), Type.String()])),
       access: Type.Optional(
         Type.Union([

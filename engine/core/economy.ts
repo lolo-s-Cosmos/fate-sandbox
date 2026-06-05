@@ -49,6 +49,7 @@ export type EconomyEvent =
       access: MoneyPurse["access"];
       reason: string;
     }
+  | { kind: "rename-purse"; purseId: string; label: string; reason: string }
   | { kind: "add-debt"; debtorActorId: ActorId; creditor: string; amount: number; reason: string };
 
 export interface EconomyEventResult {
@@ -77,6 +78,8 @@ export function updateEconomy(event: EconomyEvent): EconomyEventResult {
       );
     case "add-purse":
       return addPurse(event);
+    case "rename-purse":
+      return renamePurse(event);
     case "add-debt":
       return addDebt(event);
     default:
@@ -174,6 +177,14 @@ function addPurse(event: Extract<EconomyEvent, { kind: "add-purse" }>): EconomyE
     });
   });
   return { message: "资金账户已加入。" };
+}
+
+function renamePurse(event: Extract<EconomyEvent, { kind: "rename-purse" }>): EconomyEventResult {
+  updateState((draft) => {
+    const purse = resolvePurse(draft.public.economy.accessibleFunds, event.purseId, undefined);
+    purse.label = assertNonEmptyString(event.label, "label");
+  });
+  return { message: "资金账户名称已更新。" };
 }
 
 function addDebt(event: Extract<EconomyEvent, { kind: "add-debt" }>): EconomyEventResult {

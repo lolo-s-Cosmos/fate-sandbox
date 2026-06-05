@@ -19,7 +19,10 @@ function assertEconomyEvent(params: unknown): EconomyEvent {
     throw new Error("update_economy 参数必须是对象。");
   }
   const kind = params["kind"];
-  if ((kind === "spend-money" || kind === "gain-money") && typeof params["purseId"] === "string") {
+  if (
+    (kind === "spend-money" || kind === "gain-money" || kind === "rename-purse") &&
+    typeof params["purseId"] === "string"
+  ) {
     const purseId = params["purseId"];
     const exists = getPublicState().economy.accessibleFunds.some((purse) => purse.id === purseId);
     if (!exists) {
