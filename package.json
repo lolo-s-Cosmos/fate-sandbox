@@ -12,7 +12,6 @@
   "files": [
     "agents/",
     "data/",
-    "docs/",
     "engine/",
     "extensions/",
     "skills/",

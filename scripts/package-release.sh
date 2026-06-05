@@ -65,6 +65,10 @@ NODE
   cp -R "$rel" "$STAGE_DIR/$rel"
 done
 
+# 移除本地玩家角色印象和测试文件；发布包只保留运行所需内容。
+rm -rf "$STAGE_DIR/agents/user"
+find "$STAGE_DIR" -type f -name '*.test.ts' -delete
+
 # 避免 macOS zip 写入 AppleDouble 扩展属性文件。
 (
   cd "$TMP_DIR"
