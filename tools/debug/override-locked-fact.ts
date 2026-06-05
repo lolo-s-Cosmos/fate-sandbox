@@ -11,7 +11,13 @@ import { textResult, type ToolResult } from "../runtime/tool-result";
 
 export type OverrideLockedFactParams =
   | { kind: "servant-class"; actorId: ActorId; className: ServantClass; reason: string }
-  | { kind: "servant-true-name"; actorId: ActorId; display: string; reason: string }
+  | {
+      kind: "servant-true-name";
+      actorId: ActorId;
+      display: string;
+      status?: "hidden" | "suspected" | "revealed";
+      reason: string;
+    }
   | { kind: "servant-base-params"; actorId: ActorId; base: FateParams; reason: string };
 
 export function overrideLockedFactTool(params: unknown, sessionManager: unknown): ToolResult {
@@ -33,7 +39,10 @@ export function overrideLockedFactTool(params: unknown, sessionManager: unknown)
         servantForm.identity.className = override.className;
         break;
       case "servant-true-name":
-        servantForm.identity.trueName = { status: "revealed", display: override.display };
+        servantForm.identity.trueName = {
+          status: override.status ?? "revealed",
+          display: override.display,
+        };
         break;
       case "servant-base-params":
         servantForm.parameters.base = override.base;
@@ -63,12 +72,31 @@ function assertOverrideLockedFactParams(params: unknown): OverrideLockedFactPara
     case "servant-class":
       return { kind, actorId, className: assertServantClass(params["className"]), reason };
     case "servant-true-name":
-      return { kind, actorId, display: assertString(params["display"], "display"), reason };
+      return {
+        kind,
+        actorId,
+        display: assertString(params["display"], "display"),
+        status: assertOptionalTrueNameStatus(params["status"]),
+        reason,
+      };
     case "servant-base-params":
       return { kind, actorId, base: assertFateParams(params["base"]), reason };
     default:
       throw new Error(`非法 override kind: ${kind}`);
   }
+}
+
+function assertOptionalTrueNameStatus(
+  value: unknown,
+): "hidden" | "suspected" | "revealed" | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  const status = assertString(value, "status");
+  if (status === "hidden" || status === "suspected" || status === "revealed") {
+    return status;
+  }
+  throw new Error(`非法 status: ${status}。允许值: hidden, suspected, revealed。`);
 }
 
 function assertFateParams(value: unknown): FateParams {

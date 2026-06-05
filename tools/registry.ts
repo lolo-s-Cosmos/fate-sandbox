@@ -810,6 +810,11 @@ export function registerAllTools(pi: ExtensionAPI): void {
       actorId: Type.String(),
       className: Type.Optional(Type.String()),
       display: Type.Optional(Type.String()),
+      status: Type.Optional(
+        Type.Union([Type.Literal("hidden"), Type.Literal("suspected"), Type.Literal("revealed")], {
+          description: "servant-true-name 可选；修正误泄露时填 hidden/suspected，默认 revealed",
+        }),
+      ),
       base: Type.Optional(Type.Unknown()),
       reason: Type.String(),
     }),

@@ -119,7 +119,10 @@ function assertServantInput(value: unknown): ServantInput {
     demeanor: assertString(servant["demeanor"], "servant.demeanor"),
     className: assertServantClass(servant["className"], "servant.className"),
     trueNameDisplay: assertString(servant["trueNameDisplay"], "servant.trueNameDisplay"),
-    trueNameStatus: assertRevealStatus(servant["trueNameStatus"], "servant.trueNameStatus"),
+    trueNameStatus: normalizeProtagonistTrueNameStatus(
+      assertRevealStatus(servant["trueNameStatus"], "servant.trueNameStatus"),
+      servant,
+    ),
     parameters: assertFateParams(servant["parameters"], "servant.parameters"),
     classSkills: assertServantSkills(servant["classSkills"], "servant.classSkills"),
     personalSkills: assertServantSkills(servant["personalSkills"], "servant.personalSkills"),
@@ -219,6 +222,18 @@ function assertServantClass(value: unknown, fieldName: string): ServantClass {
 
 function assertRevealStatus(value: unknown, fieldName: string): "hidden" | "suspected" | "revealed" {
   return assertOneOf(value, fieldName, REVEAL_STATUSES);
+}
+
+function normalizeProtagonistTrueNameStatus(
+  status: "hidden" | "suspected" | "revealed",
+  servant: Record<string, unknown>,
+): "hidden" | "suspected" | "revealed" {
+  if (servant["id"] !== "protagonist" || status !== "revealed") {
+    return status;
+  }
+  throw new Error(
+    "玩家从者初始化不得把 servant.trueNameStatus 写成 revealed；玩家知道真名也应保持 public trueName hidden/suspected，并用 reveal_secret 配置隐藏真名。",
+  );
 }
 
 function assertOutfit(value: unknown, fieldName: string): OutfitState {

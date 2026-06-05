@@ -86,6 +86,28 @@ void test("upsertActorTool reports invalid npc relationship stance in domain lan
   );
 });
 
+void test("upsertActorTool rejects revealed true name for protagonist servant setup", () => {
+  resetState();
+
+  assert.throws(
+    () =>
+      upsertActorTool(
+        {
+          kind: "upsert-servant",
+          servant: {
+            ...baseMasterlessServant(),
+            id: "protagonist",
+            trueNameDisplay: "两仪式",
+            trueNameStatus: "revealed",
+          },
+          reason: "测试玩家从者初始化真名泄露保护",
+        },
+        createNoopSessionManager(),
+      ),
+    /玩家从者初始化不得把 servant\.trueNameStatus 写成 revealed/,
+  );
+});
+
 function baseMasterlessServant(): Record<string, unknown> {
   return {
     id: "masterless-caster",
