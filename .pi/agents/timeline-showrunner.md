@@ -48,7 +48,7 @@ interface TimelineShowrunnerInput {
 }
 ```
 
-extension 会在系统提示中自动注入 `<timeline_state_context>`，其中包含当前 public 态势与最近幕后事件。你只能使用输入、该注入上下文，以及 lookup 查到的公开型月设定。不要假装知道注入上下文之外的完整主状态或 secret。
+extension 会在系统提示中自动注入 `<timeline_state_context>`，其中包含当前 public 态势、当前 UTC、本地展示时间、timezone 与最近幕后事件。你只能使用输入、该注入上下文，以及 lookup 查到的公开型月设定。不要假装知道注入上下文之外的完整主状态或 secret。
 
 ## 输出契约
 
@@ -111,12 +111,14 @@ interface TimelineShowrunnerOutput {
 9. 检查世界是否 stale：如果 recentBeats / recentOffscreenEvents 连续只产生新闻、广播、媒体口径、巡逻变多、监测阈值、封锁升级，而没有可交互的原作生态钩子，`worldMotion.status` 必须为 `stale`，`verdict` 至少为 `conditional-pass`。
 10. 检查世界是否过于温柔：如果连续 2 轮没有代价、没有资源/时间/关系损耗、没有敌方主动行动、没有调查窗口关闭，`worldMotion.status` 应判为 `stale` 或 `railroaded`，并要求下一轮给出硬后果。
 11. 检查关键 NPC 是否有目标、限制、误判和行动意愿，而不是只负责递线索或受害。
-12. 给出 1-3 条必须执行的纠偏要求，写入 `requiredCorrections`。
+12. 检查后台时间是否把本地时间误写成 UTC。若 recentOffscreenEvents / 输入候选出现 `21:00 Denver` 被写成 `21:00Z` 这类偏移，必须写入 `hardBlockers`。
+13. 给出 1-3 条必须执行的纠偏要求，写入 `requiredCorrections`。
 
 ## 审计纪律
 
 - 严查空转和温柔兜底，不严禁推进；模棱两可时判为 `watch`，玩家优先级被抢、钩子换皮重复、世界运动缺席、连续无代价成功时判 `drifting`。
 - 不要建议越过 storyWindow.forbiddenEscalations。
+- 时间审计必须以 `<timeline_state_context>` 为准：`currentAt/currentAtUtc` 是 ISO UTC，`displayTime/currentLocalTime` 只是本地展示。严禁把本地时间直接加 `Z` 当 UTC。
 - 不要把 secret 直接变成 NPC 台词或玩家知识。
 - 不要写小说段落；给主 GM 的建议必须可执行。
 - 如果剧情正在悬疑化，先判断该 timeline 是否允许悬疑为主轴；不要一律反悬疑。

@@ -1,16 +1,21 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
+import type { TimeZoneId } from "../../../engine/core/state";
+
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Type } from "typebox";
 
+import { formatHumanTime } from "../../../engine/core/date-time";
 import { lookupTool } from "../../../tools/lookup/lookup";
 
 interface TimelineStateContext {
   currentAt: string;
+  currentAtUtc: string;
   timezone: string;
   displayTime: string;
+  currentLocalTime: string;
   timeRangeRule: string;
   campaign: {
     title: string;
@@ -95,7 +100,7 @@ function buildTimelineStateInjection(): string {
   }
 }
 
-function buildTimelineStateContext(state: Record<string, unknown>): TimelineStateContext {
+export function buildTimelineStateContext(state: Record<string, unknown>): TimelineStateContext {
   const publicState = requireRecord(state["public"], "state.public");
   const secrets = requireRecord(state["secrets"], "state.secrets");
   const campaign = requireRecord(publicState["campaign"], "public.campaign");
@@ -103,14 +108,17 @@ function buildTimelineStateContext(state: Record<string, unknown>): TimelineStat
   const scene = requireRecord(publicState["scene"], "public.scene");
   const actors = requireRecord(publicState["actors"], "public.actors");
   const offscreenEventLog = optionalArray(secrets["offscreenEventLog"]);
+  const currentAt = requireString(clock["currentAt"], "clock.currentAt");
+  const timezone = assertTimelineTimezone(requireString(clock["timezone"], "clock.timezone"));
+  const displayTime = formatHumanTime(currentAt, timezone).display;
 
   return {
-    currentAt: requireString(clock["currentAt"], "clock.currentAt"),
-    timezone: requireString(clock["timezone"], "clock.timezone"),
-    displayTime:
-      optionalString(clock["displayTime"]) ?? requireString(clock["currentAt"], "clock.currentAt"),
-    timeRangeRule:
-      "所有 timeRange.start/end 必须使用 ISO UTC；displayTime 是本地展示时间，不是 UTC；timeRange.end <= currentAt。",
+    currentAt,
+    currentAtUtc: currentAt,
+    timezone,
+    displayTime,
+    currentLocalTime: displayTime,
+    timeRangeRule: `所有 timeWindow/timeRange.start/end 必须使用 ISO UTC；当前 UTC ${currentAt} = ${timezone} 本地 ${displayTime}；不得把本地时钟直接加 Z 输出；timeRange.end <= currentAt。`,
     campaign: {
       title: requireString(campaign["title"], "campaign.title"),
       timeline: requireString(campaign["timeline"], "campaign.timeline"),
@@ -229,6 +237,13 @@ function formatThreats(values: readonly unknown[]): string[] {
     const threat = requireRecord(value, `scene.threats[${index}]`);
     return `${requireString(threat["severity"], "threat.severity")}: ${requireString(threat["summary"], "threat.summary")}`;
   });
+}
+
+function assertTimelineTimezone(value: string): TimeZoneId {
+  if (value === "Asia/Tokyo" || value === "America/Denver") {
+    return value;
+  }
+  throw new Error(`clock.timezone 不支持: ${value}。`);
 }
 
 function selectStateRecord(raw: unknown): Record<string, unknown> {

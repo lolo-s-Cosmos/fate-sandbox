@@ -32,7 +32,7 @@ interface ParallelLineInput {
     | "custom";
   genreContract: string;
   activePressurePalette: string[];
-  timeWindow: { start: string; end: string };
+  timeWindow: { start: string; end: string }; // ISO UTC；本地展示时间只看注入上下文 currentLocalTime/displayTime，不得把本地时钟直接当 UTC。
   currentArc: string;
   currentBeat: string;
   allowedScope: string[];
@@ -56,7 +56,7 @@ interface ParallelLineInput {
 }
 ```
 
-extension 会在系统提示中自动注入 `<timeline_state_context>`，其中包含当前 public 态势与最近幕后事件。你必须使用该上下文检查重复后台线；不要要求主 GM 重复提供，也不要假装知道注入上下文之外的完整主状态。
+extension 会在系统提示中自动注入 `<timeline_state_context>`，其中包含当前 public 态势、当前 UTC、本地展示时间、timezone 与最近幕后事件。你必须使用该上下文检查重复后台线；不要要求主 GM 重复提供，也不要假装知道注入上下文之外的完整主状态。
 
 ## 输出契约
 
@@ -100,6 +100,7 @@ interface ParallelLineOutput {
 - `riskFlags` 最多 4 条。
 - `optionalNarrativeSnippet` 默认必须为 null；只有输入明确 `majorBeatEnd=true` 或 `arcTransition=true` 时，才可给 2-6 句玩家安全镜头。
 - 单次只推进 1 条最直接后台线；不要同时铺开超过 2 个新阵营/角色。
+- `timeRange.start/end` 必须复制或计算为 ISO UTC。若你想表达本地夜晚，先用 `<timeline_state_context>` 的 timezone/currentLocalTime 对照 UTC；严禁把 `21:00 Denver` 写成 `21:00Z`。
 - 避免精确兵力数字、部署密度、完整系统代号等会制造状态债务的细节；用“巡逻增加”“封锁升级”“样本被记录”这类可审核运营描述。
 - 如果最近 2 条 `recentOffscreenEvents` 已经使用同一阵营或同一压力类型，本次默认降权而不是封禁；只要能带来新状态、新误判、新行动窗口、资源消耗、内部冲突、失败或 payoff，就可以继续推进同一条线。
 
