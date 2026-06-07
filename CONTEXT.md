@@ -104,6 +104,10 @@ _Avoid_: Per-tool persistence boilerplate, manual result wrapper
 The module that narrows unknown tool parameters into domain event inputs at the tool seam. It owns common record, string, enum, array, and positive-integer checks so Domain Event Tools do not duplicate shallow boundary parsing.
 _Avoid_: Per-tool assert helper clones, unchecked tool params
 
+**New Game Initialization**:
+The single recipe module for creating a new playable Game State from selected campaign, protagonist, presence, and optional hidden protagonist Servant facts. It owns reset ordering, campaign setup, protagonist materialization, secret-slot setup, and post-init self-checks.
+_Avoid_: Manual start-game tool chain, prompt-only initialization recipe
+
 **Revelation**:
 A domain event that moves hidden truth from Secret Game State into Public Game State. Ordinary reveal tools accept player-facing claims and evidence, not secret IDs; the tool internally matches and validates whether anything is revealed.
 _Avoid_: Secret ID reveal, manual public copy
