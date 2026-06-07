@@ -5,7 +5,9 @@
 ## 工具优先级
 
 - 需要确认当前时间、地点、资源、伤势、目标、威胁、记忆：调用 `get_status`。
-- 涉及任何预设角色、地点、概念、时间线、能力细节，且当前 public brief / 本轮工具结果 / 已明确的会话上下文不足以确认时：调用 `lookup`；普通生活细节和已确认事实不要重复查。
+- 涉及任何预设角色、地点、概念、时间线、能力细节，且当前 public brief / 本轮工具结果 / 已明确的会话上下文不足以确认时：先调用 `lookup` 确认本地索引和版本边界；普通生活细节和已确认事实不要重复查。
+- `lookup` 只给出索引、边界或残缺资料，仍不足以确认精确 canon 时：调用 `web_search` 搜索外部资料，再用 `fetch_content` 读取具体页面正文。不要只根据搜索摘要定事实。
+- 从者参数、技能、宝具、职阶适性、真名、外观、阵营关系、不同作品版本差异，在写入长期状态或用于战斗结算前，如果本地资料不完整或来源不清，必须外部检索确认。
 - 进入复杂调查、潜入、对峙、撤退、战斗准备：优先 `start_scene_beat`。
 - 当前 beat 目标已满足，需要收口、记录后果或进入下一 beat：优先 `finish_current_beat`。
 - 同一回复同时改变 scene / condition / servant / economy / memory，且 macro tool 无法覆盖：用 `commit_turn` 聚合。
@@ -33,6 +35,13 @@
 - 如果连续 2 轮没有代价、没有敌方主动行动、没有资源/时间/关系损耗，必须调用 `parallel-line` 或使用领域工具落地一个硬后果；不要只用气氛暗示压力。
 - 如果主 GM 不确定下一条 `parallel-line` 应该换到哪个生态位，先调用 `timeline-showrunner`，让它给 `pressurePalette` / `worldMotion.requiredAction`，再调用 `parallel-line`。
 - 子 agent 输出不得直接成为 canonical state；需要落地时由主 GM 审核后使用 `record_offscreen_event`、公开 clue/threat/memory 或普通领域工具。
+
+## 外部检索边界
+
+- 搜索 query 优先包含日文名、作品名、目标字段，例如 `ペイルライダー Fate strange Fake ステータス`。
+- 优先打开 TYPE-MOON Wiki JP、TMdict、官方站或能引用官方 material 的页面。
+- 可以用中文/英文页面找别名和关键词，但不能把战力排行、论坛讨论、视频解说、SEO 文章或 AI 摘要当 canon。
+- 外部检索结果默认是 GM 资料，不是玩家角色或 NPC 知识；是否能进入 public state 仍按信息安全规则判断。
 
 ## 边界
 
