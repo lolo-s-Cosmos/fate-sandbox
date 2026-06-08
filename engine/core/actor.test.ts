@@ -135,6 +135,65 @@ void test("upsertActor rejects non-protagonist setup", () => {
 void test("upsertActor can replace protagonist setup skeleton", () => {
   resetState();
 
+  upsertShirouProtagonist(40);
+
+  const publicState = getPublicState();
+  assert.equal(publicState.actors.protagonist?.identity.publicIdentity, "卫宫士郎");
+  assert.match(buildGmBrief(publicState), /玩家角色：卫宫士郎 \/ human \/ 卫宫士郎/);
+});
+
+void test("GM brief separates human circuit aptitude from Od remaining percentage", () => {
+  resetState();
+
+  upsertShirouProtagonist(100);
+
+  const brief = buildGmBrief(getPublicState());
+  assert.match(brief, /魔术回路27\/E；Od余量稳定（100%）/);
+});
+
+void test("GM brief separates servant mana parameter from mana remaining percentage", () => {
+  resetState();
+
+  upsertActor({
+    kind: "upsert-servant",
+    servant: {
+      id: "protagonist",
+      displayName: "Saber",
+      publicIdentity: "玩家扮演的 Saber",
+      apparentAge: "不明",
+      outfit: { label: "蓝银甲胄", details: "灵装显现。" },
+      demeanor: "克制而警惕。",
+      className: "Saber",
+      trueNameDisplay: "Saber",
+      trueNameStatus: "hidden",
+      parameters: {
+        strength: "B",
+        endurance: "C",
+        agility: "C",
+        mana: "A+",
+        luck: "D",
+        noblePhantasm: "A++",
+      },
+      classSkills: [],
+      personalSkills: [],
+      noblePhantasms: [],
+      spiritualCore: 100,
+      mana: 100,
+      spiritualCondition: "灵基稳定",
+      masterActorId: null,
+      masterName: null,
+      contractStatus: "masterless",
+      manaSupply: "sufficient",
+      currentOrder: "自主行动",
+    },
+    reason: "测试玩家从者魔力显示",
+  });
+
+  const brief = buildGmBrief(getPublicState());
+  assert.match(brief, /魔力余量稳定（100%；参数A\+）/);
+});
+
+function upsertShirouProtagonist(od: number): void {
   upsertActor({
     kind: "setup-protagonist",
     actor: {
@@ -142,7 +201,7 @@ void test("upsertActor can replace protagonist setup skeleton", () => {
       kind: "human",
       roles: [{ kind: "social", label: "穗群原学园学生" }],
       magecraft: {
-        circuits: { count: "27", quality: "E", od: 40, status: "normal", traits: [] },
+        circuits: { count: "27", quality: "E", od, status: "normal", traits: [] },
         disciplines: [
           { name: "强化", rank: "E", notes: "可强化物体结构。" },
           { name: "投影", rank: "E-", notes: "基础投影，稳定性低。" },
@@ -171,11 +230,7 @@ void test("upsertActor can replace protagonist setup skeleton", () => {
     },
     reason: "setup confirmed protagonist identity",
   });
-
-  const publicState = getPublicState();
-  assert.equal(publicState.actors.protagonist?.identity.publicIdentity, "卫宫士郎");
-  assert.match(buildGmBrief(publicState), /玩家角色：卫宫士郎 \/ human \/ 卫宫士郎/);
-});
+}
 
 void test("configureServantSecrets creates mergeable slots for runtime servants", () => {
   resetState();

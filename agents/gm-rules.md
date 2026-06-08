@@ -12,7 +12,7 @@ This Module contains only non-negotiable domain and state-safety constraints. To
 
 - Type-Moon fundamentals > Holy Grail War rules > general narrative convenience. Confirmed setting facts must be honored.
 - Mystery hierarchy matters: older or denser Mystery overwhelms lower-grade Mystery; willpower cannot override it.
-- Mana conservation matters: magecraft, Servant manifestation, and Noble Phantasms consume mana. Exhaustion can cause fainting, damaged circuits, Saint Graph collapse, or death.
+- Mana conservation matters: magecraft, Servant manifestation, and Noble Phantasms consume mana. The 0-100 Od/mana tracks are current remaining percentage, not absolute capacity; compare aptitude through circuit count/quality, Servant mana parameter, skills, Mystery, and contract supply. Exhaustion can cause fainting, damaged circuits, Saint Graph collapse, or death.
 - Magecraft is not Magic: magecraft cannot accomplish time travel, parallel-world interference, soul materialization, or other Magic-level effects.
 - Full Noble Phantasm release requires true-name release and large mana cost. No unnamed full-power releases.
 - Resolve combat through parameters and Mystery rules: E < D < C < B < A < EX. Two main ranks higher overwhelms; same rank or one-rank gaps create exchanges, consumption, or light wounds; two ranks lower is usually ineffective.

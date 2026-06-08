@@ -116,15 +116,17 @@ function formatActorLine(actor: NonNullable<PublicGameState["actors"][string]>):
   const servant = actor.servantForm;
   const identity = formatIdentity(actor);
   if (servant === null) {
-    return `${actor.presentation.displayName} / ${actor.kind} / ${identity}`;
+    return [actor.presentation.displayName, actor.kind, identity, formatMagecraft(actor)].join(
+      " / ",
+    );
   }
   return [
     actor.presentation.displayName,
     actor.kind,
     servant.identity.className,
     `真名${servant.identity.trueName.status}:${servant.identity.trueName.display}`,
-    `灵基${resourceBand(servant.condition.spiritualCore.value)}`,
-    `魔力${resourceBand(servant.condition.mana.value)}`,
+    `灵基完整度${resourceBand(servant.condition.spiritualCore.value)}（${servant.condition.spiritualCore.value}%）`,
+    `魔力余量${resourceBand(servant.condition.mana.value)}（${servant.condition.mana.value}%；参数${servant.parameters.base.mana}）`,
     `契约${servant.contract.status}`,
   ].join(" / ");
 }
@@ -219,6 +221,14 @@ function formatOrdinaryItems(publicState: PublicGameState): string {
       (actor) => `- ${actor.presentation.displayName}：${actor.inventory.ordinaryItems.join("、")}`,
     );
   return lines.length === 0 ? "- 无记录" : lines.join("\n");
+}
+
+function formatMagecraft(actor: NonNullable<PublicGameState["actors"][string]>): string {
+  const magecraft = actor.magecraft;
+  if (magecraft === null) {
+    return "无可用魔术回路";
+  }
+  return `魔术回路${magecraft.circuits.count}/${magecraft.circuits.quality}；Od余量${resourceBand(magecraft.circuits.od)}（${magecraft.circuits.od}%）`;
 }
 
 function resourceBand(value: number): string {
