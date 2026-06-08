@@ -19,10 +19,10 @@ export function buildGmBrief(publicState: PublicGameState): string {
     `资源：${formatGmBriefFunds(publicState)}`,
     `伤势/长期影响：${formatCondition(protagonist.condition)}`,
     `当前目标：${formatActiveObjectives(publicState, { separator: "；" })}`,
-    `目标选择规则：resolve-objective / commit_turn 解决目标时，优先用 objectiveSummary 并逐字复制上方 summary；不确定 id 时不要传 objectiveId，更不要传空字符串。`,
+    `目标推进规则：active beat 收口用 progress_scene_beat complete；仅在 commit_turn 局部解决目标且不收口 beat 时，scene event 使用 resolve-objective，并用 objectiveSummary 逐字复制上方 summary。`,
     `当前威胁：${formatSceneThreats(publicState, { separator: "；", colon: ":" })}`,
     `最近重大记忆：${formatRecentEvents(publicState)}`,
-    "本轮工具纪律：复杂 beat 开启/收口用 progress_scene_beat；非常规多状态组合才用 commit_turn；actor 入场/离场用 set_scene_presence。不要输出 JSON、数值表、schema 字段。",
+    "本轮工具纪律：每轮 time 必须用 elapsed/travel 推进时间；Scene Beat lifecycle 用 progress_scene_beat；非 Scene Beat lifecycle 的多状态变化用 commit_turn；actor 入场/离场用 set_scene_presence。不要输出 JSON、数值表、schema 字段。",
   ].join("\n");
 }
 
