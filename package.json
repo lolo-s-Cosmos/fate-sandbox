@@ -51,13 +51,11 @@
     "typebox": "^1.1.38"
   },
   "devDependencies": {
-    "@earendil-works/pi-coding-agent": "^0.75.3",
     "@types/node": "^25.9.1",
     "jiti": "^2.7.0",
     "oxfmt": "^0.52.0",
     "oxlint": "^1.67.0",
     "oxlint-tsgolint": "^0.23.0",
-    "typebox": "^1.1.38",
     "typescript": "^6.0.3"
   },
   "peerDependenciesMeta": {
@@ -71,5 +69,5 @@
   "engines": {
     "node": ">=24"
   },
-  "packageManager": "pnpm@11.3.0+sha512.2c403d6594527287672b1f7056343a1f7c3634036a67ffabfcc2b3d7595d843768f8787148d1b57cf7956c90606bbd192857c363af19e96d2d0ec9ec5741d215"
+  "packageManager": "pnpm@11.5.2"
 }
