@@ -53,12 +53,14 @@ void test("lookupWorldData finds Fate EXTRA character indexes", () => {
 
 void test("lookupWorldData finds Fate EXTRA servant indexes", () => {
   const nero = lookupWorldData({ query: "尼禄 克劳狄乌斯 赤Saber EXTRA" });
-  assert.match(nero.text, /"id": "nero-claudius-saber-extra"/);
+  assert.match(nero.text, /名称：尼禄·克劳狄乌斯/);
   assert.match(nero.text, /外部检索确认/);
+  assert.doesNotMatch(nero.text, /"id": "nero-claudius-saber-extra"/);
 
   const saver = lookupWorldData({ query: "Saver 觉者 特维斯 EXTRA" });
-  assert.match(saver.text, /"id": "saver-buddha-extra"/);
+  assert.match(saver.text, /名称：觉者/);
   assert.match(saver.text, /Saver 不是常规七职阶/);
+  assert.doesNotMatch(saver.text, /"id": "saver-buddha-extra"/);
 });
 
 void test("lookupWorldData finds Fate EXTRA CCC timeline contract", () => {
@@ -82,12 +84,15 @@ void test("lookupWorldData finds Fate EXTRA CCC character indexes", () => {
 
 void test("lookupWorldData finds Fate EXTRA CCC servant indexes", () => {
   const karna = lookupWorldData({ query: "迦尔纳 CCC 吉娜可 职阶不明" });
-  assert.match(karna.text, /"id": "karna-servant-ccc"/);
+  assert.match(karna.text, /名称：迦尔纳（CCC）/);
   assert.match(karna.text, /职阶不明/);
+  assert.doesNotMatch(karna.text, /"id": "karna-servant-ccc"/);
 
   const alterEgo = lookupWorldData({ query: "Passionlip Meltryllis Alter Ego CCC BB眷属" });
-  assert.match(alterEgo.text, /"id": "passionlip-alter-ego-ccc"/);
-  assert.match(alterEgo.text, /"id": "meltryllis-alter-ego-ccc"/);
+  assert.match(alterEgo.text, /名称：帕ッションリップ/);
+  assert.match(alterEgo.text, /名称：梅尔特莉莉丝/);
+  assert.doesNotMatch(alterEgo.text, /"id": "passionlip-alter-ego-ccc"/);
+  assert.doesNotMatch(alterEgo.text, /"id": "meltryllis-alter-ego-ccc"/);
 });
 
 void test("lookupWorldData finds Snowfield locations", () => {

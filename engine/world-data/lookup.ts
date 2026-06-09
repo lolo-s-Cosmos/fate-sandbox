@@ -156,7 +156,7 @@ function recordEntries(record: Record<string, string>): LookupEntry[] {
 function servantEntries(servants: ServantEntry[]): LookupEntry[] {
   return servants.map((servant) => ({
     key: servant.name,
-    text: JSON.stringify(servant, null, 2),
+    text: formatServantEntry(servant),
     searchableText: [
       servant.id,
       servant.name,
@@ -164,8 +164,47 @@ function servantEntries(servants: ServantEntry[]): LookupEntry[] {
       servant.trueName,
       ...servant.aliases,
       ...servant.notes,
+      ...Object.values(servant.parameters),
+      ...servant.noblePhantasms.flatMap((noblePhantasm) => [
+        noblePhantasm.name,
+        noblePhantasm.rank,
+        noblePhantasm.kind,
+        noblePhantasm.summary,
+      ]),
     ].join("\n"),
   }));
+}
+
+function formatServantEntry(servant: ServantEntry): string {
+  return [
+    `名称：${servant.name}`,
+    `职阶：${servant.className}`,
+    `真名：${servant.trueName}`,
+    `别名：${servant.aliases.join("、")}`,
+    `参数：${formatServantParameters(servant.parameters)}`,
+    "宝具：",
+    ...servant.noblePhantasms.map(formatNoblePhantasm),
+    "备注：",
+    ...servant.notes.map((note) => `- ${note}`),
+  ].join("\n");
+}
+
+function formatServantParameters(parameters: Record<string, string>): string {
+  const labels: Record<string, string> = {
+    strength: "筋力",
+    endurance: "耐久",
+    agility: "敏捷",
+    mana: "魔力",
+    luck: "幸运",
+    noblePhantasm: "宝具",
+  };
+  return Object.entries(labels)
+    .map(([key, label]) => `${label} ${parameters[key] ?? "?"}`)
+    .join(" / ");
+}
+
+function formatNoblePhantasm(noblePhantasm: ServantEntry["noblePhantasms"][number]): string {
+  return `- ${noblePhantasm.name}（${noblePhantasm.rank}，${noblePhantasm.kind}）：${noblePhantasm.summary}`;
 }
 
 function locationEntries(locations: LocationEntry[]): LookupEntry[] {
