@@ -172,7 +172,16 @@ export function revealSecret(event: RevealSecretEvent): RevealSecretResult {
     );
     if (noblePhantasm !== undefined && actor.servantForm !== null) {
       noblePhantasm.revealState = "revealed";
-      actor.servantForm.noblePhantasms.push({ ...noblePhantasm.value, status: "revealed" });
+      const revealedEntry = { ...noblePhantasm.value, status: "revealed" as const };
+      const hiddenIndex = findReplaceableHiddenNoblePhantasmIndex(
+        actor.servantForm.noblePhantasms,
+        noblePhantasm.value.name,
+      );
+      if (hiddenIndex === -1) {
+        actor.servantForm.noblePhantasms.push(revealedEntry);
+      } else {
+        actor.servantForm.noblePhantasms[hiddenIndex] = revealedEntry;
+      }
       result = { outcome: "revealed", playerSafeMessage: "隐藏宝具信息已经揭示。" };
       return;
     }
@@ -209,6 +218,32 @@ function createEmptyActorSecretSlots(actorId: ActorId): ActorSecretSlots {
     privateMotives: [],
     unrevealedAffiliations: [],
   };
+}
+
+function findReplaceableHiddenNoblePhantasmIndex(
+  noblePhantasms: NoblePhantasm[],
+  revealedName: string,
+): number {
+  const hiddenNoblePhantasms = noblePhantasms
+    .map((noblePhantasm, index) => ({ noblePhantasm, index }))
+    .filter(({ noblePhantasm }) => noblePhantasm.status === "hidden");
+  if (hiddenNoblePhantasms.length === 0) {
+    return -1;
+  }
+  const nameMatch = hiddenNoblePhantasms.find(
+    ({ noblePhantasm }) =>
+      noblePhantasm.name === revealedName ||
+      noblePhantasm.name.includes(revealedName) ||
+      revealedName.includes(noblePhantasm.name),
+  );
+  if (nameMatch !== undefined) {
+    return nameMatch.index;
+  }
+  const first = hiddenNoblePhantasms[0];
+  if (first === undefined) {
+    return -1;
+  }
+  return first.index;
 }
 
 function buildStringSecretSlot(

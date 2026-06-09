@@ -312,6 +312,83 @@ void test("configured servant secrets can be revealed by evidence", () => {
   assert.equal(caster?.servantForm?.identity.trueName.display, "美狄亚");
 });
 
+void test("reveal_secret replaces placeholder hidden noble phantasm instead of duplicating", () => {
+  resetState();
+  upsertActor({
+    kind: "upsert-servant",
+    servant: {
+      id: "caster",
+      displayName: "Caster",
+      publicIdentity: "柳洞寺驻留的从者",
+      apparentAge: "不明",
+      outfit: { label: "深紫色长袍与兜帽", details: "遮住面容" },
+      demeanor: "谨慎、孤高",
+      className: "Caster",
+      trueNameDisplay: "Caster",
+      trueNameStatus: "hidden",
+      parameters: {
+        strength: "E",
+        endurance: "D",
+        agility: "C",
+        mana: "A+",
+        luck: "B",
+        noblePhantasm: "C",
+      },
+      classSkills: [{ name: "阵地作成", rank: "A", summary: "建造工房级别的魔术阵地" }],
+      personalSkills: [{ name: "高速神言", rank: "A", summary: "无需咏唱发动大魔术" }],
+      noblePhantasms: [
+        {
+          name: "未确认宝具",
+          rank: "none",
+          kind: "对人宝具",
+          status: "hidden",
+          summary: "宝具真名与效果尚未确认",
+        },
+      ],
+      spiritualCore: 100,
+      mana: 90,
+      spiritualCondition: "完好",
+      masterActorId: null,
+      masterName: null,
+      contractStatus: "masterless",
+      manaSupply: "sufficient",
+      currentOrder: "守卫柳洞寺山门",
+    },
+    reason: "测试从者入场",
+  });
+
+  configureServantSecrets({
+    kind: "configure-servant-secrets",
+    actorId: "caster",
+    hiddenNoblePhantasms: [
+      {
+        value: {
+          name: "Rule Breaker",
+          rank: "C",
+          kind: "对魔术宝具",
+          status: "hidden",
+          summary: "短剑形宝具，可强制解除魔力契约。",
+        },
+        revealConditions: ["破除魔术", "短剑"],
+      },
+    ],
+    reason: "测试宝具揭示",
+  });
+
+  const result = revealSecret({
+    kind: "claim-reveal",
+    actorId: "caster",
+    claim: "Rule Breaker",
+    evidence: "短剑形宝具切开了魔术契约。",
+  });
+
+  const caster = getState().public.actors["caster"];
+  assert.equal(result.outcome, "revealed");
+  assert.equal(caster?.servantForm?.noblePhantasms.length, 1);
+  assert.equal(caster?.servantForm?.noblePhantasms[0]?.name, "Rule Breaker");
+  assert.equal(caster?.servantForm?.noblePhantasms[0]?.status, "revealed");
+});
+
 function upsertTestCaster(): void {
   upsertTestCasterWithMaster(null);
 }
