@@ -1,10 +1,9 @@
 import type { SceneBeatThreatInput } from "./scene-beat-schema";
+import type { SceneEvent } from "./scene-schema";
 import type {
   ActorId,
-  LocationState,
   SceneObjectiveId,
   SceneThreatId,
-  SceneThreatSeverity,
   SituationKind,
   State,
   StoryBeatId,
@@ -13,23 +12,10 @@ import type {
 
 import { assertNonEmptyString, createId, updateState } from "./state";
 
+export type { SceneEvent } from "./scene-schema";
+
 const MIN_BEAT_OBJECTIVES = 1;
 const MAX_BEAT_OBJECTIVES = 5;
-
-export type SceneEvent =
-  | { kind: "set-location"; location: LocationState; reason: string }
-  | { kind: "set-situation"; situation: SituationKind; reason: string }
-  | { kind: "set-story-window"; storyWindow: StoryWindowState; reason: string }
-  | { kind: "clear-story-window"; reason: string }
-  | { kind: "add-objective"; summary: string; reason: string }
-  | {
-      kind: "resolve-objective";
-      objectiveId?: SceneObjectiveId;
-      objectiveSummary?: string;
-      reason: string;
-    }
-  | { kind: "add-threat"; summary: string; severity: SceneThreatSeverity; reason: string }
-  | { kind: "clear-threat"; threatId: SceneThreatId; reason: string };
 
 export type SceneBeatTurnEvent =
   | { kind: "begin-beat"; input: SceneBeatInput }

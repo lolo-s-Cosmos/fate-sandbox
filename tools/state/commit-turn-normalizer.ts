@@ -1,10 +1,10 @@
 import type { ScenePresenceInput } from "../../engine/core/actor";
 import type { MemoryEvent } from "../../engine/core/memory";
-import type { SceneEvent } from "../../engine/core/scene";
 import type { TurnCommitEvent, TurnCommitInput } from "../../engine/core/turn-commit";
 
 import { parseEconomyEvent } from "../../engine/core/economy-schema";
 import { parseMemoryEvent } from "../../engine/core/memory-schema";
+import { parseSceneEvent } from "../../engine/core/scene-schema";
 import { parseServantFormEvent } from "../../engine/core/servant-schema";
 import { parseTurnTimePolicySchema } from "../../engine/core/turn-time-schema";
 
@@ -18,16 +18,6 @@ const TURN_EVENT_KINDS = [
   "servant-form",
   "economy",
   "memory",
-] as const;
-const COMMIT_SCENE_EVENT_KINDS = [
-  "set-location",
-  "set-situation",
-  "set-story-window",
-  "clear-story-window",
-  "add-objective",
-  "resolve-objective",
-  "add-threat",
-  "clear-threat",
 ] as const;
 
 export function normalizeTurnCommitInput(params: unknown): TurnCommitInput {
@@ -128,25 +118,21 @@ function normalizeSceneTurnEvent(
   event: Record<string, unknown>,
   summary: string,
 ): TurnCommitEvent {
-  const payload = normalizeSceneEventPayload(withReason(extractDomainEvent(event, "scene.event"), summary));
-  if (payload["kind"] === "set-scene-presence") {
-    return {
-      kind: "scene-presence",
-      event: normalizeScenePresenceInput(payload, summary),
-    };
-  }
-  return { kind: "scene", event: payload as unknown as SceneEvent };
+  const payload = normalizeSceneEventPayload(
+    withReason(extractDomainEvent(event, "scene.event"), summary),
+  );
+  return { kind: "scene", event: parseSceneEvent(payload, "commit_turn scene.event") };
 }
 
+/**
+ * 进 TypeBox parser 之前的宽松预归一化：
+ * kind 容错（大小写 / 下划线），resolve-objective 的空白选填字段降级为缺省。
+ * 结构与字段校验交给 parseSceneEvent。
+ */
 function normalizeSceneEventPayload(
   payload: Record<string, unknown> & { reason: string },
 ): Record<string, unknown> & { reason: string } {
   const kind = normalizeKindText(payload["kind"]);
-  if (!COMMIT_SCENE_EVENT_KINDS.includes(kind as (typeof COMMIT_SCENE_EVENT_KINDS)[number])) {
-    throw new Error(
-      `非法 commit_turn scene.event.kind: ${formatUnknown(payload["kind"])}。允许: ${COMMIT_SCENE_EVENT_KINDS.join(" / ")}。`,
-    );
-  }
   if (kind !== "resolve-objective") {
     return { ...payload, kind };
   }
