@@ -1,9 +1,9 @@
 import type { Static } from "typebox";
 
+import type { TypeBoxValidator } from "./typebox-validation";
+
 import { Type } from "typebox";
 import { Compile } from "typebox/compile";
-
-import type { TypeBoxValidator } from "./typebox-validation";
 
 import { MEMORY_SCOPE_SCHEMA, stringEnumSchema } from "./state-enum-schemas";
 import { parseTaggedTypeBoxUnion, trimStringsDeep } from "./typebox-validation";

@@ -13,11 +13,7 @@ import {
   SERVANT_CLASS_SCHEMA,
   stringEnumSchema,
 } from "./state-enum-schemas";
-import {
-  parseTaggedTypeBoxUnion,
-  parseTypeBoxValue,
-  trimStringsDeep,
-} from "./typebox-validation";
+import { parseTaggedTypeBoxUnion, parseTypeBoxValue, trimStringsDeep } from "./typebox-validation";
 
 /**
  * Actor 领域工具边界 schema：单一事实来源。

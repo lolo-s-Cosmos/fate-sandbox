@@ -1,3 +1,5 @@
+import type { MemoryClaim, MemoryEvent } from "./memory-schema";
+
 import {
   assertIsoDateString,
   assertNonEmptyString,
@@ -10,14 +12,7 @@ import {
   type SecretSlot,
 } from "./state";
 
-import type { MemoryClaim, MemoryEvent } from "./memory-schema";
-
-export type {
-  MemoryCertainty,
-  MemoryClaim,
-  MemoryClaimKind,
-  MemoryEvent,
-} from "./memory-schema";
+export type { MemoryCertainty, MemoryClaim, MemoryClaimKind, MemoryEvent } from "./memory-schema";
 
 export interface MemoryEventResult {
   factId?: MemoryFactId;

@@ -1,9 +1,9 @@
 import type { Static } from "typebox";
 
+import type { TypeBoxValidator } from "./typebox-validation";
+
 import { Type } from "typebox";
 import { Compile } from "typebox/compile";
-
-import type { TypeBoxValidator } from "./typebox-validation";
 
 import {
   CONTRACT_STATUS_SCHEMA,

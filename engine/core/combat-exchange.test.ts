@@ -253,15 +253,18 @@ void test("resolveCombatExchange does not force wounds or hard stops for costly 
 void test("parseCombatExchangeInput rejects model-authored difficulty language", () => {
   assert.throws(
     () =>
-      parseCombatExchangeInput({
-        actorId: "saber",
-        opponentId: "rider",
-        intent: "攻击",
-        tactic: "困难",
-        actorParameter: "strength",
-        opponentParameter: "endurance",
-        riskTolerance: "medium",
-      }, "resolve_combat_exchange 参数"),
+      parseCombatExchangeInput(
+        {
+          actorId: "saber",
+          opponentId: "rider",
+          intent: "攻击",
+          tactic: "困难",
+          actorParameter: "strength",
+          opponentParameter: "endurance",
+          riskTolerance: "medium",
+        },
+        "resolve_combat_exchange 参数",
+      ),
     /tactic 必须是允许值之一: direct-attack/u,
   );
 });

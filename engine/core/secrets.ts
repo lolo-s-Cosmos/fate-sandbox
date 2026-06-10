@@ -1,3 +1,12 @@
+import type {
+  ConfigureActorSecretsInput,
+  ConfigureServantSecretsInput,
+  PrivateResolveEvent,
+  RevealSecretEvent,
+  ServantSecretNoblePhantasmInput,
+  ServantSecretStringInput,
+} from "./secrets-schema";
+
 import { recordMemory } from "./memory";
 import { recordOffscreenEvent } from "./offscreen-event";
 import {
@@ -10,15 +19,6 @@ import {
   type SecretSlot,
   updateState,
 } from "./state";
-
-import type {
-  ConfigureActorSecretsInput,
-  ConfigureServantSecretsInput,
-  PrivateResolveEvent,
-  RevealSecretEvent,
-  ServantSecretNoblePhantasmInput,
-  ServantSecretStringInput,
-} from "./secrets-schema";
 
 export type {
   ConfigureActorSecretsInput,

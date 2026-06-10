@@ -33,5 +33,9 @@ export function parseRecordOffscreenEventInput(
   value: unknown,
   fieldName: string,
 ): RecordOffscreenEventInput {
-  return parseTypeBoxValue(trimStringsDeep(value), fieldName, RECORD_OFFSCREEN_EVENT_INPUT_VALIDATOR);
+  return parseTypeBoxValue(
+    trimStringsDeep(value),
+    fieldName,
+    RECORD_OFFSCREEN_EVENT_INPUT_VALIDATOR,
+  );
 }

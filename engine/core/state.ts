@@ -455,7 +455,6 @@ export interface ServantSkill {
   summary: string;
 }
 
-
 export interface EconomyState {
   currency: CurrencyCode;
   accessibleFunds: MoneyPurse[];
@@ -2046,6 +2045,5 @@ const FATE_RANKS = [
   "EX+++",
   "EX-",
 ] as const;
-
 
 const SECRET_REVEAL_STATES = ["hidden", "foreshadowed", "revealed"] as const;

@@ -1,5 +1,3 @@
-import type { ActorId, PublicActorState, PublicGameState } from "./state";
-
 import type {
   ActorRegistryInput,
   PublicNpcInput,
@@ -8,6 +6,7 @@ import type {
   ScenePresenceInput,
   ServantInput,
 } from "./actor-schema";
+import type { ActorId, PublicActorState, PublicGameState } from "./state";
 
 import { assertNonEmptyString, updateState } from "./state";
 

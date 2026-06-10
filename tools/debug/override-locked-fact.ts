@@ -6,17 +6,14 @@ import { Type } from "typebox";
 import { Compile } from "typebox/compile";
 
 import { FATE_PARAMS_SCHEMA } from "../../engine/core/actor-schema";
+import { updateState, writeStateToDetails } from "../../engine/core/state";
 import {
   REVEAL_STATUS_SCHEMA,
   SERVANT_CLASS_SCHEMA,
   stringEnumSchema,
 } from "../../engine/core/state-enum-schemas";
-import { updateState, writeStateToDetails } from "../../engine/core/state";
 import { persistCurrentState } from "../../engine/core/state-persistence";
-import {
-  parseTaggedTypeBoxUnion,
-  trimStringsDeep,
-} from "../../engine/core/typebox-validation";
+import { parseTaggedTypeBoxUnion, trimStringsDeep } from "../../engine/core/typebox-validation";
 import { textResult, type ToolResult } from "../runtime/tool-result";
 
 const OVERRIDE_LOCKED_FACT_KINDS = [

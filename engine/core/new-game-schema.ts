@@ -91,8 +91,11 @@ export function parseNewGameInitializationInput(
   value: unknown,
   fieldName: string,
 ): NewGameInitializationInput {
-  return parseTaggedTypeBoxUnion<
-    NewGameInitializationInput["kind"],
-    NewGameInitializationInput
-  >(trimStringsDeep(value), fieldName, "kind", NEW_GAME_KIND_VALIDATOR, NEW_GAME_VARIANT_VALIDATORS);
+  return parseTaggedTypeBoxUnion<NewGameInitializationInput["kind"], NewGameInitializationInput>(
+    trimStringsDeep(value),
+    fieldName,
+    "kind",
+    NEW_GAME_KIND_VALIDATOR,
+    NEW_GAME_VARIANT_VALIDATORS,
+  );
 }

@@ -59,7 +59,11 @@ const COMBAT_EXCHANGE_INPUT_VALIDATOR = Compile(COMBAT_EXCHANGE_INPUT_SCHEMA);
 const EMPTY_FACTOR_MARKERS = new Set(["none", "无", "n/a", "null"]);
 
 export function parseCombatExchangeInput(value: unknown, fieldName: string): CombatExchangeInput {
-  const parsed = parseTypeBoxValue(trimStringsDeep(value), fieldName, COMBAT_EXCHANGE_INPUT_VALIDATOR);
+  const parsed = parseTypeBoxValue(
+    trimStringsDeep(value),
+    fieldName,
+    COMBAT_EXCHANGE_INPUT_VALIDATOR,
+  );
   return {
     ...parsed,
     committedResources: meaningfulFactors(parsed.committedResources),

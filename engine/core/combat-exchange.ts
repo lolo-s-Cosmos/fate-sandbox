@@ -1,13 +1,12 @@
-import type { FateParams, FateRank, NoblePhantasm, PublicActorState } from "./state";
-
-import { compareFateRanks, type FateRankComparison } from "./fate-rank";
-import { getState } from "./state";
-
 import type {
   CombatExchangeTactic,
   CombatRiskTolerance,
   CombatSwing,
 } from "./combat-exchange-schema";
+import type { FateParams, FateRank, NoblePhantasm, PublicActorState } from "./state";
+
+import { compareFateRanks, type FateRankComparison } from "./fate-rank";
+import { getState } from "./state";
 
 export type {
   CombatExchangeTactic,
