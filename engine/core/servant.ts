@@ -1,21 +1,9 @@
-import type {
-  ActorId,
-  ParamModifier,
-  PermanentDefect,
-  ResourceTrack,
-  ServantContractState,
-  ServantCoreState,
-} from "./state";
+import type { ServantFormEvent } from "./servant-schema";
+import type { ActorId, ResourceTrack, ServantCoreState } from "./state";
 
 import { assertNonEmptyString, assertPercent, createId, updateState } from "./state";
 
-export type ServantFormEvent =
-  | { kind: "spend-mana"; actorId: ActorId; amount: number; reason: string }
-  | { kind: "restore-mana"; actorId: ActorId; amount: number; reason: string }
-  | { kind: "damage-spiritual-core"; actorId: ActorId; amount: number; reason: string }
-  | { kind: "add-param-modifier"; actorId: ActorId; modifier: ParamModifier; reason: string }
-  | { kind: "change-contract"; actorId: ActorId; contract: ServantContractState; reason: string }
-  | { kind: "add-permanent-defect"; actorId: ActorId; defect: PermanentDefect; reason: string };
+export type { ServantFormEvent } from "./servant-schema";
 
 export interface ServantFormEventResult {
   message: string;

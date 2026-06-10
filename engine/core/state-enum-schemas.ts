@@ -92,3 +92,22 @@ export type OffscreenEventVisibility = Static<typeof OFFSCREEN_EVENT_VISIBILITY_
 export const OFFSCREEN_EVENT_SOURCES = ["parallel-line-subagent", "gm", "debug"] as const;
 export const OFFSCREEN_EVENT_SOURCE_SCHEMA = stringEnumSchema(OFFSCREEN_EVENT_SOURCES);
 export type OffscreenEventSource = Static<typeof OFFSCREEN_EVENT_SOURCE_SCHEMA>;
+
+export const CONTRACT_STATUSES = ["stable", "weak", "cut", "masterless"] as const;
+export const CONTRACT_STATUS_SCHEMA = stringEnumSchema(CONTRACT_STATUSES);
+export type ContractStatus = Static<typeof CONTRACT_STATUS_SCHEMA>;
+
+export const MANA_SUPPLIES = ["sufficient", "strained", "starved"] as const;
+export const MANA_SUPPLY_SCHEMA = stringEnumSchema(MANA_SUPPLIES);
+export type ManaSupply = Static<typeof MANA_SUPPLY_SCHEMA>;
+
+export const FATE_PARAM_KEYS = [
+  "strength",
+  "endurance",
+  "agility",
+  "mana",
+  "luck",
+  "noblePhantasm",
+] as const;
+export const FATE_PARAM_KEY_SCHEMA = stringEnumSchema(FATE_PARAM_KEYS);
+export type FateParamKey = Static<typeof FATE_PARAM_KEY_SCHEMA>;

@@ -2,7 +2,9 @@ import type { NoblePhantasm } from "./actor-schema";
 import type { OffscreenEvent } from "./parallel-line";
 import type {
   BoundaryKind,
+  ContractStatus,
   CurrencyCode,
+  ManaSupply,
   MemoryFactScope,
   OpeningMode,
   PurseAccess,
@@ -21,8 +23,13 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { formatHumanTime, normalizeIsoInstant, nowIso } from "./date-time";
 import {
   BOUNDARY_KINDS as BOUNDARIES,
+  CONTRACT_STATUSES,
   CURRENCY_CODES as CURRENCIES,
+  FATE_PARAM_KEYS,
+  MANA_SUPPLIES,
   MEMORY_SCOPES,
+  OFFSCREEN_EVENT_SOURCES,
+  OFFSCREEN_EVENT_VISIBILITIES,
   OPENING_MODES,
   PURSE_ACCESSES,
   REVEAL_STATUSES as TRUE_NAME_STATUSES,
@@ -35,7 +42,9 @@ import { parseTurnTimePolicySchema } from "./turn-time-schema";
 
 export type {
   BoundaryKind,
+  ContractStatus,
   CurrencyCode,
+  ManaSupply,
   MemoryFactScope,
   OpeningMode,
   PurseAccess,
@@ -401,8 +410,8 @@ export interface ResourceTrack {
 export interface ServantContractState {
   masterActorId: ActorId | null;
   masterName: string | null;
-  status: "stable" | "weak" | "cut" | "masterless";
-  manaSupply: "sufficient" | "strained" | "starved";
+  status: ContractStatus;
+  manaSupply: ManaSupply;
 }
 
 export interface ServantParameterState {
@@ -2055,16 +2064,4 @@ const SERVANT_CLASSES = [
   "Pretender",
   "Custom",
 ] as const;
-const CONTRACT_STATUSES = ["stable", "weak", "cut", "masterless"] as const;
-const MANA_SUPPLIES = ["sufficient", "strained", "starved"] as const;
-const FATE_PARAM_KEYS = [
-  "strength",
-  "endurance",
-  "agility",
-  "mana",
-  "luck",
-  "noblePhantasm",
-] as const;
 const SECRET_REVEAL_STATES = ["hidden", "foreshadowed", "revealed"] as const;
-const OFFSCREEN_EVENT_VISIBILITIES = ["secret", "foreshadowed", "player-known"] as const;
-const OFFSCREEN_EVENT_SOURCES = ["parallel-line-subagent", "gm", "debug"] as const;
