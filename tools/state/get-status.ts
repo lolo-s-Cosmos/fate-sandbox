@@ -1,3 +1,5 @@
+import type { FsnToolDefinition } from "../runtime/tool-definition";
+import { Type } from "typebox";
 import { buildGmBrief } from "../../engine/core/public-projection";
 import { hydrateStateFromSessionManager } from "../../engine/core/session-hydration";
 import { getState } from "../../engine/core/state-store";
@@ -48,3 +50,21 @@ function statusRevision(state: ReturnType<typeof getState>): string {
 function isObject(value: unknown): value is object {
   return typeof value === "object" && value !== null;
 }
+
+export const getStatusToolDefinition: FsnToolDefinition = {
+  name: "get_status",
+  description:
+    "查看玩家可见状态摘要；返回 GM brief 风格读模型，不展示完整 JSON。\n\n" +
+    "【必须调用的场景】\n" +
+    "- 当前回合没有可用 GM brief 或工具结果，必须先取得玩家可见状态\n" +
+    "- 玩家明确询问当前状态、同行者、资源或剧情账本\n" +
+    "- 工具失败后需要一次性重新同步玩家可见状态\n\n" +
+    "【严禁的行为】\n" +
+    "- 状态未变化时重复调用\n" +
+    "- 已有当前 GM brief 或本轮工具结果时，把它当刷新按钮\n" +
+    "- 凭记忆叙述机械事实——以工具返回为准\n" +
+    "- 要求或输出 canonical state JSON",
+  parameters: Type.Object({}),
+  execute: async (_toolCallId, _params, _signal, _onUpdate, ctx) =>
+    getStatusTool(ctx.sessionManager),
+};

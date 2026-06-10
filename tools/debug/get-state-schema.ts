@@ -1,3 +1,7 @@
+import type { FsnToolDefinition } from "../runtime/tool-definition";
+
+import { Type } from "typebox";
+
 import { CURRENT_STATE_SCHEMA_VERSION } from "../../engine/core/state";
 import { textResult, type ToolResult } from "../runtime/tool-result";
 
@@ -33,3 +37,10 @@ export function getStateSchemaTool(): ToolResult {
   };
   return textResult(JSON.stringify(schema, null, 2));
 }
+
+export const getStateSchemaToolDefinition: FsnToolDefinition = {
+  name: "get_state_schema",
+  description: "【调试工具】查看当前状态 schema 版本与聚合根。",
+  parameters: Type.Object({}),
+  execute: async () => getStateSchemaTool(),
+};

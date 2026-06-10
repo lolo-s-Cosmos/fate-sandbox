@@ -1,4 +1,4 @@
-import type { HumanActorState, PatchOp, PublicGameState, State, StateExport } from "./state";
+import type { HumanActorState, PublicGameState, State, StateExport } from "./state";
 
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -33,7 +33,7 @@ export function exportState(): StateExport {
   return toStateExport(getStore());
 }
 
-export function patchState(ops: ReadonlyArray<PatchOp>): State {
+export function patchState(ops: ReadonlyArray<unknown>): State {
   if (ops.length > 0) {
     throw new Error(
       "patch_state 已降级为 debug-only 且不再接受裸 JSON Patch；请使用领域 update 工具。",

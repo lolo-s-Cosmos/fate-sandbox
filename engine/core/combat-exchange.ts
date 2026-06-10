@@ -29,7 +29,6 @@ export type CombatStateLandingKind =
   | "memory"
   | "reveal-secret";
 export type CombatParameter = keyof FateParams;
-export type RawCombatExchangeInput = Record<string, unknown>;
 
 export interface CombatExchangeInput {
   actorId: string;

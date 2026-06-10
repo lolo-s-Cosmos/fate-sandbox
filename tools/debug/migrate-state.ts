@@ -1,3 +1,7 @@
+import type { FsnToolDefinition } from "../runtime/tool-definition";
+
+import { Type } from "typebox";
+
 import { cloneState, migrateState, replaceStateForDebug } from "../../engine/core/state-store";
 import { isRecord } from "../../engine/core/typebox-validation";
 import { textResult, type ToolResult } from "../runtime/tool-result";
@@ -51,3 +55,15 @@ function assertString(value: unknown, fieldName: string): string {
   }
   return value.trim();
 }
+
+export const migrateStateToolDefinition: FsnToolDefinition = {
+  name: "migrate_state",
+  description:
+    "【调试工具】把旧 Game State 程序化迁移到当前 schemaVersion；默认只返回迁移结果，apply=true 时覆盖当前内存状态。必须写明 reason。",
+  parameters: Type.Object({
+    state: Type.Optional(Type.Unknown()),
+    apply: Type.Optional(Type.Boolean()),
+    reason: Type.String(),
+  }),
+  execute: async (_toolCallId, params) => migrateStateTool(params),
+};

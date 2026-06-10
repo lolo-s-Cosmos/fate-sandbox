@@ -1,6 +1,7 @@
 import type { Static } from "typebox";
 
 import type { TypeBoxValidator } from "../../engine/core/typebox-validation";
+import type { FsnToolDefinition } from "../runtime/tool-definition";
 
 import { Type } from "typebox";
 import { Compile } from "typebox/compile";
@@ -106,3 +107,26 @@ export function overrideLockedFactTool(params: unknown, sessionManager: unknown)
   writeStateToDetails(details);
   return textResult(`锁定事实已覆盖：${override.kind}。原因：${override.reason}`, details);
 }
+
+export const overrideLockedFactToolDefinition: FsnToolDefinition = {
+  name: "override_locked_fact",
+  description:
+    "【调试工具】覆盖已锁定的从者职阶、真名或基础参数。仅用于开发修档，必须写明 reason。",
+  parameters: Type.Object({
+    kind: Type.String({
+      description: "允许: servant-class / servant-true-name / servant-base-params",
+    }),
+    actorId: Type.String(),
+    className: Type.Optional(Type.String()),
+    display: Type.Optional(Type.String()),
+    status: Type.Optional(
+      Type.String({
+        description: "servant-true-name 可选；允许 hidden / suspected / revealed，默认 revealed",
+      }),
+    ),
+    base: Type.Optional(Type.Unknown()),
+    reason: Type.String(),
+  }),
+  execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>
+    overrideLockedFactTool(params, ctx.sessionManager),
+};

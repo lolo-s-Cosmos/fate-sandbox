@@ -517,10 +517,4 @@ export interface StateExport extends Omit<GameState, "public"> {
 
 export type State = GameState;
 
-export interface PatchOp {
-  op: "replace";
-  path: string;
-  value: unknown;
-}
-
 export const CURRENT_STATE_SCHEMA_VERSION = 3;
