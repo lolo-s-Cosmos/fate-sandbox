@@ -76,3 +76,7 @@ export type SituationKind = Static<typeof SITUATION_KIND_SCHEMA>;
 export const PURSE_ACCESSES = ["held", "shared", "requires-permission"] as const;
 export const PURSE_ACCESS_SCHEMA = stringEnumSchema(PURSE_ACCESSES);
 export type PurseAccess = Static<typeof PURSE_ACCESS_SCHEMA>;
+
+export const MEMORY_SCOPES = ["protagonist", "npc", "faction", "world"] as const;
+export const MEMORY_SCOPE_SCHEMA = stringEnumSchema(MEMORY_SCOPES);
+export type MemoryFactScope = Static<typeof MEMORY_SCOPE_SCHEMA>;

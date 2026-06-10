@@ -6,56 +6,18 @@ import {
   updateState,
   type DailySummaryMemoryId,
   type MajorEventMemoryId,
-  type MemoryFact,
   type MemoryFactId,
   type SecretSlot,
 } from "./state";
 
-export type MemoryCertainty = "observed" | "confirmed" | "inferred" | "rumor" | "hypothesis";
+import type { MemoryClaim, MemoryEvent } from "./memory-schema";
 
-export type MemoryClaimKind =
-  | "mundane"
-  | "identity"
-  | "location"
-  | "affiliation"
-  | "motive"
-  | "ability"
-  | "resource"
-  | "relationship"
-  | "event-cause"
-  | "world-fact";
-
-export interface MemoryClaim {
-  kind: MemoryClaimKind;
-  statement: string;
-  certainty: MemoryCertainty;
-  subjectId?: string;
-  relatedSecretSlotIds?: string[];
-  evidence?: string;
-}
-
-export type MemoryEvent =
-  | {
-      kind: "pin-fact";
-      scope: MemoryFact["scope"];
-      subject: string;
-      text: string;
-      sourceEventId: string | null;
-      claims: MemoryClaim[];
-    }
-  | {
-      kind: "record-major-event";
-      title: string;
-      summary: string;
-      consequences?: string[];
-      claims: MemoryClaim[];
-    }
-  | {
-      kind: "record-daily-summary";
-      startDate: string;
-      endDate: string;
-      summary: string;
-    };
+export type {
+  MemoryCertainty,
+  MemoryClaim,
+  MemoryClaimKind,
+  MemoryEvent,
+} from "./memory-schema";
 
 export interface MemoryEventResult {
   factId?: MemoryFactId;

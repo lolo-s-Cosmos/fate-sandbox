@@ -1,7 +1,8 @@
 import type { MemoryEvent, MemoryEventResult } from "../../engine/core/memory";
+import type { ToolResult } from "../runtime/tool-result";
 
 import { recordMemory } from "../../engine/core/memory";
-import type { ToolResult } from "../runtime/tool-result";
+import { parseMemoryEvent } from "../../engine/core/memory-schema";
 
 import { runDomainEventTool } from "./domain-tool-runner";
 
@@ -9,7 +10,7 @@ export function recordMemoryTool(params: unknown, sessionManager: unknown): Tool
   return runDomainEventTool({
     sessionManager,
     execute: () => {
-      const event = assertMemoryEvent(params);
+      const event = parseMemoryEvent(normalizeSourceEventId(params), "record_memory 参数");
       return { event, result: recordMemory(event) };
     },
     details: ({ result }) => ({ result }),
@@ -28,19 +29,14 @@ function formatResult(params: MemoryEvent, result: MemoryEventResult): string {
   }
 }
 
-function assertMemoryEvent(params: unknown): MemoryEvent {
-  if (!isRecord(params)) {
-    throw new Error("record_memory 参数必须是对象。");
+/** pin-fact 的 sourceEventId 容错：缺失/空白一律归一为 null——领域归一化，不是校验。 */
+function normalizeSourceEventId(params: unknown): unknown {
+  if (!isRecord(params) || params["kind"] !== "pin-fact") {
+    return params;
   }
-  if (params["kind"] !== "pin-fact") {
-    return params as MemoryEvent; // safe: recordMemory narrows and validates required fields by event kind before mutation.
-  }
-  const rawSourceEventId = params["sourceEventId"];
-  const sourceEventId =
-    typeof rawSourceEventId === "string" && rawSourceEventId.trim().length > 0
-      ? rawSourceEventId
-      : null;
-  return { ...params, sourceEventId } as MemoryEvent; // safe: normalized boundary value; engine validates remaining fields.
+  const raw = params["sourceEventId"];
+  const sourceEventId = typeof raw === "string" && raw.trim().length > 0 ? raw : null;
+  return { ...params, sourceEventId };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

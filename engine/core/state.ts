@@ -2,6 +2,7 @@ import type { OffscreenEvent } from "./parallel-line";
 import type {
   BoundaryKind,
   CurrencyCode,
+  MemoryFactScope,
   OpeningMode,
   PurseAccess,
   RuleSetId,
@@ -17,6 +18,7 @@ import { formatHumanTime, normalizeIsoInstant, nowIso } from "./date-time";
 import {
   BOUNDARY_KINDS as BOUNDARIES,
   CURRENCY_CODES as CURRENCIES,
+  MEMORY_SCOPES,
   OPENING_MODES,
   PURSE_ACCESSES,
   RULE_SET_IDS,
@@ -29,6 +31,7 @@ import { parseTurnTimePolicySchema } from "./turn-time-schema";
 export type {
   BoundaryKind,
   CurrencyCode,
+  MemoryFactScope,
   OpeningMode,
   PurseAccess,
   RuleSetId,
@@ -468,7 +471,7 @@ export interface CampaignMemory {
 
 export interface MemoryFact {
   id: MemoryFactId;
-  scope: "protagonist" | "npc" | "faction" | "world";
+  scope: MemoryFactScope;
   subject: string;
   text: string;
   since: string;
@@ -2064,7 +2067,6 @@ const FATE_PARAM_KEYS = [
   "luck",
   "noblePhantasm",
 ] as const;
-const MEMORY_SCOPES = ["protagonist", "npc", "faction", "world"] as const;
 const SECRET_REVEAL_STATES = ["hidden", "foreshadowed", "revealed"] as const;
 const OFFSCREEN_EVENT_VISIBILITIES = ["secret", "foreshadowed", "player-known"] as const;
 const OFFSCREEN_EVENT_SOURCES = ["parallel-line-subagent", "gm", "debug"] as const;
