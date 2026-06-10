@@ -1,6 +1,8 @@
+import type { OffscreenEventSource, OffscreenEventVisibility } from "./state-enum-schemas";
+
+export type { OffscreenEventSource, OffscreenEventVisibility } from "./state-enum-schemas";
+
 export type ParallelLineOutcome = "no-change" | "progress" | "escalation" | "blocked";
-export type OffscreenEventVisibility = "secret" | "foreshadowed" | "player-known";
-export type OffscreenEventSource = "parallel-line-subagent" | "gm" | "debug";
 
 export interface ParallelLineTimeWindow {
   start: string;

@@ -9,22 +9,12 @@ import {
   createId,
   updateState,
 } from "./state";
+import { OFFSCREEN_EVENT_SOURCES, OFFSCREEN_EVENT_VISIBILITIES } from "./state-enum-schemas";
 import { assertOneOfString } from "./string-enum";
 
 export type { OffscreenEventSource, OffscreenEventVisibility } from "./state";
 
 export type RecordOffscreenEventInput = Omit<OffscreenEvent, "id">;
-
-const OFFSCREEN_EVENT_VISIBILITIES = [
-  "secret",
-  "foreshadowed",
-  "player-known",
-] as const satisfies readonly OffscreenEventVisibility[];
-const OFFSCREEN_EVENT_SOURCES = [
-  "parallel-line-subagent",
-  "gm",
-  "debug",
-] as const satisfies readonly OffscreenEventSource[];
 
 export interface RecordOffscreenEventResult {
   eventId: string;
