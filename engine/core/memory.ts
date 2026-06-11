@@ -8,6 +8,7 @@ import type {
 } from "./state.ts";
 
 import { createId } from "./ids.ts";
+import { settleOldestObligation } from "./obligations.ts";
 import { assertIsoDateString, assertNonEmptyString } from "./typebox-validation.ts";
 
 export type {
@@ -24,6 +25,12 @@ export interface MemoryEventResult {
 }
 
 export function recordMemory(draft: State, event: MemoryEvent): MemoryEventResult {
+  const result = applyMemoryEvent(draft, event);
+  settleOldestObligation(draft, ["memory"]);
+  return result;
+}
+
+function applyMemoryEvent(draft: State, event: MemoryEvent): MemoryEventResult {
   switch (event.kind) {
     case "pin-fact":
       return recordPinnedFact(draft, event);

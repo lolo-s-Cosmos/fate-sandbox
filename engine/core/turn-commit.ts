@@ -16,6 +16,7 @@ import { updateActorCondition } from "./actor-condition.ts";
 import { setScenePresence } from "./actor.ts";
 import { updateEconomy } from "./economy.ts";
 import { recordMemory } from "./memory.ts";
+import { assertNoOpenObligations } from "./obligations.ts";
 import { beginSceneBeat, transitionSceneBeat, updateScene } from "./scene.ts";
 import { updateServantForm } from "./servant.ts";
 import { appendTurnLogEntry } from "./turn-log.ts";
@@ -57,6 +58,9 @@ export function commitTurn(draft: State, input: TurnCommitInput): TurnCommitResu
   const startedAt = draft.public.clock.currentAt;
   const timeResult = applyTurnTime(draft, input.time);
   const results = input.events.map((event) => applyTurnEvent(draft, event));
+  // canonical commit 对账点：本轮裁决登记的义务必须在 events 里落地，
+  // 账未清则整次 commit 拒绝回滚（backlog #4）。
+  assertNoOpenObligations(draft);
   const timeResults = [{ kind: "scene" as const, result: timeResult }];
   const autoCloseResult = closeCompletedOpenStoryWindow(draft);
   const baseResults = [...timeResults, ...results];

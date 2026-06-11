@@ -65,7 +65,7 @@ function nullable<T extends TSchema>(schema: T) {
 }
 
 export const STATE_META_SCHEMA = Type.Object({
-  schemaVersion: Type.Literal(3),
+  schemaVersion: Type.Literal(4),
   createdAt: ISO_INSTANT_SCHEMA,
   updatedAt: ISO_INSTANT_SCHEMA,
 });
@@ -373,6 +373,23 @@ const TURN_LOG_ENTRY_SCHEMA = Type.Object({
   resultCount: NON_NEGATIVE_INTEGER_SCHEMA,
 });
 
+export const TURN_OBLIGATION_KINDS = [
+  "scene-objective",
+  "scene-threat",
+  "actor-condition",
+  "servant-form",
+  "memory",
+  "reveal-secret",
+] as const;
+
+const TURN_OBLIGATION_SCHEMA = Type.Object({
+  id: NON_EMPTY_STRING_SCHEMA,
+  source: NON_EMPTY_STRING_SCHEMA,
+  kind: stringEnumSchema(TURN_OBLIGATION_KINDS),
+  summary: NON_EMPTY_STRING_SCHEMA,
+  createdAt: ISO_INSTANT_SCHEMA,
+});
+
 export const PUBLIC_GAME_STATE_SCHEMA = Type.Object({
   campaign: CAMPAIGN_STATE_SCHEMA,
   clock: CLOCK_STATE_SCHEMA,
@@ -384,6 +401,7 @@ export const PUBLIC_GAME_STATE_SCHEMA = Type.Object({
   economy: ECONOMY_STATE_SCHEMA,
   memory: CAMPAIGN_MEMORY_SCHEMA,
   turnLog: Type.Array(TURN_LOG_ENTRY_SCHEMA),
+  obligations: Type.Array(TURN_OBLIGATION_SCHEMA),
 });
 
 export const SECRET_REVEAL_STATES = ["hidden", "foreshadowed", "revealed"] as const;

@@ -16,6 +16,7 @@ import type {
 } from "./state.ts";
 
 import { recordMemory } from "./memory.ts";
+import { settleOldestObligation } from "./obligations.ts";
 import { recordOffscreenEvent } from "./offscreen-event.ts";
 import { assertNonEmptyString } from "./typebox-validation.ts";
 
@@ -132,6 +133,7 @@ export function revealSecret(draft: State, event: RevealSecretEvent): RevealSecr
   const result = applyRevealSecret(draft, event, evidence);
 
   if (result.outcome === "revealed") {
+    settleOldestObligation(draft, ["reveal-secret"]);
     recordMemory(draft, {
       kind: "record-major-event",
       title: "隐藏事实揭示",

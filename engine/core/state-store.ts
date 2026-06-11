@@ -201,6 +201,7 @@ export function createInitialState(): State {
         dailySummaries: [],
       },
       turnLog: [],
+      obligations: [],
     },
     secrets: {
       actorSecrets: {},
@@ -267,6 +268,8 @@ function migrateOneSchemaVersion(
       return migrateGameStateV1ToV2(raw);
     case 2:
       return migrateGameStateV2ToV3(raw);
+    case 3:
+      return migrateGameStateV3ToV4(raw);
     default:
       throw new Error(
         `不支持的 state schemaVersion: ${version}。当前支持逐步迁移到 ${CURRENT_STATE_SCHEMA_VERSION}。`,
@@ -291,10 +294,19 @@ function migrateGameStateV1ToV2(raw: Record<string, unknown>): Record<string, un
 function migrateGameStateV2ToV3(raw: Record<string, unknown>): Record<string, unknown> {
   const next = structuredClone(raw);
   const meta = assertRecordForMigration(next["meta"], "meta");
-  meta["schemaVersion"] = CURRENT_STATE_SCHEMA_VERSION;
+  meta["schemaVersion"] = 3;
   const publicState = assertRecordForMigration(next["public"], "public");
   const rawTurnLog = Array.isArray(publicState["turnLog"]) ? publicState["turnLog"] : [];
   publicState["turnLog"] = rawTurnLog.filter(hasAdvancingTurnTime);
+  return next;
+}
+
+function migrateGameStateV3ToV4(raw: Record<string, unknown>): Record<string, unknown> {
+  const next = structuredClone(raw);
+  const meta = assertRecordForMigration(next["meta"], "meta");
+  meta["schemaVersion"] = CURRENT_STATE_SCHEMA_VERSION;
+  const publicState = assertRecordForMigration(next["public"], "public");
+  publicState["obligations"] = [];
   return next;
 }
 

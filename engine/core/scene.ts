@@ -11,6 +11,7 @@ import type {
 } from "./state.ts";
 
 import { createId } from "./ids.ts";
+import { settleOldestObligation } from "./obligations.ts";
 import { assertNonEmptyString } from "./typebox-validation.ts";
 
 export type { SceneEvent } from "./scene-schema.ts";
@@ -168,6 +169,16 @@ export function transitionSceneBeat(
 
 export function updateScene(draft: State, event: SceneEvent): SceneEventResult {
   assertNonEmptyString(event.reason, "reason");
+  const result = applySceneEvent(draft, event);
+  if (event.kind === "add-objective" || event.kind === "resolve-objective") {
+    settleOldestObligation(draft, ["scene-objective"]);
+  } else if (event.kind === "add-threat" || event.kind === "clear-threat") {
+    settleOldestObligation(draft, ["scene-threat"]);
+  }
+  return result;
+}
+
+function applySceneEvent(draft: State, event: SceneEvent): SceneEventResult {
   switch (event.kind) {
     case "set-location":
       return setLocation(draft, event);

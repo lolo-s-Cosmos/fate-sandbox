@@ -90,7 +90,7 @@ export interface GameState {
 }
 
 export interface StateMeta {
-  schemaVersion: 3;
+  schemaVersion: 4;
   createdAt: string;
   updatedAt: string;
 }
@@ -106,6 +106,26 @@ export interface PublicGameState {
   economy: EconomyState;
   memory: CampaignMemory;
   turnLog: TurnLogEntry[];
+  /** 裁决已出、尚未落地的强制状态变更；canonical commit 前必须清空 */
+  obligations: TurnObligation[];
+}
+
+export type TurnObligationKind =
+  | "scene-objective"
+  | "scene-threat"
+  | "actor-condition"
+  | "servant-form"
+  | "memory"
+  | "reveal-secret";
+
+export interface TurnObligation {
+  id: string;
+  /** 产生此义务的裁决源，如 "combat-exchange" */
+  source: string;
+  kind: TurnObligationKind;
+  summary: string;
+  /** 登记时的游戏内时钟 */
+  createdAt: string;
 }
 
 export interface SecretGameState {
@@ -520,4 +540,4 @@ export interface StateExport extends Omit<GameState, "public"> {
 
 export type State = GameState;
 
-export const CURRENT_STATE_SCHEMA_VERSION = 3;
+export const CURRENT_STATE_SCHEMA_VERSION = 4;

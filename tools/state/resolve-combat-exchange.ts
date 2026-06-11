@@ -10,19 +10,44 @@ import {
   type CombatSwing,
 } from "../../engine/core/combat-exchange.ts";
 import { parseCombatExchangeInput } from "../../engine/core/combat-exchange-schema.ts";
-import { getState } from "../../engine/core/state-store.ts";
+import { recordObligation } from "../../engine/core/obligations.ts";
+import type { State } from "../../engine/core/state.ts";
 import { noNumberNarrativeHint } from "../runtime/narrative-hints.ts";
-import { textResult, type ToolResult } from "../runtime/tool-result.ts";
+import type { ToolResult } from "../runtime/tool-result.ts";
+import { runDomainEventTool } from "./domain-tool-runner.ts";
 
-export function resolveCombatExchangeTool(params: unknown, _sessionManager: unknown): ToolResult {
+export function resolveCombatExchangeTool(params: unknown, sessionManager: unknown): ToolResult {
   const input = parseCombatExchangeInput(params, "resolve_combat_exchange 参数");
-  const result = resolveCombatExchange(getState(), { ...input, swing: input.swing ?? rollCombatSwing() });
-  // 只读裁决工具：不 commit state，也不需要把全量 state 冗余写进 details。
-  const details: Record<string, unknown> = { result };
-  return textResult(formatCombatExchangeResult(result), details);
+  return runDomainEventTool({
+    sessionManager,
+    // 裁决本身不改战斗状态，但必须落地的 landing 记入义务账本（backlog #4）：
+    // canonical commit 对账时账未清则拒绝提交。
+    execute: (draft: State) => {
+      const result = resolveCombatExchange(draft, {
+        ...input,
+        swing: input.swing ?? rollCombatSwing(),
+      });
+      const recorded = result.stateLandings
+        .filter((landing) => landing.required)
+        .map((landing) =>
+          recordObligation(draft, {
+            source: "combat-exchange",
+            kind: landing.kind,
+            summary: landing.reason,
+          }),
+        );
+      return { result, recordedObligations: recorded.length };
+    },
+    details: ({ result }) => ({ result }),
+    message: ({ result, recordedObligations }) =>
+      formatCombatExchangeResult(result, recordedObligations),
+  });
 }
 
-function formatCombatExchangeResult(result: CombatExchangeResult): string {
+function formatCombatExchangeResult(
+  result: CombatExchangeResult,
+  recordedObligations: number,
+): string {
   return [
     `交锋裁决：${result.outcome}`,
     `意图：${result.intent}`,
@@ -42,6 +67,12 @@ function formatCombatExchangeResult(result: CombatExchangeResult): string {
     ...uniqueLines(result.forbiddenNarration).map((line) => `- ${line}`),
     "",
     `下一行动窗口：${result.nextActionWindow}`,
+    ...(recordedObligations > 0
+      ? [
+          "",
+          `⚠ 已登记 ${recordedObligations} 条必须落地的义务；本轮 canonical commit（commit_turn / progress_scene_beat）前必须用对应状态事件清账，否则提交会被拒绝。`,
+        ]
+      : []),
   ].join("\n");
 }
 
@@ -75,7 +106,7 @@ function uniqueLines(lines: readonly string[]): string[] {
 export const resolveCombatExchangeToolDefinition: FsnToolDefinition = {
   name: "resolve_combat_exchange",
   description:
-    "定性裁决当前战斗交锋窗口；比较 Fate 参数/尺度、资源投入、已知优势/劣势和伤势压力，返回结果 band 与必须落地的状态约束。不写 HP，不直接改状态。\n\n" +
+    "定性裁决当前战斗交锋窗口；比较 Fate 参数/尺度、资源投入、已知优势/劣势和伤势压力，返回结果 band 与必须落地的状态约束。不写 HP；必须落地项会登记为义务账本，commit_turn / progress_scene_beat 前必须用对应状态事件清账，否则提交被拒。\n\n" +
     "【必须调用的场景】\n" +
     "- 战斗、撤退、保护、破除拘束、试探能力、宝具前摇/解放等高风险交锋需要机械裁决\n" +
     "- 双方有从者参数、魔术资质、伤势、地形、情报或资源投入差异，不能只靠 GM 口胡胜负\n" +

@@ -25,7 +25,8 @@ export const commitTurnToolDefinition: FsnToolDefinition = {
     "- 一轮回复同时改变时间/地点、Scene Objective、伤势、物品、资金、记忆或从者资源中的多个状态\n" +
     "- 叙事已经发生购买、治疗、移动、揭示、消耗、战斗结算等 canonical Game State 变化\n" +
     "- 一轮回复同时改变非 beat lifecycle 的多个状态；Scene Beat 开启/收口必须优先用 progress_scene_beat\n" +
-    "- 只覆盖当前玩家行动窗口及其直接后果；重大结算后应停止前台推进并先写足正文\n\n" +
+    "- 只覆盖当前玩家行动窗口及其直接后果；重大结算后应停止前台推进并先写足正文\n" +
+    "- resolve_combat_exchange 登记的裁决义务必须在本次 events 里落地；账未清则整次提交被拒绝\n\n" +
     "【严禁的行为】\n" +
     "- 把它当裸 patch；events 必须是已有领域事件\n" +
     "- 在 events 里写时间或移动；时间与移动只写顶层 time\n" +

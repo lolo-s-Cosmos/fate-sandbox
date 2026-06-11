@@ -2,6 +2,7 @@ import type { ActorConditionEvent } from "./actor-condition-schema.ts";
 import type { ActorId, PermanentEffect, PublicActorState, State } from "./state.ts";
 
 import { createId } from "./ids.ts";
+import { settleOldestObligation } from "./obligations.ts";
 import { assertNonEmptyString } from "./typebox-validation.ts";
 
 export type { ActorConditionEvent } from "./actor-condition-schema.ts";
@@ -11,6 +12,16 @@ export interface ActorConditionEventResult {
 }
 
 export function updateActorCondition(
+  draft: State,
+  event: ActorConditionEvent,
+): ActorConditionEventResult {
+  const result = applyActorConditionEvent(draft, event);
+  // 伤势/状态落地 = 裁决义务清账（FIFO 一次一条）
+  settleOldestObligation(draft, ["actor-condition"]);
+  return result;
+}
+
+function applyActorConditionEvent(
   draft: State,
   event: ActorConditionEvent,
 ): ActorConditionEventResult {

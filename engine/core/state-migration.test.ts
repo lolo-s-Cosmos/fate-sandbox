@@ -3,9 +3,9 @@ import test from "node:test";
 
 import { cloneState, hydrateState, migrateState, createInitialState } from "./state-store.ts";
 
-void test("migrateState upgrades schema v1 states to schema v3 turn log shape", () => {
+void test("migrateState upgrades schema v1 states to current turn log shape", () => {
   const current = createInitialState();
-  const { turnLog: _turnLog, ...publicV1 } = current.public;
+  const { turnLog: _turnLog, obligations: _obligations, ...publicV1 } = current.public;
   const rawV1 = {
     ...current,
     meta: { ...current.meta, schemaVersion: 1 },
@@ -14,18 +14,20 @@ void test("migrateState upgrades schema v1 states to schema v3 turn log shape", 
 
   const migrated = migrateState(rawV1);
 
-  assert.equal(migrated.meta.schemaVersion, 3);
+  assert.equal(migrated.meta.schemaVersion, 4);
   assert.deepEqual(migrated.public.turnLog, []);
+  assert.deepEqual(migrated.public.obligations, []);
   assert.equal(migrated.public.clock.currentAt, current.public.clock.currentAt);
 });
 
 void test("migrateState drops schema v2 non-advancing turn log entries", () => {
   const current = createInitialState();
+  const { obligations: _obligations, ...publicV2 } = current.public;
   const rawV2 = {
     ...current,
     meta: { ...current.meta, schemaVersion: 2 },
     public: {
-      ...current.public,
+      ...publicV2,
       turnLog: [
         {
           id: "turn-1",
@@ -51,14 +53,14 @@ void test("migrateState drops schema v2 non-advancing turn log entries", () => {
 
   const migrated = migrateState(rawV2);
 
-  assert.equal(migrated.meta.schemaVersion, 3);
+  assert.equal(migrated.meta.schemaVersion, 4);
   assert.equal(migrated.public.turnLog.length, 1);
   assert.equal(migrated.public.turnLog[0]?.id, "turn-2");
 });
 
 void test("hydrateState accepts session-wrapped schema v1 states through migration", () => {
   const current = createInitialState();
-  const { turnLog: _turnLog, ...publicV1 } = current.public;
+  const { turnLog: _turnLog, obligations: _obligations, ...publicV1 } = current.public;
   const rawV1 = {
     ...current,
     meta: { ...current.meta, schemaVersion: 1 },
@@ -68,6 +70,22 @@ void test("hydrateState accepts session-wrapped schema v1 states through migrati
   hydrateState({ v: 1, turn: 0, state: rawV1 });
 
   const hydrated = cloneState();
-  assert.equal(hydrated.meta.schemaVersion, 3);
+  assert.equal(hydrated.meta.schemaVersion, 4);
   assert.deepEqual(hydrated.public.turnLog, []);
+  assert.deepEqual(hydrated.public.obligations, []);
+});
+
+void test("migrateState upgrades schema v3 states with an empty obligations ledger", () => {
+  const current = createInitialState();
+  const { obligations: _obligations, ...publicV3 } = current.public;
+  const rawV3 = {
+    ...current,
+    meta: { ...current.meta, schemaVersion: 3 },
+    public: publicV3,
+  };
+
+  const migrated = migrateState(rawV3);
+
+  assert.equal(migrated.meta.schemaVersion, 4);
+  assert.deepEqual(migrated.public.obligations, []);
 });

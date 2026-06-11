@@ -4,6 +4,7 @@ import type { ActorId, ResourceTrack, ServantCoreState, State } from "./state.ts
 import { Temporal } from "@js-temporal/polyfill";
 
 import { createId } from "./ids.ts";
+import { settleOldestObligation } from "./obligations.ts";
 import { assertNonEmptyString, assertPercent } from "./typebox-validation.ts";
 
 export type { ServantFormEvent } from "./servant-schema.ts";
@@ -31,6 +32,12 @@ export function pruneExpiredParamModifiers(state: State): State {
 
 export function updateServantForm(draft: State, event: ServantFormEvent): ServantFormEventResult {
   assertNonEmptyString(event.reason, "reason");
+  const result = applyServantFormEvent(draft, event);
+  settleOldestObligation(draft, ["servant-form"]);
+  return result;
+}
+
+function applyServantFormEvent(draft: State, event: ServantFormEvent): ServantFormEventResult {
   switch (event.kind) {
     case "spend-mana":
       return updateResource(draft, event.actorId, "mana", -event.amount, "魔力已消耗");

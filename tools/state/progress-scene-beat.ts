@@ -3,6 +3,7 @@ import { Type } from "typebox";
 import { timePolicySchema } from "./time-policy-tool-schema.ts";
 import type { ToolResult } from "../runtime/tool-result.ts";
 
+import { assertNoOpenObligations } from "../../engine/core/obligations.ts";
 import { progressSceneBeat } from "../../engine/core/scene-beat-lifecycle.ts";
 import { parseSceneBeatProgressInput } from "../../engine/core/scene-beat-schema.ts";
 
@@ -11,8 +12,15 @@ import { resultDetails, runDomainEventTool } from "./domain-tool-runner.ts";
 export function progressSceneBeatTool(params: unknown, sessionManager: unknown): ToolResult {
   return runDomainEventTool({
     sessionManager,
-    execute: (draft) =>
-      progressSceneBeat(draft, parseSceneBeatProgressInput(params, "progress_scene_beat 参数")),
+    execute: (draft) => {
+      const result = progressSceneBeat(
+        draft,
+        parseSceneBeatProgressInput(params, "progress_scene_beat 参数"),
+      );
+      // canonical commit 对账点：裁决义务未清账则拒绝提交（backlog #4）
+      assertNoOpenObligations(draft);
+      return result;
+    },
     details: resultDetails,
     message: (result) => result.message,
   });
