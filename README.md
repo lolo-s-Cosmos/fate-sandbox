@@ -47,7 +47,10 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 /status     查看当前时间、地点、目标、威胁和资源
 /inventory  查看当前玩家可见资金与物品
 /compact    手动压缩聊天上下文（项目已接管为 Fate 压缩策略，自动压缩同样生效）
+/fuck [N]   快速回退到倒数第 N 次输入（默认 1）：中断生成、删除废弃分支、原输入回填输入框
 ```
+
+`/fuck` 是“坏输入急救”：刚发出去就后悔时用它回到输入前一刻，游戏状态会自动回滚到回退点快照。被废弃的分支会从 session 文件中物理删除，不可恢复；如果想保留分支对比不同走向，请用 pi 自带的 `/tree`。
 
 `/status` 和 `/inventory` 是 UI 面板，不是剧情动作；它们用于命令行里查看自己当前知道/持有的东西。
 
