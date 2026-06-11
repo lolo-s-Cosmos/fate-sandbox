@@ -12,7 +12,7 @@ import {
   SERVANT_CLASS_SCHEMA,
   stringEnumSchema,
 } from "../../engine/core/state-enum-schemas.ts";
-import { persistCurrentState, writeStateToDetails } from "../../engine/core/state-persistence.ts";
+import { persistStateAfterCommit } from "../../engine/core/state-persistence.ts";
 import { cloneState, commitState } from "../../engine/core/state-store.ts";
 import { parseTaggedTypeBoxUnion, trimStringsDeep } from "../../engine/core/typebox-validation.ts";
 import { textResult, type ToolResult } from "../runtime/tool-result.ts";
@@ -98,13 +98,12 @@ export function overrideLockedFactTool(params: unknown, sessionManager: unknown)
       break;
   }
   commitState(draft);
-  persistCurrentState(sessionManager);
   const details: Record<string, unknown> = {
     kind: override.kind,
     actorId: override.actorId,
     reason: override.reason,
   };
-  writeStateToDetails(details);
+  persistStateAfterCommit(sessionManager, details);
   return textResult(`锁定事实已覆盖：${override.kind}。原因：${override.reason}`, details);
 }
 

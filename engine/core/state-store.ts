@@ -93,9 +93,17 @@ function setStore(state: State): void {
   writeStateDebugSnapshot(normalizedState);
 }
 
+/** 上次落盘的序列化快照；hydrate 在每个入口都会触发，内容不变时跳过同步磁盘写。 */
+let lastWrittenSnapshot: string | undefined;
+
 function writeStateDebugSnapshot(state: State): void {
+  const payload = `${JSON.stringify(toStateExport(state), null, 2)}\n`;
+  if (payload === lastWrittenSnapshot) {
+    return;
+  }
   mkdirSync("state", { recursive: true });
-  writeFileSync(DEBUG_STATE_PATH, `${JSON.stringify(toStateExport(state), null, 2)}\n`, "utf-8");
+  writeFileSync(DEBUG_STATE_PATH, payload, "utf-8");
+  lastWrittenSnapshot = payload;
 }
 
 function toStateExport(state: State): StateExport {

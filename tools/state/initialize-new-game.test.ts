@@ -30,14 +30,16 @@ void test("initializeNewGameTool initializes human protagonist and persists deta
 
   assert.match(textOf(result), /新游戏 state 已初始化/);
   assert.equal(sessionManager.entries.length, 1);
-  assert.equal(result.details[sessionKey()] !== undefined, true);
-  assert.deepEqual(getStateDetail(result).public.scene.presentActorIds, ["protagonist"]);
-  assert.equal(getStateDetail(result).public.actors.protagonist?.identity.publicIdentity, "不了解魔术的本地学生");
+  // session 可写时 state 只走 custom entry，details 不再冗余携带全量 state。
+  assert.equal(result.details[sessionKey()], undefined);
+  assert.deepEqual(getStateDetail(sessionManager).public.scene.presentActorIds, ["protagonist"]);
+  assert.equal(getStateDetail(sessionManager).public.actors.protagonist?.identity.publicIdentity, "不了解魔术的本地学生");
 });
 
 void test("initializeNewGameTool initializes servant protagonist hidden true name", () => {
   resetState();
-  const result = initializeNewGameTool(
+  const sessionManager = createMockSessionManager();
+  initializeNewGameTool(
     {
       kind: "servant-protagonist",
       campaign: { presetId: "fsf_2008_snowfield" },
@@ -57,10 +59,10 @@ void test("initializeNewGameTool initializes servant protagonist hidden true nam
       },
       reason: "tool-level 初始化玩家从者并隐藏真名",
     },
-    createMockSessionManager(),
+    sessionManager,
   );
 
-  const state = getStateDetail(result);
+  const state = getStateDetail(sessionManager);
   assert.equal(state.public.actors.protagonist?.servantForm?.identity.trueName.status, "hidden");
   assert.equal(state.secrets.actorSecrets.protagonist !== undefined, true);
 });
@@ -137,7 +139,7 @@ function createMockSessionManager(): MockSessionManager {
   };
 }
 
-function getStateDetail(result: ReturnType<typeof initializeNewGameTool>): {
+function getStateDetail(sessionManager: MockSessionManager): {
   public: {
     scene: { presentActorIds: string[] };
     actors: {
@@ -149,11 +151,13 @@ function getStateDetail(result: ReturnType<typeof initializeNewGameTool>): {
   };
   secrets: { actorSecrets: { protagonist?: unknown } };
 } {
-  const detail = result.details[sessionKey()];
-  if (!isStateEntry(detail)) {
-    throw new Error("initialize_new_game result details missing persisted state entry");
+  const entry = sessionManager.entries[sessionManager.entries.length - 1];
+  const data =
+    typeof entry === "object" && entry !== null && "data" in entry ? entry.data : undefined;
+  if (!isStateEntry(data)) {
+    throw new Error("initialize_new_game session entries missing persisted state entry");
   }
-  return detail.state;
+  return data.state;
 }
 
 function isStateEntry(value: unknown): value is {

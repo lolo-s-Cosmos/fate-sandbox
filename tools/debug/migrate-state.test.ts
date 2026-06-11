@@ -5,7 +5,7 @@ import { sessionKey } from "../../engine/core/state-persistence.ts";
 import { resetState } from "../../engine/core/state-store.ts";
 import { migrateStateTool } from "./migrate-state.ts";
 
-void test("migrateStateTool apply=true persists state to session and details", () => {
+void test("migrateStateTool apply=true persists state to session entries", () => {
   resetState();
   const appended: Array<{ customType: string; data: unknown }> = [];
   const sessionManager = {
@@ -19,9 +19,18 @@ void test("migrateStateTool apply=true persists state to session and details", (
 
   assert.equal(appended.length, 1);
   assert.equal(appended[0]?.customType, sessionKey());
+  // session 可写时 state 只走 custom entry，details 不再冗余携带全量 state。
+  assert.equal(result.details?.[sessionKey()], undefined);
+});
+
+void test("migrateStateTool apply=true falls back to details without a session writer", () => {
+  resetState();
+
+  const result = migrateStateTool({ apply: true, reason: "测试回退" }, undefined);
+
   assert.ok(
     result.details?.[sessionKey()] !== undefined,
-    "apply=true 必须把 fsn-state 写进 tool result details，否则下次 hydrate 会静默回滚迁移",
+    "session 不可写时必须把 fsn-state 写进 tool result details，否则迁移结果没有任何落盘",
   );
 });
 

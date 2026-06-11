@@ -1,7 +1,6 @@
 import { cloneState, commitState } from "../../engine/core/state-store.ts";
-import { writeStateToDetails } from "../../engine/core/state-persistence.ts";
+import { persistStateAfterCommit } from "../../engine/core/state-persistence.ts";
 import type { State } from "../../engine/core/state.ts";
-import { persistCurrentState } from "../../engine/core/state-persistence.ts";
 import { textResult, type ToolResult } from "../runtime/tool-result.ts";
 
 export interface DomainToolRunInput<Result> {
@@ -19,9 +18,8 @@ export function runDomainEventTool<Result>(input: DomainToolRunInput<Result>): T
   const draft = cloneState();
   const result = input.execute(draft);
   commitState(draft);
-  persistCurrentState(input.sessionManager);
   const details = input.details(result);
-  writeStateToDetails(details);
+  persistStateAfterCommit(input.sessionManager, details);
   return textResult(input.message(result), details);
 }
 

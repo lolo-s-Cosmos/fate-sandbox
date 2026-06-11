@@ -2,7 +2,7 @@ import type { FsnToolDefinition } from "../runtime/tool-definition.ts";
 
 import { Type } from "typebox";
 
-import { persistCurrentState, writeStateToDetails } from "../../engine/core/state-persistence.ts";
+import { persistStateAfterCommit } from "../../engine/core/state-persistence.ts";
 import { cloneState, migrateState, replaceStateForDebug } from "../../engine/core/state-store.ts";
 import { isRecord } from "../../engine/core/typebox-validation.ts";
 import { textResult, type ToolResult } from "../runtime/tool-result.ts";
@@ -26,10 +26,9 @@ export function migrateStateTool(params: unknown, sessionManager: unknown): Tool
   };
   if (input.apply === true) {
     replaceStateForDebug(migrated);
-    // 与 reset_state / override_locked_fact 同款持久化：缺了这两步，
+    // 与 reset_state / override_locked_fact 同款持久化：缺了这步，
     // 下次 session hydrate 会把“已应用”的迁移静默冲回旧状态。
-    persistCurrentState(sessionManager);
-    writeStateToDetails(details);
+    persistStateAfterCommit(sessionManager, details);
   }
   return textResult(`State 已迁移到 schemaVersion ${migrated.meta.schemaVersion}。`, details);
 }

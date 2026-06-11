@@ -11,15 +11,14 @@ import {
 } from "../../engine/core/combat-exchange.ts";
 import { parseCombatExchangeInput } from "../../engine/core/combat-exchange-schema.ts";
 import { getState } from "../../engine/core/state-store.ts";
-import { writeStateToDetails } from "../../engine/core/state-persistence.ts";
 import { noNumberNarrativeHint } from "../runtime/narrative-hints.ts";
 import { textResult, type ToolResult } from "../runtime/tool-result.ts";
 
 export function resolveCombatExchangeTool(params: unknown, _sessionManager: unknown): ToolResult {
   const input = parseCombatExchangeInput(params, "resolve_combat_exchange 参数");
   const result = resolveCombatExchange(getState(), { ...input, swing: input.swing ?? rollCombatSwing() });
+  // 只读裁决工具：不 commit state，也不需要把全量 state 冗余写进 details。
   const details: Record<string, unknown> = { result };
-  writeStateToDetails(details);
   return textResult(formatCombatExchangeResult(result), details);
 }
 

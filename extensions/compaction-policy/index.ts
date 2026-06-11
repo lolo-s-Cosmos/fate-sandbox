@@ -4,12 +4,13 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { syncStateFromSessionManager } from "../../engine/core/session-hydration.ts";
 import { buildStateExclusionDigestFromRaw } from "../../engine/core/state-file-projection.ts";
+import { exportState } from "../../engine/core/state-store.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = join(__dirname, "..", "..");
 const POLICY_PATH = join(PROJECT_ROOT, "agents", "compaction-policy.md");
-const STATE_PATH = join(PROJECT_ROOT, "state", "state.json");
 
 export default function compactionPolicyExtension(pi: ExtensionAPI): void {
   pi.registerCommand("fate-compact", {
@@ -25,7 +26,7 @@ function triggerFsnCompaction(ctx: ExtensionContext): void {
     ctx.ui.notify("Fate compaction started", "info");
   }
   ctx.compact({
-    customInstructions: buildCustomInstructions(),
+    customInstructions: buildCustomInstructions(ctx),
     onComplete: () => {
       if (ctx.hasUI) {
         ctx.ui.notify("Fate compaction completed", "info");
@@ -39,22 +40,26 @@ function triggerFsnCompaction(ctx: ExtensionContext): void {
   });
 }
 
-function buildCustomInstructions(): string {
+function buildCustomInstructions(ctx: ExtensionContext): string {
   return [
     readFileSync(POLICY_PATH, "utf-8").trim(),
     "",
     "<current_state_for_exclusion>",
-    JSON.stringify(readStateExclusionDigest(), null, 2),
+    JSON.stringify(readStateExclusionDigest(ctx), null, 2),
     "</current_state_for_exclusion>",
   ].join("\n");
 }
 
-function readStateExclusionDigest():
-  | ReturnType<typeof buildStateExclusionDigestFromRaw>
-  | { error: string } {
+/**
+ * 从当前 session branch 同步进程内 canonical state 后直接取快照；
+ * 不再读 state/state.json 侧通道，避免拿到别的 session/branch 的残留快照。
+ */
+function readStateExclusionDigest(
+  ctx: ExtensionContext,
+): ReturnType<typeof buildStateExclusionDigestFromRaw> | { error: string } {
   try {
-    const raw: unknown = JSON.parse(readFileSync(STATE_PATH, "utf-8"));
-    return buildStateExclusionDigestFromRaw(raw);
+    syncStateFromSessionManager(ctx.sessionManager);
+    return buildStateExclusionDigestFromRaw(exportState());
   } catch (error) {
     return { error: formatError(error) };
   }
