@@ -47,28 +47,6 @@ export interface TimelineOffscreenEventContext {
   futureHooks: string[];
 }
 
-export interface StateExclusionDigest {
-  clock: {
-    currentAt: string;
-    timezone: string;
-    displayTime: string;
-  };
-  campaign: {
-    title: string;
-    timeline: string;
-    premise: string;
-  };
-  scene: {
-    location: string;
-    situation: string;
-    presentActorIds: string[];
-    objectiveIds: string[];
-    threatIds: string[];
-  };
-  actorIds: string[];
-  offscreenEventIds: string[];
-}
-
 const RECENT_OFFSCREEN_LIMIT = 6;
 
 export function buildTimelineStateContextFromRaw(raw: unknown): TimelineStateContext {
@@ -107,43 +85,6 @@ export function buildTimelineStateContextFromRaw(raw: unknown): TimelineStateCon
     recentOffscreenEvents: offscreenEventLog
       .slice(-RECENT_OFFSCREEN_LIMIT)
       .map((event, index) => offscreenEventContext(event, index)),
-  };
-}
-
-export function buildStateExclusionDigestFromRaw(raw: unknown): StateExclusionDigest {
-  const state = selectStateRecord(raw);
-  const publicState = requireRecord(state["public"], "state.public");
-  const secrets = requireRecord(state["secrets"], "state.secrets");
-  const campaign = requireRecord(publicState["campaign"], "public.campaign");
-  const clock = requireRecord(publicState["clock"], "public.clock");
-  const scene = requireRecord(publicState["scene"], "public.scene");
-  const actors = requireRecord(publicState["actors"], "public.actors");
-  const currentAt = requireString(clock["currentAt"], "clock.currentAt");
-  const timezone = requireTimezone(clock["timezone"], "clock.timezone");
-  return {
-    clock: {
-      currentAt,
-      timezone,
-      displayTime:
-        optionalString(clock["displayTime"]) ?? formatHumanTime(currentAt, timezone).display,
-    },
-    campaign: {
-      title: requireString(campaign["title"], "campaign.title"),
-      timeline: requireString(campaign["timeline"], "campaign.timeline"),
-      premise: requireString(campaign["premise"], "campaign.premise"),
-    },
-    scene: {
-      location: formatStateFileLocation(requireRecord(scene["location"], "scene.location")),
-      situation: requireString(scene["situation"], "scene.situation"),
-      presentActorIds: stringArray(scene["presentActorIds"], "scene.presentActorIds"),
-      objectiveIds: objectIdArray(optionalArray(scene["objectives"]), "scene.objectives"),
-      threatIds: objectIdArray(optionalArray(scene["threats"]), "scene.threats"),
-    },
-    actorIds: Object.keys(actors),
-    offscreenEventIds: objectIdArray(
-      optionalArray(secrets["offscreenEventLog"]),
-      "offscreenEventLog",
-    ),
   };
 }
 
@@ -245,13 +186,6 @@ function formatThreats(values: readonly unknown[]): string[] {
   return values.map((value, index) => {
     const threat = requireRecord(value, `scene.threats[${index}]`);
     return `${requireString(threat["severity"], "threat.severity")}: ${requireString(threat["summary"], "threat.summary")}`;
-  });
-}
-
-function objectIdArray(values: readonly unknown[], fieldName: string): string[] {
-  return values.map((value, index) => {
-    const record = requireRecord(value, `${fieldName}[${index}]`);
-    return requireString(record["id"], `${fieldName}[${index}].id`);
   });
 }
 
