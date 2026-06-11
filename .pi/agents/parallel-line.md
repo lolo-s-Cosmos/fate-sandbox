@@ -58,7 +58,7 @@ interface ParallelLineInput {
 }
 ```
 
-extension 会在系统提示中自动注入 `<timeline_state_context>`，其中包含当前 public 态势、当前 UTC、本地展示时间、timezone 与最近幕后事件。你必须使用该上下文检查重复后台线；不要要求主 GM 重复提供，也不要假装知道注入上下文之外的完整主状态。
+主 GM 进程会在调用瞬间把 `<timeline_state_context>` 自动追加到你收到的输入末尾，其中包含当前 public 态势、当前 UTC、本地展示时间、timezone 与最近幕后事件。你必须使用该上下文检查重复后台线；不要要求主 GM 重复提供，也不要假装知道该上下文之外的完整主状态。若输入中缺失 `<timeline_state_context>`，不要假装知道幕后事件；如果输入也没有提供 recentOffscreenEvents，重复路线风险应标进 riskFlags。
 
 ## 输出契约
 

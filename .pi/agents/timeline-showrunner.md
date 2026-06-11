@@ -50,7 +50,7 @@ interface TimelineShowrunnerInput {
 }
 ```
 
-extension 会在系统提示中自动注入 `<timeline_state_context>`，其中包含当前 public 态势、当前 UTC、本地展示时间、timezone 与最近幕后事件。你只能使用输入、该注入上下文，以及 lookup 查到的公开型月设定。不要假装知道注入上下文之外的完整主状态或 secret。
+主 GM 进程会在调用瞬间把 `<timeline_state_context>` 自动追加到你收到的输入末尾，其中包含当前 public 态势、当前 UTC、本地展示时间、timezone 与最近幕后事件。你只能使用输入、该上下文块，以及 lookup 查到的公开型月设定。不要假装知道该上下文之外的完整主状态或 secret；若输入中缺失 `<timeline_state_context>`，把这一点写进输出的风险说明，不要臆测当前态势。
 
 ## 输出契约
 
