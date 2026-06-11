@@ -1,0 +1,190 @@
+# 系统潜力挖掘 backlog
+
+来源：2026-06-11 对上下文管理 / 提示词注入 / 工具设计 / 引擎全面盘点的结论。
+原则轴：把还停留在 prompt 里的纪律下沉为结构；把 GM 手工装配的活变成 engine 自动供给。
+每项做完勾掉，动手前先重读对应小节，按当时代码现状校正方案。
+
+优先级总览：
+
+1. ✅ 高性价比先做：#1 输出 lint（含真名泄漏阻断）、#8 JSONL 审计脚本
+2. 叙事上限主解锁：#2 hook 状态化、#3 阵营时钟与到期义务
+3. 吃 #3 结构红利：#4 裁决落地账本、#5 parallel-line 工具化
+4. 长跑差距项：#6 NPC 卡片 + 记忆检索、#7 canon 研究缓存
+5. 小件随手做：#9 确定性随机源、#10 玩家侧命令、#11 preset 顺序微优化
+
+---
+
+## 1. 输出契约机械执法（output-lint 扩展）
+
+- [ ] 状态：未开始
+
+`gm-output-contract.md` + `gm-style-blacklist.md` 大半禁令可正则检测，现在全靠模型自查（违反「Prompt 不是防线」）。
+
+可机械检测项：
+
+- 开头禁语：「好的」「以下是」「那么」「状态已经」「现在为你写」
+- 伪菜单结尾：「你可以 A，也可以 B」「是…还是…」「左边是 A，右边是 B」
+- Markdown 分隔线/标题、JSON 花括号、schema 路径
+- 黑名单句式：「并非…而是」「与其说」「空气中弥漫着」「显得格外」「难以言喻」、连续双比喻「像 A，像 B」、水系比喻簇
+- **未揭示秘密泄漏（最高价值）**：扫描最终正文是否包含 `secrets` 中 `revealState !== "revealed"` 的真名 / 宝具名字符串
+
+落地形态：
+
+- 新 extension（如 `extensions/output-lint/`），turn 结束时对最终 assistant 正文跑规则
+- 轻则 `ctx.ui.notify` 警告 + 写审计日志；重则注入修正指令重写
+- 真名泄漏做硬阻断
+- 规则集本体写成纯函数 + 测试；规则集与 #8 审计脚本复用同一模块
+
+进阶：「同一意象簇 3 轮内不得重复」机械化——对最近 3 轮正文做意象关键词计数，超限时在下一轮 pre-response 动态注入「本轮禁用意象：X、Y」，把 style blacklist 从静态文本变成带违规上下文的动态注入。
+
+## 2. Mystery hook 状态化（明确违宪存量）
+
+- [ ] 状态：未开始
+
+`gm-story-driver.md` 的 hook budget（active/parked/paid/escalated/retired、同场景最多 1-2 active、parked 1-2 轮内不抢焦点、复现必须带新状态）全部只活在 prompt 里。state 有 `storyWindow` 但 hook 不是领域对象。后果：compaction 后 hook 状态只能靠 5 条 narrative texture 苟活；timeline-showrunner 审计拿不到账本；「复现带新信息」无法验证。
+
+方案：
+
+```ts
+interface HookState {
+  id: HookId;
+  label: string;
+  status: "active" | "parked" | "paid" | "escalated" | "retired";
+  lastSurfacedAt: string; // ISO
+  surfaceCount: number;
+  lastNovelty: string; // 上次复现带来的新状态，复现时必填
+}
+// 落点：public.hooks: HookState[]
+```
+
+- lifecycle 进 `commit_turn` / `progress_scene_beat` 事件集（或窄工具 `update_hook`）
+- GM Brief 加一行 hook 账本
+- 工具层 invariant：同 scene active hook > 2 拒绝新增；复现必须提供 `lastNovelty`
+- timeline-showrunner 输入直接从 state 拿账本，审计从读对话变成对账
+- 需要 schemaVersion bump + migration + 测试
+
+## 3. 阵营时钟与到期义务（faction clock / scheduled obligation）
+
+- [ ] 状态：未开始
+
+「世界不为玩家暂停」「每 2-3 次后台推进要有一次格局变化」「倒计时」目前全靠 GM 与 parallel-line 自觉。引入 BITD 进度钟思路：
+
+```ts
+interface FactionClock {
+  id: string;
+  factionId: string;
+  label: string;
+  filled: number;
+  size: number;
+  visibility: "hidden" | "leaked";
+}
+interface ScheduledEvent {
+  id: string;
+  dueAt: string; // ISO
+  summary: string;
+  onDue: "surface-to-gm";
+}
+// 落点：secret state
+```
+
+- parallel-line 输出契约升级：`secretStateChanges` 允许结构化 `clockAdvance`
+- `commit_turn` / `progress_scene_beat` 推进时间越过 `dueAt` 时，**工具返回值直接列出到期义务**：「以下幕后倒计时已到期，本轮必须处理或显式展期」——engine 催账，GM 不需要记得
+- 时钟填满 = 强制格局变化事件
+- timeline-showrunner 审计「连续无代价」时有数字可查
+- 这是 `docs/parallel-line-subagents-plan.md` 的最后一公里：现在 subagent 产出候选，但没有任何东西保证候选的后续会发生；时钟就是那个保证
+
+## 4. resolve_combat_exchange 裁决-落地缝隙（turn obligations ledger）
+
+- [ ] 状态：未开始
+
+该工具裁决但不改 state，伤势/魔力落地靠 GM 自觉跟进，存在「裁决了但没落地」的无人看守缝隙。
+
+方案：
+
+- engine 记 `pendingExchangeSettlement`：exchange 裁决产生的 mandatory landings 清单
+- 下一次 `commit_turn` 若清单未清空则拒绝或在返回值强提醒
+- 泛化为 **turn obligations ledger**：任何工具可登记「本轮欠的账」，`commit_turn` 是统一对账点（#3 的到期义务也走同一账本）
+
+## 5. parallel-line 调用工具化（engine 装配输入 + schema 验收输出）
+
+- [ ] 状态：未开始
+
+现在 GM 手写 `ParallelLineInput`（knownFacts/actorGoals/previousLineState 全靠主模型现编）：装配质量不稳、可能泄漏不该给的内容、懒了就不调。`<timeline_state_context>` 注入已证明 engine 装配路线可行，再走一步：
+
+- `run_parallel_line` 领域工具（或扩展内拦截）：输入只要 `lineId + timeWindow + 可选偏好`，其余字段由 engine 从 secret state、actor agenda、offscreenEventLog 自动装配
+- 输出用 TypeBox 验证 `ParallelLineOutput`，解析失败自动重试一次——bare JSON 契约从 prompt 恳求变成代码验收
+- 解锁 **async 预取**：beat 进行中后台 `async: true` 先跑，玩家读正文的时间就是子代理计算时间，下轮取结果，延迟归零
+- 前置依赖：actor 加轻量 `agenda`（目标/恐惧/当前指令），同时喂 #6
+
+## 6. 上下文经济：presence 驱动 NPC 卡片 + 记忆检索
+
+- [ ] 状态：未开始
+
+两个长跑缺口：
+
+a) **NPC 声音一致性没有载体**。有 `protagonist-impression.md` 但 NPC 没有对应物，口吻/情绪立场在 compaction 后只剩 texture bullets。
+
+- per-actor impression 卡（公开层，几行即可），beat complete 或 compaction 时由模型/子代理蒸馏更新
+- pre-response 注入时只注入当前 scene presence 里的 actor 卡片——presence 已是 canonical state，免费路由信号
+
+b) **Campaign memory 不可检索**。eventLog/pinnedFacts 只进 brief 的「最近重大记忆」，旧事实靠 compaction 摘要侥幸存活。
+
+- `recall_memory(query)` 查询工具（关键词/actor/地点过滤即可，不上向量）+ tool-policy 一行路由规则
+- 更自动版本：brief 按当前 location/在场 actor 关联注入 2-3 条相关旧记忆
+
+## 7. Canon 研究缓存（casting 子代理）
+
+- [ ] 状态：未开始
+
+tool-policy 的 canon query（lookup → web_search → fetch_content）每次都在主上下文消化 wiki 正文，且跨 session 不复用。
+
+- 研究结果落盘为结构化角色卡缓存（如 `data/canon-cache/`）：外貌、口吻、参数、关系、版本边界，带来源 URL
+- 进阶：**casting 子代理**——输入「角色名 + timeline + 本局需要字段」，在自己的上下文里做 web 研究，返回窄结构卡片；主 GM 上下文只进卡片不进 wiki 正文
+- `lookup` 优先命中缓存，未命中才触发研究
+- 注意发布纪律：缓存目录属本地产物还是发布内容需要决定（含网络抓取文本，倾向不进 release zip）
+
+## 8. JSONL 审计脚本（叙事纪律可回归测试）
+
+- [ ] 状态：未开始
+
+AGENTS.md 说「先写 JSONL 统计复现」，但没有现成统计工具。建 `scripts/audit-session.ts`，对 session JSONL 输出：
+
+- 时间推进覆盖率（accepted canonical turn 中带 time 的比例——已点名的逃生门指标）
+- 工具调用分布、`get_status` 滥用率
+- 连续无代价轮数分布（压力纪律量化）
+- 输出契约违规命中（复用 #1 的 lint 规则模块）
+- parallel-line 调用频率 vs 触发条件命中率
+
+价值：把「感觉最近 GM 变软了」变成数字；每次 prompt/工具改动有 before/after 基线。所有项里对长期迭代复利最大。
+
+## 9. 确定性随机源（seeded RNG）
+
+- [ ] 状态：未开始
+
+gm-rules 禁裸骰，但「同 rank 互换」「变动输出宝具 X~Y」这类裁决实际是模型脑内挑结果——不可审计、可被叙事倾向带偏。
+
+- engine 加 seeded RNG：seed 进 state，每次消耗记入 turnLog
+- `resolve_combat_exchange` 内部使用
+- 结果可复现、可测试；rewind 后重放行为一致
+
+## 10. 玩家侧小件
+
+- [ ] `/recap`：从 Campaign Memory（player-safe）生成前情提要，不进上下文
+- [ ] `/journal`：turnLog + eventLog 渲染时间线（审计账本是现成数据）
+- [ ] 分支书签：session tree 已支持分叉，加 `/bookmark` 命名存档点，配合 `/fuck` 形成 what-if 工作流
+- [ ] 成书导出：session → 去掉工具调用的纯正文 HTML/EPUB
+
+## 11. preset 注入顺序微优化（KV cache）
+
+- [ ] 状态：未开始
+
+pre-response 槽里 `mechanical_state`（每轮变，priority 10）排在 tool-policy(20)/hard-rules(30)/story-driver(40) 这些静态块**前面**，每轮打穿后面静态块的前缀缓存。把动态 brief 的 priority 调到静态规则之后即可，改动只是 `agents/preset.json` 的数字。注意同步改 `engine/gm-prompt/injection.test.ts` / `preset.test.ts` 的顺序断言（若有）。
+
+---
+
+## 实施纪律提醒
+
+- 改 state 结构的项（#2 #3 #4 #5 #6a #9）都要：bump `schemaVersion` + 线性 migration + migration 测试 + protected paths 同步
+- 新工具在 `tools/registry.ts` 注册，description 含「必须调用场景 + 严禁行为」
+- 子代理改动保持 project-scope、explicit `tools`/`extensions`、bare JSON 约束
+- 每项完成 = `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test` 全过
