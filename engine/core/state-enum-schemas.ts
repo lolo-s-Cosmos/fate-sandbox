@@ -33,6 +33,7 @@ export const TIMELINE_IDS = [
   "fz",
   "fsn",
   "case-files",
+  "apocrypha",
   "fsf",
   "extra",
   "extra-ccc",
@@ -45,7 +46,13 @@ export const TIMELINE_IDS = [
 export const TIMELINE_ID_SCHEMA = stringEnumSchema(TIMELINE_IDS);
 export type TimelineId = Static<typeof TIMELINE_ID_SCHEMA>;
 
-export const TIMEZONE_IDS = ["Asia/Tokyo", "America/Denver", "UTC"] as const;
+export const TIMEZONE_IDS = [
+  "Asia/Tokyo",
+  "America/Denver",
+  "Europe/London",
+  "Europe/Bucharest",
+  "UTC",
+] as const;
 export const TIMEZONE_ID_SCHEMA = stringEnumSchema(TIMEZONE_IDS);
 export type TimeZoneId = Static<typeof TIMEZONE_ID_SCHEMA>;
 

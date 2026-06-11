@@ -35,7 +35,7 @@ export const initializeNewGameToolDefinition: FsnToolDefinition = {
     campaign: Type.Object({
       presetId: Type.String({
         description:
-          "fsn_2004_fuyuki / fsf_2008_snowfield / extra_2032_seraph / extra_ccc_2032_far_side",
+          "fsn_2004_fuyuki / fz_1994_fuyuki / ha_2004_fuyuki / fsf_2008_snowfield / apocrypha_2004_trifas / extra_2032_seraph / extra_ccc_2032_far_side / case_files_2003_london / tsukihime_2000_misaki / tsukihime_2021_souya / knk_1998_mifune / mahoyo_1989_misaki / custom_worldline",
       }),
       title: Type.Optional(Type.String()),
       premise: Type.Optional(Type.String()),

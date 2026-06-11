@@ -175,9 +175,24 @@ protagonist 从者真名规则：
 默认 preset：
 
 - FSN 冬木：`presetId=fsn_2004_fuyuki`，timezone=`Asia/Tokyo`，currency=`JPY`
+- FZ 冬木（第四次）：`presetId=fz_1994_fuyuki`，timezone=`Asia/Tokyo`，currency=`JPY`
+- hollow ataraxia（五战半年后）：`presetId=ha_2004_fuyuki`，timezone=`Asia/Tokyo`，currency=`JPY`
 - FSF 斯诺菲尔德：`presetId=fsf_2008_snowfield`，timezone=`America/Denver`，currency=`USD`
+- Apocrypha 特里凡：`presetId=apocrypha_2004_trifas`，timezone=`Europe/Bucharest`，currency=`custom`
 - Fate/EXTRA SE.RA.PH：`presetId=extra_2032_seraph`，timezone=`UTC`，currency=`custom`
 - Fate/EXTRA CCC 月之裏側：`presetId=extra_ccc_2032_far_side`，timezone=`UTC`，currency=`custom`
+- 二世事件簿 伦敦：`presetId=case_files_2003_london`，timezone=`Europe/London`，currency=`custom`
+- 月姬原作 三咲：`presetId=tsukihime_2000_misaki`，timezone=`Asia/Tokyo`，currency=`JPY`
+- 月姬重制 总谷：`presetId=tsukihime_2021_souya`，timezone=`Asia/Tokyo`，currency=`JPY`
+- 空之境界 观布子：`presetId=knk_1998_mifune`，timezone=`Asia/Tokyo`，currency=`JPY`
+- 魔法使之夜 三咲：`presetId=mahoyo_1989_misaki`，timezone=`Asia/Tokyo`，currency=`JPY`
+- 自定义世界线：`presetId=custom_worldline`，时间/地点/货币占位，初始化时用 campaign 覆盖项填入开局问答结果
+
+非圣杯战争世界线注意（事件簿/月姬/空境/魔夜）：
+
+- 没有令咒、从者、七骑规则；不要把圣杯战争结构带入。
+- 战斗仍用 resolve_combat_exchange，但对手是死徒/鬼种/魔术师/怪异，不是 Servant 阶位对决。
+- 原作主角线是否已发生/正在发生由开局确认，不要默认玩家替代原作主角。
 
 时间规则：
 
