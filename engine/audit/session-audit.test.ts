@@ -17,7 +17,7 @@ import {
 // ---------- fixture 构造 ----------
 
 interface ChainSpec {
-  kind: "user" | "assistant" | "toolResult" | "state";
+  kind: "user" | "assistant" | "toolResult" | "state" | "prose";
   text?: string;
   toolCalls?: Array<{ id: string; name: string; args?: unknown }>;
   toolCallId?: string;
@@ -41,6 +41,17 @@ function buildJsonl(specs: readonly ChainSpec[]): string {
           id,
           parentId: parent,
           data: { v: 1, turn: i, state: { meta: {}, public: {}, secrets: spec.secrets ?? {} } },
+        }),
+      );
+    } else if (spec.kind === "prose") {
+      lines.push(
+        JSON.stringify({
+          type: "custom_message",
+          customType: "fsn-prose",
+          id,
+          parentId: parent,
+          content: spec.text ?? "",
+          display: true,
         }),
       );
     } else if (spec.kind === "toolResult") {
@@ -101,6 +112,20 @@ function plainTurn(
       kind: "assistant",
       text: options.prose ?? "她合上门，走廊重新陷入安静。脚步声停在第三级台阶。",
     },
+  ];
+}
+
+/** 一个双 pass 轮：user → assistant(submit packet) → result → fsn-prose 渲染正文 */
+function twoPassTurn(callId: string, prose: string): ChainSpec[] {
+  return [
+    { kind: "user", text: "玩家行动" },
+    {
+      kind: "assistant",
+      text: "结算完成。",
+      toolCalls: [{ id: callId, name: "submit_direction_packet", args: { needsRender: true } }],
+    },
+    { kind: "toolResult", toolCallId: callId },
+    { kind: "prose", text: prose },
   ];
 }
 
@@ -235,6 +260,25 @@ void test("add-threat scene event counts as cost", () => {
   ]);
   const pressure = measurePressure(groupTurns(reconstructActivePath(parseSessionJsonl(jsonl))));
   assert.equal(pressure.noCostTurns, 0);
+});
+
+void test("groupTurns takes fsn-prose custom message as final prose in two-pass sessions", () => {
+  const turns = groupTurns(
+    reconstructActivePath(
+      parseSessionJsonl(
+        buildJsonl([
+          ...twoPassTurn("c1", "雨停了。她把伞收进门后的桶里。"),
+          ...twoPassTurn("c2", "走廊尽头的灯还亮着。"),
+        ]),
+      ),
+    ),
+  );
+
+  assert.equal(turns.length, 2);
+  assert.equal(turns[0]?.finalProse, "雨停了。她把伞收进门后的桶里。");
+  // 结算轮可见文本也进 fullText（泄密扫描覆盖），但最终正文是渲染产出
+  assert.match(turns[0]?.fullText ?? "", /结算完成/);
+  assert.equal(turns[1]?.finalProse, "走廊尽头的灯还亮着。");
 });
 
 void test("measureLint reports prose violations and secret leaks", () => {

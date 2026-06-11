@@ -21,6 +21,8 @@ interface RawEntry {
   message?: Record<string, unknown>;
   customType?: string;
   data?: unknown;
+  /** custom_message entry 的正文（双 pass 渲染轮的 fsn-prose 走这里） */
+  content?: unknown;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -47,6 +49,7 @@ export function parseSessionJsonl(content: string): RawEntry[] {
       message: isRecord(parsed["message"]) ? parsed["message"] : undefined,
       customType: typeof parsed["customType"] === "string" ? parsed["customType"] : undefined,
       data: parsed["data"],
+      content: parsed["content"],
     });
   }
   return entries;
@@ -98,9 +101,13 @@ export interface AuditTurn {
   index: number;
   userText: string;
   toolCalls: AuditToolCall[];
-  /** 本轮全部 assistant text block 拼接（含中间叙述） */
+  /** 本轮全部可见文本拼接（assistant text + fsn-prose 渲染正文） */
   fullText: string;
-  /** 本轮最后一个含 text 的 assistant 消息正文（= 最终玩家可见回复） */
+  /**
+   * 本轮最终玩家可见正文。
+   * 双 pass session：fsn-prose custom message（优先）；
+   * 单 pass 老 session：最后一个含 text 的 assistant 消息。
+   */
   finalProse: string;
   /** 本轮结束时最新 fsn-state 快照中的未揭示秘密字符串 */
   unrevealedSecrets: string[];
@@ -151,6 +158,17 @@ export function groupTurns(path: readonly RawEntry[]): AuditTurn[] {
       const state = entry.data["state"];
       if (isRecord(state)) latestSecrets = collectUnrevealedSecretStrings(state["secrets"]);
       if (current !== undefined) current.unrevealedSecrets = latestSecrets;
+      continue;
+    }
+    // 双 pass 渲染轮的最终正文：fsn-prose custom message 覆盖 assistant text
+    if (entry.type === "custom_message" && entry.customType === "fsn-prose") {
+      if (current !== undefined) {
+        const prose = blockText(entry.content);
+        if (prose.trim().length > 0) {
+          current.fullText = current.fullText.length > 0 ? `${current.fullText}\n${prose}` : prose;
+          current.finalProse = prose;
+        }
+      }
       continue;
     }
     if (entry.type !== "message" || entry.message === undefined) continue;
