@@ -42,22 +42,23 @@ function packetCallMessage(args: Record<string, unknown>): Record<string, unknow
   };
 }
 
-void test("findPendingDirectionPacket returns the latest unrendered packet", () => {
-  const packet = findPendingDirectionPacket([
+void test("findPendingDirectionPacket returns the latest unrendered packet with its call id", () => {
+  const pending = findPendingDirectionPacket([
     userMessage("贴上去！"),
     packetCallMessage(PACKET_ARGS),
   ]);
-  assert.ok(packet);
-  assert.equal(packet.needsRender, true);
+  assert.ok(pending);
+  assert.equal(pending.packet.needsRender, true);
+  assert.equal(pending.toolCallId, "tc-1");
 });
 
 void test("findPendingDirectionPacket ignores already-rendered turns", () => {
-  const packet = findPendingDirectionPacket([
+  const pending = findPendingDirectionPacket([
     userMessage("贴上去！"),
     packetCallMessage(PACKET_ARGS),
     proseMessage("已渲染的正文。"),
   ]);
-  assert.equal(packet, undefined);
+  assert.equal(pending, undefined);
 });
 
 void test("findPendingDirectionPacket returns undefined without a packet call", () => {

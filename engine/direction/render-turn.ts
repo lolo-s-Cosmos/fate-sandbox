@@ -12,21 +12,30 @@ export const SUBMIT_DIRECTION_PACKET_TOOL = "submit_direction_packet";
 /** 渲染器散文史上限（轮数），防止 Pass B 上下文无界增长。 */
 const MAX_PROSE_HISTORY_TURNS = 8;
 
+export interface PendingDirectionPacket {
+  packet: DirectionPacket;
+  /** 提交该 packet 的 toolCall id，供扩展层去重（防竞态下双重渲染）。 */
+  toolCallId: string;
+}
+
 /**
  * 从 agent loop 的消息流中找出「已提交、尚未渲染」的 direction packet。
  * 从尾部回扫：先遇到 prose 消息说明本轮已渲染过（或无新 packet），返回 undefined。
  */
 export function findPendingDirectionPacket(
   messages: ReadonlyArray<unknown>,
-): DirectionPacket | undefined {
+): PendingDirectionPacket | undefined {
   for (let index = messages.length - 1; index >= 0; index--) {
     const message = messages[index];
     if (isProseMessage(message)) {
       return undefined;
     }
-    const args = findSubmitPacketArguments(message);
-    if (args !== undefined) {
-      return parseDirectionPacket(args, "direction packet");
+    const call = findSubmitPacketCall(message);
+    if (call !== undefined) {
+      return {
+        packet: parseDirectionPacket(call.args, "direction packet"),
+        toolCallId: call.toolCallId,
+      };
     }
   }
   return undefined;
@@ -167,7 +176,9 @@ function joinTextParts(content: unknown): string {
     .trim();
 }
 
-function findSubmitPacketArguments(message: unknown): Record<string, unknown> | undefined {
+function findSubmitPacketCall(
+  message: unknown,
+): { args: Record<string, unknown>; toolCallId: string } | undefined {
   if (!isRecord(message) || message["role"] !== "assistant") {
     return undefined;
   }
@@ -183,7 +194,11 @@ function findSubmitPacketArguments(message: unknown): Record<string, unknown> | 
       part["name"] === SUBMIT_DIRECTION_PACKET_TOOL &&
       isRecord(part["arguments"])
     ) {
-      return part["arguments"];
+      const id = part["id"];
+      return {
+        args: part["arguments"],
+        toolCallId: typeof id === "string" ? id : "unknown-tool-call",
+      };
     }
   }
   return undefined;

@@ -4,10 +4,7 @@ import type {
   MessageRenderer,
 } from "@earendil-works/pi-coding-agent";
 
-import type {
-  DirectionPacket,
-  RenderDirectionPacket,
-} from "../../engine/direction/packet-schema.ts";
+import type { RenderDirectionPacket } from "../../engine/direction/packet-schema.ts";
 
 import { complete } from "@earendil-works/pi-ai";
 import { getMarkdownTheme } from "@earendil-works/pi-coding-agent";
@@ -21,39 +18,76 @@ import {
   buildRendererPrompt,
   findPendingDirectionPacket,
   lintRenderedProse,
+  type PendingDirectionPacket,
   PROSE_CUSTOM_TYPE,
   redactSecrets,
 } from "../../engine/direction/render-turn.ts";
 import { buildRendererSystemPrompt } from "../../engine/gm-prompt/injection.ts";
 
 const RENDERER_MAX_TOKENS = 8192;
+/** 等待 run 真正空闲的轮询间隔与上限（约 10s）。 */
+const IDLE_POLL_INTERVAL_MS = 25;
+const IDLE_POLL_MAX_ATTEMPTS = 400;
 
 /**
  * 双 pass 第二段（Pass B）：结算循环以 submit_direction_packet 收尾后，
  * 在 agent_end 用洁净室 complete() 把 packet 渲染成玩家可见正文，
  * 以 fsn-prose custom message 落 session。结算投影的过滤在 extension.ts。
+ *
+ * 注意：agent_end 触发时 run 仍处于 streaming 态（finishRun 在监听器之后），
+ * 此时 sendMessage 会被当成 steer 输入再唤醒结算器，形成自激振荡。
+ * 所以发送必须延迟到 ctx.isIdle() 之后；另用 toolCallId 去重防双渲。
  */
 export default function twoPassRenderExtension(pi: ExtensionAPI): void {
   pi.registerMessageRenderer(PROSE_CUSTOM_TYPE, renderProseMessage);
 
+  const renderedToolCallIds = new Set<string>();
+
   pi.on("agent_end", async (event, ctx) => {
-    const packet = readPendingPacket(event.messages, ctx);
-    if (packet === undefined) {
+    const pending = readPendingPacket(event.messages, ctx);
+    if (pending === undefined || renderedToolCallIds.has(pending.toolCallId)) {
       return;
     }
+    renderedToolCallIds.add(pending.toolCallId);
+    const { packet } = pending;
     if (!packet.needsRender) {
-      sendProse(pi, packet.directReply, { kind: "direct-reply" });
+      sendProseWhenIdle(pi, ctx, packet.directReply, { kind: "direct-reply" });
       return;
     }
     syncStateFromSessionManager(ctx.sessionManager);
     const unrevealedSecrets = collectUnrevealedSecretStrings(getState().secrets);
     const prose = await renderProse(ctx, event.messages, packet, unrevealedSecrets);
     if (prose === undefined) {
-      sendProse(pi, buildFallbackProse(packet), { kind: "render-fallback" });
+      sendProseWhenIdle(pi, ctx, buildFallbackProse(packet), { kind: "render-fallback" });
       return;
     }
-    sendProse(pi, prose.text, { kind: "rendered", lintRuleIds: prose.lintRuleIds });
+    sendProseWhenIdle(pi, ctx, prose.text, { kind: "rendered", lintRuleIds: prose.lintRuleIds });
   });
+}
+
+/**
+ * 等 run 退出 streaming 态后再落 prose：此时 sendMessage 走「非 streaming +
+ * 不触发」分支，只追加消息不开新轮。若玩家抢先开了新轮，则继续等到
+ * 那轮结束，最多约 10s 后放弃并告警。
+ */
+function sendProseWhenIdle(
+  pi: ExtensionAPI,
+  ctx: ExtensionContext,
+  text: string,
+  details: Record<string, unknown>,
+  attempt = 0,
+): void {
+  if (ctx.isIdle()) {
+    sendProse(pi, text, details);
+    return;
+  }
+  if (attempt >= IDLE_POLL_MAX_ATTEMPTS) {
+    notify(ctx, "two-pass render: agent never went idle, dropping prose delivery", "error");
+    return;
+  }
+  setTimeout(() => {
+    sendProseWhenIdle(pi, ctx, text, details, attempt + 1);
+  }, IDLE_POLL_INTERVAL_MS);
 }
 
 interface RenderedProse {
@@ -145,7 +179,7 @@ async function completeProse(
 function readPendingPacket(
   messages: ReadonlyArray<unknown>,
   ctx: ExtensionContext,
-): DirectionPacket | undefined {
+): PendingDirectionPacket | undefined {
   try {
     return findPendingDirectionPacket(messages);
   } catch (error) {
