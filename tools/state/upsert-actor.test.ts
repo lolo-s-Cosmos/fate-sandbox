@@ -201,7 +201,7 @@ function baseProtagonistActor(): Record<string, unknown> {
       demeanor: "警惕但保持冷静",
     },
     condition: { wounds: [], afflictions: [], permanentEffects: [] },
-    inventory: { ordinaryItems: [], heldTrackedItemIds: [] },
+    inventory: { ordinaryItems: [] },
     abilities: [],
     relationshipToProtagonist: { stance: "self", summary: "玩家角色本人。" },
   };

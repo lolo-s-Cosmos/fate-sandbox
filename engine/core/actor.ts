@@ -158,7 +158,7 @@ function upsertServant(
       demeanor: sv.demeanor,
     },
     condition: { wounds: [], afflictions: [], permanentEffects: [] },
-    inventory: { ordinaryItems: sv.ordinaryItems ?? [], heldTrackedItemIds: [] },
+    inventory: { ordinaryItems: sv.ordinaryItems ?? [] },
     abilities: [],
     relationshipToProtagonist: sv.relationshipToProtagonist ?? {
       stance: "neutral",
@@ -262,7 +262,7 @@ function toSafePublicActor(npc: PublicNpcInput): PublicActorState {
       demeanor: assertNonEmptyString(npc.demeanor, "npc.demeanor"),
     },
     condition: { wounds: [], afflictions: [], permanentEffects: [] },
-    inventory: { ordinaryItems: npc.ordinaryItems, heldTrackedItemIds: [] },
+    inventory: { ordinaryItems: npc.ordinaryItems },
     abilities: [],
     relationshipToProtagonist: npc.relationshipToProtagonist,
   };

@@ -354,7 +354,6 @@ function publicActorSchema(): ReturnType<typeof Type.Object> {
     }),
     inventory: Type.Object({
       ordinaryItems: Type.Array(Type.String()),
-      heldTrackedItemIds: Type.Array(Type.String()),
     }),
     abilities: Type.Array(
       Type.Object({ id: Type.String(), label: Type.String(), summary: Type.String() }),

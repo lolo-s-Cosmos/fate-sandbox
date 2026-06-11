@@ -30,7 +30,15 @@ const RUNTIME_SOURCES: readonly string[] = ["state-brief"];
 export function loadPromptPreset(projectRoot: string): PromptPreset {
   const path = join(projectRoot, "agents", "preset.json");
   const raw = readFileSync(path, "utf-8");
-  return parsePromptPreset(JSON.parse(raw), path);
+  return parsePromptPreset(parseJsonFile(raw, path), path);
+}
+
+function parseJsonFile(raw: string, path: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    throw new Error(`Invalid JSON in ${path}: ${String(error)}`, { cause: error });
+  }
 }
 
 export function parsePromptPreset(raw: unknown, sourcePath: string): PromptPreset {

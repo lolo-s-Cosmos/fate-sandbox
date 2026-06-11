@@ -210,7 +210,7 @@ function buildHumanProtagonist(input: HumanProtagonistOpeningInput): PublicActor
       demeanor: input.demeanor,
     },
     condition: { wounds: [], afflictions: [], permanentEffects: [] },
-    inventory: { ordinaryItems: input.ordinaryItems ?? [], heldTrackedItemIds: [] },
+    inventory: { ordinaryItems: input.ordinaryItems ?? [] },
     abilities: (input.abilities ?? []).map((summary, index) => ({
       id: `ability-protagonist-${index + 1}`,
       label: summary,

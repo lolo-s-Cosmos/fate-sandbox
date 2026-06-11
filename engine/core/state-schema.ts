@@ -175,7 +175,6 @@ const CONDITION_STATE_SCHEMA = Type.Object({
 
 const INVENTORY_STATE_SCHEMA = Type.Object({
   ordinaryItems: NON_EMPTY_STRING_ARRAY_SCHEMA,
-  heldTrackedItemIds: NON_EMPTY_STRING_ARRAY_SCHEMA,
 });
 
 const ABILITY_STATE_SCHEMA = Type.Object({
@@ -544,21 +543,45 @@ function normalizeStateDatesInPlace(state: State): void {
   }
 }
 
+type ActorRegistry = State["public"]["actors"];
+
 /** schema 表达不了的跨字段不变量：registry key 一致性与 actor 引用完整性。 */
 function assertStateInvariants(state: State): void {
   const actors = state.public.actors;
+  assertActorRegistryInvariants(actors);
+  assertSceneActorReferences(state, actors);
+  assertTrackedItemInvariants(state, actors);
+  assertEconomyActorReferences(state, actors);
+  assertActorSecretsInvariants(state, actors);
+}
 
+function assertActorRegistryInvariants(actors: ActorRegistry): void {
   for (const [actorId, actor] of Object.entries(actors)) {
     if (actor.id !== actorId) {
       throw new Error(`actor registry key ${actorId} 与 actor.id ${actor.id} 不一致。`);
     }
     for (const role of actor.roles) {
-      if (role.kind === "master" && role.commandSpells.remaining > role.commandSpells.total) {
-        throw new Error("非法 commandSpells: remaining 不能大于 total。");
+      if (role.kind === "master") {
+        if (role.commandSpells.remaining > role.commandSpells.total) {
+          throw new Error("非法 commandSpells: remaining 不能大于 total。");
+        }
+        for (const servantId of role.contractedServantIds) {
+          assertActorExists(servantId, actors, `actors.${actorId} contractedServantIds[]`);
+        }
       }
     }
+    const masterActorId = actor.servantForm?.contract.masterActorId ?? null;
+    if (masterActorId !== null) {
+      assertActorExists(
+        masterActorId,
+        actors,
+        `actors.${actorId} servantForm.contract.masterActorId`,
+      );
+    }
   }
+}
 
+function assertSceneActorReferences(state: State, actors: ActorRegistry): void {
   assertActorExists(state.public.protagonistActorId, actors, "protagonistActorId");
   for (const actorId of state.public.allyActorIds) {
     assertActorExists(actorId, actors, "allyActorIds[]");
@@ -566,7 +589,9 @@ function assertStateInvariants(state: State): void {
   for (const actorId of state.public.scene.presentActorIds) {
     assertActorExists(actorId, actors, "scene.presentActorIds[]");
   }
+}
 
+function assertTrackedItemInvariants(state: State, actors: ActorRegistry): void {
   for (const [itemId, item] of Object.entries(state.public.trackedItems)) {
     if (item.id !== itemId) {
       throw new Error(`trackedItems key ${itemId} 与 item.id ${item.id} 不一致。`);
@@ -578,26 +603,27 @@ function assertStateInvariants(state: State): void {
       assertActorExists(item.holderActorId, actors, "item.holderActorId");
     }
   }
+}
 
+function assertEconomyActorReferences(state: State, actors: ActorRegistry): void {
   for (const purse of state.public.economy.accessibleFunds) {
     assertActorExists(purse.ownerActorId, actors, "purse.ownerActorId");
   }
   for (const debt of state.public.economy.debts) {
     assertActorExists(debt.debtorActorId, actors, "debt.debtorActorId");
   }
+}
 
+function assertActorSecretsInvariants(state: State, actors: ActorRegistry): void {
   for (const [actorId, slots] of Object.entries(state.secrets.actorSecrets)) {
     if (slots.actorId !== actorId) {
       throw new Error(`actorSecrets key ${actorId} 与 actorId ${slots.actorId} 不一致。`);
     }
+    assertActorExists(actorId, actors, "actorSecrets key");
   }
 }
 
-function assertActorExists(
-  actorId: string,
-  actors: State["public"]["actors"],
-  fieldName: string,
-): void {
+function assertActorExists(actorId: string, actors: ActorRegistry, fieldName: string): void {
   if (actors[actorId] === undefined) {
     throw new Error(`非法${fieldName}: actor ${actorId} 不存在。`);
   }

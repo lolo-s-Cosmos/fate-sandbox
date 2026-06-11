@@ -32,11 +32,85 @@ export function parseTypeBoxValue<T>(
   fieldName: string,
   validator: TypeBoxValidator<T>,
 ): T {
-  const converted = validator.Clean(validator.Convert(cloneValidationInput(value, fieldName)));
+  const convertedRaw = validator.Convert(cloneValidationInput(value, fieldName));
+  assertNoUnsafeCoercion(value, convertedRaw, fieldName);
+  const converted = validator.Clean(convertedRaw);
   if (validator.Check(converted)) {
     return converted;
   }
   throw new Error(formatTypeBoxValidationErrors(fieldName, validator.Errors(converted)));
+}
+
+/**
+ * Convert 后的定向白名单守卫，只允许信息无损的 LLM 容错转换：
+ * - 字符串 → 数字/布尔（"3" → 3，对齐 assertInteger 接受整数字符串的既有立场）
+ * - 标量 → 单元素数组包装（"x" → ["x"]，见 initialize-new-game 的 revealConditions 测试）
+ * 其余类型变化是 Value.Convert 的过度宽容：null → "null"、number → string 等
+ * 会把坏输入改名上桌，必须按字段路径拒绝。
+ */
+function assertNoUnsafeCoercion(original: unknown, converted: unknown, path: string): void {
+  if (jsonTypeOf(original) !== jsonTypeOf(converted)) {
+    assertAllowedTypeChange(original, converted, path);
+    return;
+  }
+  if (Array.isArray(original) && Array.isArray(converted)) {
+    const length = Math.max(original.length, converted.length);
+    for (let index = 0; index < length; index++) {
+      assertNoUnsafeCoercion(original[index], converted[index], `${path}[${index}]`);
+    }
+    return;
+  }
+  if (isRecord(original) && isRecord(converted)) {
+    const keys = new Set([...Object.keys(original), ...Object.keys(converted)]);
+    for (const key of keys) {
+      assertNoUnsafeCoercion(original[key], converted[key], `${path}.${key}`);
+    }
+  }
+}
+
+/** 类型发生变化时的白名单裁决；不在白名单内一律按字段路径拒绝。 */
+function assertAllowedTypeChange(original: unknown, converted: unknown, path: string): void {
+  const originalType = jsonTypeOf(original);
+  const convertedType = jsonTypeOf(converted);
+  if (originalType === "string" && (convertedType === "number" || convertedType === "boolean")) {
+    return;
+  }
+  const isScalarWrap =
+    originalType !== "object" && Array.isArray(converted) && converted.length === 1;
+  if (isScalarWrap) {
+    assertNoUnsafeCoercion(original, converted[0], `${path}[0]`);
+    return;
+  }
+  throw new Error(
+    `非法 ${path}: 类型 ${originalType} 不会被隐式转换为 ${convertedType}；请传入正确类型的值。`,
+  );
+}
+
+type JsonValueType =
+  | "null"
+  | "undefined"
+  | "string"
+  | "number"
+  | "boolean"
+  | "array"
+  | "object"
+  | "other";
+
+function jsonTypeOf(value: unknown): JsonValueType {
+  if (value === null) {
+    return "null";
+  }
+  if (value === undefined) {
+    return "undefined";
+  }
+  if (Array.isArray(value)) {
+    return "array";
+  }
+  const type = typeof value;
+  if (type === "string" || type === "number" || type === "boolean" || type === "object") {
+    return type;
+  }
+  return "other";
 }
 
 /**

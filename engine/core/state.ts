@@ -329,7 +329,6 @@ export interface PermanentDefect {
 
 export interface InventoryState {
   ordinaryItems: string[];
-  heldTrackedItemIds: ItemId[];
 }
 
 export interface AbilityState {

@@ -322,7 +322,7 @@ function servantActor(
       demeanor: "测试状态",
     },
     condition: { wounds: [], afflictions: [], permanentEffects: [] },
-    inventory: { ordinaryItems: [], heldTrackedItemIds: [] },
+    inventory: { ordinaryItems: [] },
     abilities: [],
     relationshipToProtagonist: { stance: "neutral", summary: "测试关系。" },
   };

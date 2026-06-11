@@ -124,7 +124,7 @@ void test("upsertActor rejects non-protagonist setup", () => {
             demeanor: "测试",
           },
           condition: { wounds: [], afflictions: [], permanentEffects: [] },
-          inventory: { ordinaryItems: [], heldTrackedItemIds: [] },
+          inventory: { ordinaryItems: [] },
           abilities: [],
           relationshipToProtagonist: { stance: "neutral", summary: "测试" },
         },
@@ -223,7 +223,7 @@ function upsertShirouProtagonist(draft: State, od: number): void {
         demeanor: "固执且容易主动帮忙。",
       },
       condition: { wounds: [], afflictions: [], permanentEffects: [] },
-      inventory: { ordinaryItems: [], heldTrackedItemIds: [] },
+      inventory: { ordinaryItems: [] },
       abilities: [
         { id: "reinforcement", label: "强化魔术", summary: "强化物体结构。" },
         { id: "projection", label: "投影魔术", summary: "基础投影。" },

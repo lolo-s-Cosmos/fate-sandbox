@@ -412,7 +412,12 @@ function readJsonRecord<T>(
 }
 
 function readJson(path: string): unknown {
-  return JSON.parse(readFileSync(path, "utf-8"));
+  const raw = readFileSync(path, "utf-8");
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    throw new Error(`Invalid JSON in ${path}: ${String(error)}`, { cause: error });
+  }
 }
 
 function assertCharacterEntry(value: unknown, label: string): CharacterEntry {

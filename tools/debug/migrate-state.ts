@@ -2,6 +2,7 @@ import type { FsnToolDefinition } from "../runtime/tool-definition.ts";
 
 import { Type } from "typebox";
 
+import { persistCurrentState, writeStateToDetails } from "../../engine/core/state-persistence.ts";
 import { cloneState, migrateState, replaceStateForDebug } from "../../engine/core/state-store.ts";
 import { isRecord } from "../../engine/core/typebox-validation.ts";
 import { textResult, type ToolResult } from "../runtime/tool-result.ts";
@@ -12,20 +13,25 @@ interface MigrateStateParams {
   reason: string;
 }
 
-export function migrateStateTool(params: unknown): ToolResult {
+export function migrateStateTool(params: unknown, sessionManager: unknown): ToolResult {
   const input = normalizeParams(params);
   const migrated = migrateState(input.state ?? cloneState());
-  if (input.apply === true) {
-    replaceStateForDebug(migrated);
-  }
-  return textResult(`State 已迁移到 schemaVersion ${migrated.meta.schemaVersion}。`, {
+  const details: Record<string, unknown> = {
     result: {
       schemaVersion: migrated.meta.schemaVersion,
       applied: input.apply === true,
       reason: input.reason,
     },
     migratedState: migrated,
-  });
+  };
+  if (input.apply === true) {
+    replaceStateForDebug(migrated);
+    // 与 reset_state / override_locked_fact 同款持久化：缺了这两步，
+    // 下次 session hydrate 会把“已应用”的迁移静默冲回旧状态。
+    persistCurrentState(sessionManager);
+    writeStateToDetails(details);
+  }
+  return textResult(`State 已迁移到 schemaVersion ${migrated.meta.schemaVersion}。`, details);
 }
 
 function normalizeParams(params: unknown): MigrateStateParams {
@@ -65,5 +71,6 @@ export const migrateStateToolDefinition: FsnToolDefinition = {
     apply: Type.Optional(Type.Boolean()),
     reason: Type.String(),
   }),
-  execute: async (_toolCallId, params) => migrateStateTool(params),
+  execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>
+    migrateStateTool(params, ctx.sessionManager),
 };
