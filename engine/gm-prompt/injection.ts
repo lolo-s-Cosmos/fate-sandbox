@@ -19,9 +19,8 @@ export interface TextMessage {
   timestamp: number;
 }
 
-export interface PromptAssets {
-  system: string;
-  preset: PromptPreset;
+function loadPassPreset(pass: PromptPass): PromptPreset {
+  return loadPromptPreset(PROJECT_ROOT, pass);
 }
 
 interface PromptModule {
@@ -35,15 +34,10 @@ interface PromptModule {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = join(__dirname, "..", "..");
 
-export function loadPromptAssets(): PromptAssets {
-  return {
-    system: readFileSync(join(PROJECT_ROOT, "agents", "gm-system.md"), "utf-8"),
-    preset: loadPromptPreset(PROJECT_ROOT),
-  };
-}
-
 export function buildSystemPrompt(baseSystemPrompt: string): string {
-  return baseSystemPrompt + "\n" + loadPromptAssets().system;
+  return (
+    baseSystemPrompt + "\n" + readFileSync(join(PROJECT_ROOT, "agents", "gm-system.md"), "utf-8")
+  );
 }
 
 /** 结算器（Pass A）主循环注入：只装 settlement/both 模块，零 style/render 模块。 */
@@ -77,10 +71,8 @@ export function buildRendererSystemPrompt(): string {
 }
 
 function buildPromptModules(pass: PromptPass): PromptModule[] {
-  return loadPromptAssets()
-    .preset.modules.filter(
-      (module) => module.enabled && (module.pass === pass || module.pass === "both"),
-    )
+  return loadPassPreset(pass)
+    .modules.filter((module) => module.enabled)
     .map(resolvePromptModule)
     .filter((module) => module.body.length > 0);
 }

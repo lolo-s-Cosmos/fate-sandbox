@@ -4,8 +4,8 @@ import { join } from "node:path";
 import { isRecord } from "../core/typebox-validation.ts";
 
 export type PromptSlot = "pre-history" | "pre-response" | "final-contract";
-/** 双 pass 架构下模块的归属：结算器主循环 / 渲染器洁净室 / 两者共用。 */
-export type PromptPass = "settlement" | "render" | "both";
+/** 双 pass 架构：结算器与渲染器各自持有独立的 preset 文件。 */
+export type PromptPass = "settlement" | "render";
 export type RuntimePromptSource = "state-brief";
 
 export interface PromptPreset {
@@ -16,7 +16,6 @@ export interface PromptPreset {
 export interface PromptPresetModule {
   id: string;
   enabled: boolean;
-  pass: PromptPass;
   slot: PromptSlot;
   priority: number;
   header: string;
@@ -28,11 +27,10 @@ export type PromptSource =
   | { kind: "runtime"; name: RuntimePromptSource };
 
 const PROMPT_SLOTS: readonly string[] = ["pre-history", "pre-response", "final-contract"];
-const PROMPT_PASSES: readonly string[] = ["settlement", "render", "both"];
 const RUNTIME_SOURCES: readonly string[] = ["state-brief"];
 
-export function loadPromptPreset(projectRoot: string): PromptPreset {
-  const path = join(projectRoot, "agents", "preset.json");
+export function loadPromptPreset(projectRoot: string, pass: PromptPass): PromptPreset {
+  const path = join(projectRoot, "agents", `preset-${pass}.json`);
   const raw = readFileSync(path, "utf-8");
   return parsePromptPreset(parseJsonFile(raw, path), path);
 }
@@ -74,7 +72,6 @@ function parsePromptPresetModule(
   return {
     id: readNonEmptyString(raw, "id", sourcePath, index),
     enabled: readBoolean(raw, "enabled", sourcePath, index),
-    pass: readPromptPass(raw, sourcePath, index),
     slot: readPromptSlot(raw, sourcePath, index),
     priority: readInteger(raw, "priority", sourcePath, index),
     header: readHeader(raw, sourcePath, index),
@@ -125,18 +122,6 @@ function readInteger(
     );
   }
   return value;
-}
-
-function readPromptPass(
-  raw: Record<string, unknown>,
-  sourcePath: string,
-  index: number,
-): PromptPass {
-  const pass = readNonEmptyString(raw, "pass", sourcePath, index);
-  if (!isPromptPass(pass)) {
-    throw new Error(`Invalid prompt preset ${sourcePath}: modules[${index}].pass is unknown.`);
-  }
-  return pass;
 }
 
 function readPromptSlot(
@@ -196,10 +181,6 @@ function assertUniqueModuleIds(modules: PromptPresetModule[], sourcePath: string
 
 function isPromptSlot(value: string): value is PromptSlot {
   return PROMPT_SLOTS.includes(value);
-}
-
-function isPromptPass(value: string): value is PromptPass {
-  return PROMPT_PASSES.includes(value);
 }
 
 function isRuntimePromptSource(value: string): value is RuntimePromptSource {

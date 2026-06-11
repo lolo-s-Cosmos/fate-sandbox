@@ -4,7 +4,6 @@
     {
       "id": "creative-constitution",
       "enabled": true,
-      "pass": "both",
       "slot": "pre-history",
       "priority": 10,
       "header": "creative_constitution",
@@ -13,7 +12,6 @@
     {
       "id": "world-context",
       "enabled": true,
-      "pass": "settlement",
       "slot": "pre-history",
       "priority": 20,
       "header": "world_context",
@@ -22,7 +20,6 @@
     {
       "id": "input-guide",
       "enabled": true,
-      "pass": "settlement",
       "slot": "pre-history",
       "priority": 30,
       "header": "input_guide",
@@ -31,52 +28,14 @@
     {
       "id": "social-guide",
       "enabled": true,
-      "pass": "settlement",
       "slot": "pre-history",
       "priority": 40,
       "header": "social_guide",
       "source": "agents/gm-social-guide.md"
     },
     {
-      "id": "style-blacklist",
-      "enabled": true,
-      "pass": "render",
-      "slot": "pre-history",
-      "priority": 45,
-      "header": "style_blacklist",
-      "source": "agents/gm-style-blacklist.md"
-    },
-    {
-      "id": "writing-guide",
-      "enabled": true,
-      "pass": "render",
-      "slot": "pre-history",
-      "priority": 50,
-      "header": "writing_guide",
-      "source": "agents/gm-style.md"
-    },
-    {
-      "id": "render-protocol",
-      "enabled": true,
-      "pass": "render",
-      "slot": "pre-history",
-      "priority": 60,
-      "header": "render_protocol",
-      "source": "agents/gm-render.md"
-    },
-    {
-      "id": "protagonist-impression",
-      "enabled": true,
-      "pass": "render",
-      "slot": "pre-history",
-      "priority": 70,
-      "header": "protagonist_impression",
-      "source": "agents/protagonist-impression.md"
-    },
-    {
       "id": "tool-policy",
       "enabled": true,
-      "pass": "settlement",
       "slot": "pre-response",
       "priority": 20,
       "header": "tool_policy",
@@ -85,7 +44,6 @@
     {
       "id": "hard-rules",
       "enabled": true,
-      "pass": "settlement",
       "slot": "pre-response",
       "priority": 30,
       "header": "hard_rules",
@@ -94,7 +52,6 @@
     {
       "id": "story-driver",
       "enabled": true,
-      "pass": "settlement",
       "slot": "pre-response",
       "priority": 40,
       "header": "story_driver",
@@ -103,7 +60,6 @@
     {
       "id": "mechanical-state",
       "enabled": true,
-      "pass": "settlement",
       "slot": "pre-response",
       "priority": 50,
       "header": "mechanical_state",
@@ -112,20 +68,10 @@
     {
       "id": "direction-contract",
       "enabled": true,
-      "pass": "settlement",
       "slot": "final-contract",
       "priority": 10,
       "header": "direction_contract",
       "source": "agents/gm-direction.md"
-    },
-    {
-      "id": "output-contract",
-      "enabled": true,
-      "pass": "render",
-      "slot": "final-contract",
-      "priority": 10,
-      "header": "output_contract",
-      "source": "agents/gm-output-contract.md"
     }
   ]
 }
