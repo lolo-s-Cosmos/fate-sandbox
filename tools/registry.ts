@@ -21,6 +21,7 @@ import { resolveCombatExchangeToolDefinition } from "./state/resolve-combat-exch
 import { retireActorToolDefinition } from "./state/retire-actor.ts";
 import { revealSecretToolDefinition } from "./state/reveal-secret.ts";
 import { setScenePresenceToolDefinition } from "./state/set-scene-presence.ts";
+import { submitDirectionPacketToolDefinition } from "./state/submit-direction-packet.ts";
 import { updateActorConditionToolDefinition } from "./state/update-actor-condition.ts";
 import { updateEconomyToolDefinition } from "./state/update-economy.ts";
 import { updateServantFormToolDefinition } from "./state/update-servant-form.ts";
@@ -44,6 +45,7 @@ const TOOL_DEFINITIONS: readonly FsnToolDefinition[] = [
   revealSecretToolDefinition,
   resolveCombatExchangeToolDefinition,
   privateResolveToolDefinition,
+  submitDirectionPacketToolDefinition,
   lookupToolDefinition,
   patchStateToolDefinition,
   overrideLockedFactToolDefinition,

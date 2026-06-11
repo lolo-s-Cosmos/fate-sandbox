@@ -6,10 +6,10 @@
 
 从 2026-06-08 session（FSF 绫香线之前的 Extra 白野/两仪式局）取 3 个历史轮，覆盖三类任务：
 
-| 轮 | 类型 | 单 pass 实际工具调用 |
-| --- | --- | --- |
-| turn 52 | 关系/真名揭示对白 | commit_turn |
-| turn 55 | 战斗裁决（突进受阻） | resolve_combat_exchange + commit_turn + update_servant_form |
+| 轮      | 类型                  | 单 pass 实际工具调用                                                                                             |
+| ------- | --------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| turn 52 | 关系/真名揭示对白     | commit_turn                                                                                                      |
+| turn 55 | 战斗裁决（突进受阻）  | resolve_combat_exchange + commit_turn + update_servant_form                                                      |
 | turn 57 | 宝具解放高潮（heavy） | reveal_secret×4 + resolve_combat_exchange + update_servant_form×2 + update_actor_condition + progress_scene_beat |
 
 每轮：
@@ -23,11 +23,11 @@
 
 机械 lint（`engine/audit/lint-rules.ts`）：
 
-| 轮 | baseline | rendered |
-| --- | --- | --- |
-| 52 | clean (841 字) | double-simile ×1 (1351 字) |
-| 55 | clean (1053 字) | clean (1093 字) |
-| 57 | empty-atmosphere + fake-climax (2686 字) | double-simile ×1 (1661 字) |
+| 轮  | baseline                                 | rendered                   |
+| --- | ---------------------------------------- | -------------------------- |
+| 52  | clean (841 字)                           | double-simile ×1 (1351 字) |
+| 55  | clean (1053 字)                          | clean (1093 字)            |
+| 57  | empty-atmosphere + fake-climax (2686 字) | double-simile ×1 (1661 字) |
 
 主观检查（逐条对照 packet binding 字段）：
 

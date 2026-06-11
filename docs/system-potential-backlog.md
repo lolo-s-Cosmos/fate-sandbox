@@ -184,7 +184,7 @@ pre-response 槽里 `mechanical_state`（每轮变，priority 10）排在 tool-p
 
 ## 12. 结算/渲染双 pass 分离（工具调用与叙事完全隔离）
 
-- [ ] 状态：spike GO；步骤 2 的引擎层已落地（`engine/direction/packet-schema.ts` 歧视联合 render/direct + TypeBox 验证；`packet-firewall.ts` 全字段 secret 扫描含 refusesToSay，复用 #1 规则模块）。`submit_direction_packet` 工具故意未注册——在渲染扩展（步骤 3-4）存在之前注册只会误导现行单 pass GM，应与扩展同批落地；步骤 3-7 需要交互式 session 验证，不宜 headless 直推
+- [ ] 状态：步骤 2-6 已全部落地（2026-06-11），**待交互式实测验收**。已接线：`submit_direction_packet` 工具（验证 + 防火墙 + terminate，拦截时报错回喷让结算器重写）；`extensions/two-pass-render/`（agent_end 检出未渲染 packet → 洁净室 complete() 渲染 → lint 不过重试一次 → 泄密仍存则遮蔽 → fsn-prose custom message 落 session + Markdown renderer；渲染不可用时兑底输出结算摘要）；preset 模块加 `pass: settlement|render|both` 字段按 pass 分组（吸收 #11：mechanical-state 调到静态块之后）；结算投影在 extension.ts context 事件过滤 fsn-prose；`gm-system.md` 改写为结算器身份，新增 `gm-direction.md`（packet 填写契约）与 `gm-render-system.md`（渲染器核心）；start.sh 加载新扩展。实测关注点：① 真实结算器产出的 packet 信息密度（spike 确认的最大风险）② 结算器是否仍在工具外吐可见文本 ③ steering//fuck/compaction 与 prose custom message 的交互 ④ 双 pass 延迟体感（伪流式是后续步骤 7）。已知跟进项：#8 审计脚本对新 session 需要改从 fsn-prose custom message 取正文（现只读 assistant text）；渲染侧散文史现为最近 8 轮硬截断，长期需要自己的 compaction 策略
 - [x] pi 架构可行性已验证（2026-06-11，对照 pi 0.79.1 extensions.md 全文 + 官方 examples）
 - [x] Spike 已完成（2026-06-11，`docs/spike-two-pass/`）：取 2026-06-08 session 的 turn 52/55/57（对白揭示/战斗裁决/宝具高潮三类），手工构造 packet 喂洁净室渲染器。结论 GO：resolvedChanges 全部落地、refusesToSay 防线成立、endWindow 全命中、声音一致性不丢，渲染质量持平或优于单 pass 基线（heavy 轮基线有 2 处 blacklist 违规，渲染版更干净）。已确认的真风险：生产中 packet 由结算器生成，其信息密度未验证；渲染器会自行补充 packet 外的 canon，两道 lint 关卡不可省。
 

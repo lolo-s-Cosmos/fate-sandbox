@@ -7,6 +7,7 @@ import { getPublicState } from "../core/state-store.ts";
 import { isRecord } from "../core/typebox-validation.ts";
 import {
   loadPromptPreset,
+  type PromptPass,
   type PromptPreset,
   type PromptPresetModule,
   type PromptSlot,
@@ -45,6 +46,7 @@ export function buildSystemPrompt(baseSystemPrompt: string): string {
   return baseSystemPrompt + "\n" + loadPromptAssets().system;
 }
 
+/** 结算器（Pass A）主循环注入：只装 settlement/both 模块，零 style/render 模块。 */
 export function injectGmPromptMessages<TMessage>(
   messages: ReadonlyArray<TMessage>,
 ): Array<TMessage | TextMessage> {
@@ -60,9 +62,25 @@ export function injectGmPromptMessages<TMessage>(
   ];
 }
 
-function buildPromptModules(): PromptModule[] {
+/**
+ * 渲染器（Pass B）洁净室 system prompt：gm-render-system（角色 + packet 契约）
+ * + 全部 render/both 模块，按 slot 顺序与 priority 拼接。零工具 schema、零机械规则。
+ */
+export function buildRendererSystemPrompt(): string {
+  const sections = [readPromptFile("agents/gm-render-system.md").trim()];
+  for (const slot of ["pre-history", "pre-response", "final-contract"] as const) {
+    for (const module of promptModulesForSlot(slot, "render")) {
+      sections.push(`<${module.header}>\n${module.body.trim()}\n</${module.header}>`);
+    }
+  }
+  return sections.join("\n\n");
+}
+
+function buildPromptModules(pass: PromptPass): PromptModule[] {
   return loadPromptAssets()
-    .preset.modules.filter((module) => module.enabled)
+    .preset.modules.filter(
+      (module) => module.enabled && (module.pass === pass || module.pass === "both"),
+    )
     .map(resolvePromptModule)
     .filter((module) => module.body.length > 0);
 }
@@ -98,10 +116,13 @@ function resolvePromptFilePath(path: string): string {
 }
 
 function buildSlotMessages(slot: PromptSlot): TextMessage[] {
-  return buildPromptModules()
+  return promptModulesForSlot(slot, "settlement").map(buildPromptModuleMessage);
+}
+
+function promptModulesForSlot(slot: PromptSlot, pass: PromptPass): PromptModule[] {
+  return buildPromptModules(pass)
     .filter((module) => module.slot === slot)
-    .toSorted(comparePromptModules)
-    .map(buildPromptModuleMessage);
+    .toSorted(comparePromptModules);
 }
 
 function comparePromptModules(left: PromptModule, right: PromptModule): number {

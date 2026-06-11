@@ -11,6 +11,8 @@ import { fileURLToPath } from "node:url";
 
 import { syncStateFromSessionManager } from "./engine/core/session-hydration.ts";
 import { exportState } from "./engine/core/state-store.ts";
+import { isRecord } from "./engine/core/typebox-validation.ts";
+import { PROSE_CUSTOM_TYPE } from "./engine/direction/render-turn.ts";
 import { buildSystemPrompt, injectGmPromptMessages } from "./engine/gm-prompt/injection.ts";
 import {
   buildTimelineStateContextBlock,
@@ -31,7 +33,14 @@ export default function extension(pi: ExtensionAPI): void {
 
   pi.on("context", async (event, ctx) => {
     syncStateFromSessionManager(ctx.sessionManager);
-    return { messages: injectGmPromptMessages<ContextEvent["messages"][number]>(event.messages) };
+    // 结算器（Pass A）投影：渲染产物不进结算上下文——它的记忆是
+    // state + 历届 direction packet（在工具调用参数里），不是散文。
+    const settlementMessages = event.messages.filter(
+      (message) => !(isRecord(message) && message["customType"] === PROSE_CUSTOM_TYPE),
+    );
+    return {
+      messages: injectGmPromptMessages<ContextEvent["messages"][number]>(settlementMessages),
+    };
   });
 
   pi.on("session_start", async (_event, ctx) => {
