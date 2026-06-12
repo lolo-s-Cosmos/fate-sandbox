@@ -15,10 +15,6 @@ import { syncStateFromSessionManager } from "../../engine/core/session-hydration
 import { getState } from "../../engine/core/state-store.ts";
 import { loadProseDigests, saveProseDigest } from "../../engine/direction/prose-digest-store.ts";
 import {
-  type RenderCallKind,
-  recordRenderUsage,
-} from "../../engine/direction/render-usage-store.ts";
-import {
   buildLintRetryMessages,
   buildRendererMessages,
   findPendingDirectionPacket,
@@ -28,6 +24,7 @@ import {
   redactSecrets,
   type RendererMessage,
 } from "../../engine/direction/render-turn.ts";
+
 import { buildRendererSystemPrompt } from "../../engine/gm-prompt/injection.ts";
 
 const RENDERER_MAX_TOKENS = 8192;
@@ -135,7 +132,15 @@ async function renderProse(
 
   try {
     setWorking(ctx, "渲染本轮正文…");
-    const first = await streamProse(ctx, model, auth, systemPrompt, baseMessages, "渲染中", "render");
+    const first = await streamProse(
+      ctx,
+      model,
+      auth,
+      systemPrompt,
+      baseMessages,
+      "渲染中",
+      "render",
+    );
     const firstReport = lintRenderedProse(first, unrevealedSecrets);
     if (firstReport.findings.length === 0) {
       return { text: first, lintRuleIds: [] };
@@ -199,7 +204,7 @@ async function streamProse(
         draft += event.delta;
         updateRenderWidget(ctx, label, draft);
       } else if (event.type === "done") {
-        captureUsage(usageKind, model.id, event.message.usage);
+        captureUsage(ctx, usageKind, event.message.usage);
       } else if (event.type === "error") {
         throw new Error(event.error.errorMessage ?? "renderer stream failed");
       }
@@ -227,19 +232,42 @@ interface DoneUsage {
   cost: { total: number };
 }
 
-/** 接住 done 事件的 usage 并记账；记账失败不能影响渲染交付。 */
-function captureUsage(kind: RenderCallKind, modelId: string, usage: DoneUsage): void {
+type RenderCallKind = "render" | "lint-retry" | "digest";
+
+/** Pass B 会话内累计用量（不落盘）；只供 widget 展示。 */
+const usageTotals = {
+  calls: 0,
+  input: 0,
+  output: 0,
+  cacheRead: 0,
+  totalTokens: 0,
+  costTotal: 0,
+  lastTurnTokens: 0,
+};
+
+const USAGE_WIDGET_KEY = "fsn-render-usage";
+
+/** 接住 done 事件的 usage，累进会话总账并刷新 widget；失败不阻塞渲染。 */
+function captureUsage(ctx: ExtensionContext, kind: RenderCallKind, usage: DoneUsage): void {
   try {
-    recordRenderUsage(kind, modelId, {
-      input: usage.input,
-      output: usage.output,
-      cacheRead: usage.cacheRead,
-      cacheWrite: usage.cacheWrite,
-      totalTokens: usage.totalTokens,
-      costTotal: usage.cost.total,
-    });
+    usageTotals.calls += 1;
+    usageTotals.input += usage.input;
+    usageTotals.output += usage.output;
+    usageTotals.cacheRead += usage.cacheRead;
+    usageTotals.totalTokens += usage.totalTokens;
+    usageTotals.costTotal += usage.cost.total;
+    usageTotals.lastTurnTokens = kind === "digest" ? usageTotals.lastTurnTokens : usage.totalTokens;
+    if (!ctx.hasUI) {
+      return;
+    }
+    const cost = usageTotals.costTotal > 0 ? ` · $${usageTotals.costTotal.toFixed(4)}` : "";
+    ctx.ui.setWidget(USAGE_WIDGET_KEY, [
+      `Pass B 用量 · 本轮 ${usageTotals.lastTurnTokens} tok · 累计 ${usageTotals.totalTokens} tok` +
+        `（in ${usageTotals.input} / out ${usageTotals.output} / cache ${usageTotals.cacheRead}）` +
+        ` · ${usageTotals.calls} 次调用${cost}`,
+    ]);
   } catch {
-    // 静默：账本损坏/磁盘问题不阻塞渲染。
+    // 静默：widget 展示问题不阻塞渲染。
   }
 }
 
@@ -330,7 +358,7 @@ async function writeTurnDigest(
       if (event.type === "text_delta") {
         digest += event.delta;
       } else if (event.type === "done") {
-        captureUsage("digest", model.id, event.message.usage);
+        captureUsage(ctx, "digest", event.message.usage);
       } else if (event.type === "error") {
         return;
       }
