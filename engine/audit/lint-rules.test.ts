@@ -75,6 +75,20 @@ void test("negation-reversal-colloquial hits narration variants but spares dialo
   );
 });
 
+function endingProse(line: string): string {
+  return "正文铺垫。".repeat(30) + "\n" + line;
+}
+
+void test("pseudo-menu-in-dialogue hits option-enumeration handoffs at the ending", () => {
+  const rule = "pseudo-menu-in-dialogue";
+  const ending = endingProse;
+  assert.ok(ruleIds(ending("「想再往前探，或者看完就走，由你定。」")).includes(rule));
+  assert.ok(ruleIds(ending("先撤回去，或者赌一把冲过去，你来定。")).includes(rule));
+  // 「或者」的普通叙述用法与开放式等待放过
+  assert.ok(!ruleIds(ending("她转过身，或者说试图转过身，肩膀撞在了门框上。")).includes(rule));
+  assert.ok(!ruleIds(ending("退路还在，她的手搭在刀柄上，等你开口。")).includes(rule));
+});
+
 void test("empty-atmosphere hits stock phrases", () => {
   assert.ok(ruleIds("空气中弥漫着血腥味。").includes("empty-atmosphere"));
   assert.ok(ruleIds("她的脸色显得格外苍白。").includes("empty-atmosphere"));

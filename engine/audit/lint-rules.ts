@@ -55,6 +55,14 @@ const PROSE_RULES: readonly ProseRule[] = [
     pattern:
       /你可以[^。！？\n]{0,50}(?:也可以|或者)|左边是[^。！？\n]{0,50}右边是|是[^。！？\n，]{1,30}还是[^。！？\n]{1,30}[？?]/g,
   },
+  {
+    // 伪菜单套台词壳：「A，或者B，由你定」——枚举选项+把决定权句式化
+    // 地交还玩家。台词内外都禁：这是系统发选项，不是角色在说话。
+    id: "pseudo-menu-in-dialogue",
+    scope: "ending",
+    pattern:
+      /[^。！？\n]{1,24}，或者[^。！？\n]{1,24}，(?:都)?(?:由|看|听)?你(?:来)?(?:定|决定|选|拿主意)/g,
+  },
   { id: "markdown-divider", scope: "per-line", pattern: /^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/g },
   { id: "markdown-heading", scope: "per-line", pattern: /^#{1,6}\s/g },
   {
