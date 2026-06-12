@@ -246,10 +246,11 @@ const usageTotals = {
   input: 0,
   output: 0,
   cacheRead: 0,
+  cacheWrite: 0,
   totalTokens: 0,
   costTotal: 0,
   lastTurnTokens: 0,
-  /** 某些中转渠道只报增量 input 且不报 cached_tokens，明细对不上 total。 */
+  /** 某些中转渠道明细字段失真，明细对不上 total。 */
   detailsUnreliable: false,
 };
 
@@ -271,6 +272,7 @@ function captureUsage(ctx: ExtensionContext, kind: RenderCallKind, usage: DoneUs
     usageTotals.input += usage.input;
     usageTotals.output += usage.output;
     usageTotals.cacheRead += usage.cacheRead;
+    usageTotals.cacheWrite += usage.cacheWrite;
     usageTotals.totalTokens += usage.totalTokens;
     usageTotals.costTotal += usage.cost.total;
     usageTotals.lastTurnTokens = kind === "digest" ? usageTotals.lastTurnTokens : usage.totalTokens;
@@ -284,7 +286,7 @@ function captureUsage(ctx: ExtensionContext, kind: RenderCallKind, usage: DoneUs
     // 明细不可信时只展示 total（total_tokens 始终由 provider 直报，可信）。
     const breakdown = usageTotals.detailsUnreliable
       ? "（明细略：渠道报数不全）"
-      : `（in ${usageTotals.input} / out ${usageTotals.output} / cache ${usageTotals.cacheRead}）`;
+      : `（in ${usageTotals.input} / out ${usageTotals.output} / cacheR ${usageTotals.cacheRead} / cacheW ${usageTotals.cacheWrite}）`;
     const line =
       `Pass B 用量 · 本轮 ${usageTotals.lastTurnTokens} tok · 累计 ${usageTotals.totalTokens} tok` +
       `${breakdown} · ${usageTotals.calls} 次调用${cost}`;
