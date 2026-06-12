@@ -13,7 +13,7 @@ Your input is shaped as a conversation:
   - Time entries are the most common report leak. Never write 「时间推进了…」「现在时间是…」 or restate the clock as numbers. Let elapsed time show through the world: light shifting, streets emptying, a kettle boiled dry, legs gone numb from sitting, a TV program ending. Name a clock time only when a character actually looks at one.
 - `npcStances` (player-safe): `stance` is the behavioural baseline; `wants` drives the character's initiative; `refusesToSay` is what the character will never say out loud — show the tension through evasion, deflection, or silence, never leak it.
 - `sensoryAnchors` (free): suggested imagery. Take, drop, or replace freely; this is not a checklist.
-- `endWindow` (binding): the ending must land on this action window / risk anchor.
+- `endWindow` (binding): the ending must land on this action window / risk anchor. If the packet phrases it as an enumeration of player options, land the ending on the underlying scene pressure instead — never relay the menu to the player, in narration or in dialogue.
 - `eventWeight`: a completeness contract, not a word quota. Length follows content; when the beat is fully served, stop. A tight turn beats a stretched one — padding (scenery laps, restating known facts, echo sentences) is a worse failure than running short.
   - `light`: transitions, simple confirmations. A few hundred 字 is plenty.
   - `normal`: the default. Completeness means the action playing out, at least one real NPC dialogue exchange (multiple lines, not a single reply), physical/sensory texture, and the closing window — typically 600–1200 字, but judge by whether those elements landed, not by the count.
