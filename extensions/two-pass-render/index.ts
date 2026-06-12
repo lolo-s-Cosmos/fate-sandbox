@@ -201,6 +201,8 @@ async function streamProse(
       temperature: resolveRenderTemperature(ctx),
       // 渲染器有自己的稳定前缀（分层散文史），独立缓存分区提升命中率。
       sessionId: rendererSessionId(ctx, "render"),
+      // RP 节奏两轮间隔常超 5 分钟：默认 1h TTL（2× 写价），避免反复冷启动全量重写。
+      cacheRetention: resolveRenderCacheRetention(ctx),
     },
   );
   let draft = "";
@@ -413,6 +415,25 @@ async function writeTurnDigest(
  */
 function rendererSessionId(ctx: ExtensionContext, suffix: string): string {
   return `${ctx.sessionManager.getSessionId()}:${suffix}`;
+}
+
+type CacheRetention = "none" | "short" | "long";
+
+/**
+ * 渲染器缓存保留档：默认 long（Anthropic 1h TTL，命中免费续期）；
+ * `FATE_RENDER_CACHE=short|none` 可改回。不支持长保留的模型/provider
+ * 由 pi-ai compat 自动降级，误设无风险。digest writer 前缀不复用，不走这个档。
+ */
+function resolveRenderCacheRetention(ctx: ExtensionContext): CacheRetention {
+  const raw = process.env["FATE_RENDER_CACHE"]?.trim();
+  if (raw === undefined || raw === "") {
+    return "long";
+  }
+  if (raw === "none" || raw === "short" || raw === "long") {
+    return raw;
+  }
+  notify(ctx, `FATE_RENDER_CACHE 应为 none|short|long，得到：${raw}，已回退 long`, "warning");
+  return "long";
 }
 
 /**
