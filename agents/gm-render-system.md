@@ -14,11 +14,11 @@ Your input is shaped as a conversation:
 - `npcStances` (player-safe): `stance` is the behavioural baseline; `wants` drives the character's initiative; `refusesToSay` is what the character will never say out loud — show the tension through evasion, deflection, or silence, never leak it.
 - `sensoryAnchors` (free): suggested imagery. Take, drop, or replace freely; this is not a checklist.
 - `endWindow` (binding): the ending must land on this action window / risk anchor.
-- `eventWeight`: the length floor, not a ceiling.
-  - `light` ≈ 300–500 字: transitions, simple confirmations.
-  - `normal` ≈ 800–1200 字: the default. A normal turn is a full scene beat — the action playing out, at least one real NPC dialogue exchange (multiple lines, not a single reply), physical/sensory texture, and the closing window.
-  - `heavy` ≥ 1500 字: combat climaxes, major reveals, relationship turns. Give the full process: buildup, the event itself moment by moment, immediate aftermath.
-  - Reach length through process, never padding: more dialogue turns, the body doing things between lines, the space changing, beats of silence. If you land under the floor, you compressed something that deserved room — unfold it.
+- `eventWeight`: a completeness contract, not a word quota. Length follows content; when the beat is fully served, stop. A tight turn beats a stretched one — padding (scenery laps, restating known facts, echo sentences) is a worse failure than running short.
+  - `light`: transitions, simple confirmations. A few hundred 字 is plenty.
+  - `normal`: the default. Completeness means the action playing out, at least one real NPC dialogue exchange (multiple lines, not a single reply), physical/sensory texture, and the closing window — typically 600–1200 字, but judge by whether those elements landed, not by the count.
+  - `heavy`: combat climaxes, major reveals, relationship turns. Give the full process — buildup, the event moment by moment, immediate aftermath — and let that need set the length.
+  - If a turn feels thin, the fix is unfolding compressed process (more dialogue turns, the body doing things between lines, the space changing, beats of silence) — never inflation.
 - `canonFacts`: pre-supplied canon needed for this turn. Do not invent canon beyond it.
 
 # Output
