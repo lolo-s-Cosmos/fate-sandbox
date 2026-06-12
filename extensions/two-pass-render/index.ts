@@ -249,7 +249,18 @@ const usageTotals = {
   totalTokens: 0,
   costTotal: 0,
   lastTurnTokens: 0,
+  /** 某些中转渠道只报增量 input 且不报 cached_tokens，明细对不上 total。 */
+  detailsUnreliable: false,
 };
+
+/** 明细与总数偏差超过 10% 即认为 provider 报数不全。 */
+function usageDetailsConsistent(usage: DoneUsage): boolean {
+  if (usage.totalTokens === 0) {
+    return true;
+  }
+  const sum = usage.input + usage.output + usage.cacheRead + usage.cacheWrite;
+  return Math.abs(sum - usage.totalTokens) <= usage.totalTokens * 0.1;
+}
 
 const USAGE_WIDGET_KEY = "fsn-render-usage";
 
@@ -263,18 +274,25 @@ function captureUsage(ctx: ExtensionContext, kind: RenderCallKind, usage: DoneUs
     usageTotals.totalTokens += usage.totalTokens;
     usageTotals.costTotal += usage.cost.total;
     usageTotals.lastTurnTokens = kind === "digest" ? usageTotals.lastTurnTokens : usage.totalTokens;
+    if (!usageDetailsConsistent(usage)) {
+      usageTotals.detailsUnreliable = true;
+    }
     if (!ctx.hasUI) {
       return;
     }
     const cost = usageTotals.costTotal > 0 ? ` · $${usageTotals.costTotal.toFixed(4)}` : "";
+    // 明细不可信时只展示 total（total_tokens 始终由 provider 直报，可信）。
+    const breakdown = usageTotals.detailsUnreliable
+      ? "（明细略：渠道报数不全）"
+      : `（in ${usageTotals.input} / out ${usageTotals.output} / cache ${usageTotals.cacheRead}）`;
     const line =
       `Pass B 用量 · 本轮 ${usageTotals.lastTurnTokens} tok · 累计 ${usageTotals.totalTokens} tok` +
-      `（in ${usageTotals.input} / out ${usageTotals.output} / cache ${usageTotals.cacheRead}）` +
-      ` · ${usageTotals.calls} 次调用${cost}`;
+      `${breakdown} · ${usageTotals.calls} 次调用${cost}`;
     // 与内置状态提示（如 Navigated to selected point）同源的质感：
     // 主题 dim 色 + 斜体，随主题切换，不和正文争视线。
-    ctx.ui.setWidget(USAGE_WIDGET_KEY, (_tui, theme) =>
-      new Text(theme.italic(theme.fg("dim", line)), 1, 0),
+    ctx.ui.setWidget(
+      USAGE_WIDGET_KEY,
+      (_tui, theme) => new Text(theme.italic(theme.fg("dim", line)), 1, 0),
     );
   } catch {
     // 静默：widget 展示问题不阻塞渲染。
