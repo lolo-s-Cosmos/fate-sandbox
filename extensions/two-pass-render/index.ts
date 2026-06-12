@@ -199,6 +199,8 @@ async function streamProse(
       headers: auth.headers,
       maxTokens: RENDERER_MAX_TOKENS,
       temperature: resolveRenderTemperature(ctx),
+      // 渲染器有自己的稳定前缀（分层散文史），独立缓存分区提升命中率。
+      sessionId: rendererSessionId(ctx, "render"),
     },
   );
   let draft = "";
@@ -361,6 +363,7 @@ async function writeTurnDigest(
         headers: auth.headers,
         maxTokens: DIGEST_MAX_TOKENS,
         reasoning: model.reasoning ? "minimal" : undefined,
+        sessionId: rendererSessionId(ctx, "digest"),
       },
     );
     let digest = "";
@@ -377,6 +380,15 @@ async function writeTurnDigest(
   } catch {
     // 静默：摘要缺位时渲染自动回退机械 packet 摘要。
   }
+}
+
+/**
+ * Pass B 的缓存/路由标识：复用 pi session id，加后缀与结算循环、
+ * digest writer 互相隔离——三条调用链前缀各不相同，混用同一分区
+ * 反而稀释 sticky 路由的前缀缓存。不支持 sessionId 的 provider 会忽略。
+ */
+function rendererSessionId(ctx: ExtensionContext, suffix: string): string {
+  return `${ctx.sessionManager.getSessionId()}:${suffix}`;
 }
 
 /**
