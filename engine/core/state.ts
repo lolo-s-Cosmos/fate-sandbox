@@ -91,7 +91,7 @@ export interface GameState {
 }
 
 export interface StateMeta {
-  schemaVersion: 7;
+  schemaVersion: 8;
   createdAt: string;
   updatedAt: string;
 }
@@ -111,6 +111,8 @@ export interface PublicGameState {
   obligations: TurnObligation[];
   /** Mystery hook 账本：hook budget 从 prompt 自觉变成领域对象（backlog #2） */
   hooks: HookState[];
+  /** 玩家已知的关系信号证据链；只记录行为证据，不写隐藏内心判词 */
+  relationshipSignals: RelationshipSignal[];
 }
 
 export type HookStatus = "active" | "parked" | "paid" | "escalated" | "retired";
@@ -157,6 +159,8 @@ export interface SecretGameState {
   actorAgendas: ActorAgendaState[];
   /** NPC 认知边界账本：已知、猜测、误信与禁止知道的事实 */
   actorKnowledgeLenses: ActorKnowledgeLens[];
+  /** 玩家未确认的关系信号与误判，只给 GM/private resolve/subagent 使用 */
+  relationshipSignals: RelationshipSignal[];
 }
 
 export interface ActorAgendaState {
@@ -173,6 +177,19 @@ export interface ActorKnowledgeLens {
   suspects: string[];
   falseBeliefs: string[];
   forbiddenKnowledge: string[];
+}
+
+export type RelationshipSignalVisibility = "player-known" | "secret";
+
+export interface RelationshipSignal {
+  id: string;
+  actorId: ActorId;
+  targetActorId: ActorId;
+  signal: string;
+  interpretation: string;
+  boundary: string;
+  sourceEventId: string | null;
+  visibility: RelationshipSignalVisibility;
 }
 
 export interface FactionClock {
@@ -598,4 +615,4 @@ export interface StateExport extends Omit<GameState, "public"> {
 
 export type State = GameState;
 
-export const CURRENT_STATE_SCHEMA_VERSION = 7;
+export const CURRENT_STATE_SCHEMA_VERSION = 8;

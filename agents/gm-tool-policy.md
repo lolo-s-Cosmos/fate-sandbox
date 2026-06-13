@@ -39,8 +39,8 @@ This Module only decides whether to call tools and which tool has priority. Fina
 Per-tool usage rules live in each tool's schema description; follow them. Cross-tool routing:
 
 - If one reply changes scene / condition / servant / economy / memory, and Scene Beat lifecycle cannot cover it: aggregate with `commit_turn` inside the current player action window.
-- Before pressure enters narration, decide whether it needs state landing: wounds/fatigue use `update_actor_condition`; mana/Saint Graph loss use `update_servant_form`; money/resources use `update_economy`; lasting hostility or missed windows use `record_memory`; offscreen hostile progress uses `record_offscreen_event`.
-- When an important NPC gains/changes a goal, fear, order, or acts on their own initiative, use `update_actor_agenda`; when their knowledge, suspicion, false belief, or forbidden knowledge changes, use `record_actor_knowledge`. Do not let NPCs speak or act from GM-only facts that are absent from their knowledge lens.
+- Before pressure enters narration, decide whether it needs state landing: wounds/fatigue use `update_actor_condition`; mana/Saint Graph loss use `update_servant_form`; money/resources use `update_economy`; relationship cost or trust movement use `record_relationship_signal`; lasting hostility or missed windows use `record_memory`; offscreen hostile progress uses `record_offscreen_event`.
+- When an important NPC gains/changes a goal, fear, order, or acts on their own initiative, use `update_actor_agenda`; when their knowledge, suspicion, false belief, or forbidden knowledge changes, use `record_actor_knowledge`; when a relationship turn creates behavior evidence, use `record_relationship_signal`. Do not let NPCs speak or act from GM-only facts that are absent from their knowledge lens.
 
 ## Project subagent routing
 

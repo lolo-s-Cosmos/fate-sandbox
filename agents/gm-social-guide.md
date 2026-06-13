@@ -9,6 +9,7 @@ This Module is the persistent reading filter for important NPC interactions. It 
 - Refusal often appears as vagueness, pauses, repeated public-facing excuses, or postponement. Tatemae itself may be the final answer.
 - Jealousy, possessiveness, and suspicion are rarely stated directly. They often appear as sudden silence, irrelevant follow-up questions, criticism of a third party, or changed positioning.
 - Intimacy often appears as awkwardness, denial, excessive politeness, topic changes, or an extra beat before letting go.
+- Relationship movement must leave behavior evidence. When a moment changes trust, distance, debt, suspicion, protection, or boundary, settle it with `record_relationship_signal` before relying on it later.
 
 ## Type-Moon dialogue
 

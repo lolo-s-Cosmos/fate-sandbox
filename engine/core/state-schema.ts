@@ -65,7 +65,7 @@ function nullable<T extends TSchema>(schema: T) {
 }
 
 export const STATE_META_SCHEMA = Type.Object({
-  schemaVersion: Type.Literal(7),
+  schemaVersion: Type.Literal(8),
   createdAt: ISO_INSTANT_SCHEMA,
   updatedAt: ISO_INSTANT_SCHEMA,
 });
@@ -401,6 +401,20 @@ const TURN_OBLIGATION_SCHEMA = Type.Object({
   createdAt: ISO_INSTANT_SCHEMA,
 });
 
+export const RELATIONSHIP_SIGNAL_VISIBILITIES = ["player-known", "secret"] as const;
+const RELATIONSHIP_SIGNAL_VISIBILITY_SCHEMA = stringEnumSchema(RELATIONSHIP_SIGNAL_VISIBILITIES);
+
+const RELATIONSHIP_SIGNAL_SCHEMA = Type.Object({
+  id: NON_EMPTY_STRING_SCHEMA,
+  actorId: NON_EMPTY_STRING_SCHEMA,
+  targetActorId: NON_EMPTY_STRING_SCHEMA,
+  signal: NON_EMPTY_STRING_SCHEMA,
+  interpretation: NON_EMPTY_STRING_SCHEMA,
+  boundary: NON_EMPTY_STRING_SCHEMA,
+  sourceEventId: nullable(NON_EMPTY_STRING_SCHEMA),
+  visibility: RELATIONSHIP_SIGNAL_VISIBILITY_SCHEMA,
+});
+
 export const PUBLIC_GAME_STATE_SCHEMA = Type.Object({
   campaign: CAMPAIGN_STATE_SCHEMA,
   clock: CLOCK_STATE_SCHEMA,
@@ -414,6 +428,7 @@ export const PUBLIC_GAME_STATE_SCHEMA = Type.Object({
   turnLog: Type.Array(TURN_LOG_ENTRY_SCHEMA),
   obligations: Type.Array(TURN_OBLIGATION_SCHEMA),
   hooks: Type.Array(HOOK_STATE_SCHEMA),
+  relationshipSignals: Type.Array(RELATIONSHIP_SIGNAL_SCHEMA),
 });
 
 export const SECRET_REVEAL_STATES = ["hidden", "foreshadowed", "revealed"] as const;
@@ -509,6 +524,7 @@ export const SECRET_GAME_STATE_SCHEMA = Type.Object({
   scheduledEvents: Type.Array(SCHEDULED_EVENT_SCHEMA),
   actorAgendas: Type.Array(ACTOR_AGENDA_STATE_SCHEMA),
   actorKnowledgeLenses: Type.Array(ACTOR_KNOWLEDGE_LENS_SCHEMA),
+  relationshipSignals: Type.Array(RELATIONSHIP_SIGNAL_SCHEMA),
 });
 
 export const STATE_SCHEMA = Type.Object({
@@ -631,6 +647,7 @@ function assertStateInvariants(state: State): void {
   assertActorSecretsInvariants(state, actors);
   assertActorAgendaInvariants(state, actors);
   assertActorKnowledgeLensInvariants(state, actors);
+  assertRelationshipSignalInvariants(state, actors);
   assertFactionClockInvariants(state);
 }
 
@@ -732,6 +749,40 @@ function assertActorKnowledgeLensInvariants(state: State, actors: ActorRegistry)
     }
     seen.add(lens.actorId);
   }
+}
+
+function assertRelationshipSignalInvariants(state: State, actors: ActorRegistry): void {
+  const seen = new Set<string>();
+  for (const signal of state.public.relationshipSignals) {
+    assertRelationshipSignalReferences(signal, actors, "public.relationshipSignals[]");
+    if (signal.visibility !== "player-known") {
+      throw new Error(`public.relationshipSignals 只能包含 player-known 信号: ${signal.id}。`);
+    }
+    assertUniqueRelationshipSignalId(signal.id, seen);
+  }
+  for (const signal of state.secrets.relationshipSignals) {
+    assertRelationshipSignalReferences(signal, actors, "secrets.relationshipSignals[]");
+    if (signal.visibility !== "secret") {
+      throw new Error(`secrets.relationshipSignals 只能包含 secret 信号: ${signal.id}。`);
+    }
+    assertUniqueRelationshipSignalId(signal.id, seen);
+  }
+}
+
+function assertRelationshipSignalReferences(
+  signal: State["public"]["relationshipSignals"][number],
+  actors: ActorRegistry,
+  fieldName: string,
+): void {
+  assertActorExists(signal.actorId, actors, `${fieldName}.actorId`);
+  assertActorExists(signal.targetActorId, actors, `${fieldName}.targetActorId`);
+}
+
+function assertUniqueRelationshipSignalId(id: string, seen: Set<string>): void {
+  if (seen.has(id)) {
+    throw new Error(`重复 relationship signal id: ${id}。`);
+  }
+  seen.add(id);
 }
 
 function assertActorExists(actorId: string, actors: ActorRegistry, fieldName: string): void {

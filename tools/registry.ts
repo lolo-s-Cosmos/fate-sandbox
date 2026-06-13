@@ -19,6 +19,7 @@ import { progressSceneBeatToolDefinition } from "./state/progress-scene-beat.ts"
 import { recordActorKnowledgeToolDefinition } from "./state/record-actor-knowledge.ts";
 import { recordMemoryToolDefinition } from "./state/record-memory.ts";
 import { recordOffscreenEventToolDefinition } from "./state/record-offscreen-event.ts";
+import { recordRelationshipSignalToolDefinition } from "./state/record-relationship-signal.ts";
 import { resolveCombatExchangeToolDefinition } from "./state/resolve-combat-exchange.ts";
 import { retireActorToolDefinition } from "./state/retire-actor.ts";
 import { revealSecretToolDefinition } from "./state/reveal-secret.ts";
@@ -44,6 +45,7 @@ const TOOL_DEFINITIONS: readonly FsnToolDefinition[] = [
   retireActorToolDefinition,
   updateActorAgendaToolDefinition,
   recordActorKnowledgeToolDefinition,
+  recordRelationshipSignalToolDefinition,
   updateActorConditionToolDefinition,
   setScenePresenceToolDefinition,
   upsertActorToolDefinition,

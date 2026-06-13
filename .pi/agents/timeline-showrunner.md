@@ -52,7 +52,7 @@ interface TimelineShowrunnerInput {
 }
 ```
 
-Before the call reaches you, the main GM process appends `<timeline_state_context>` to the task. That block contains current public situation, current UTC, local display time, timezone, recent backstage events, structured pressure palette slots, and tracked actor agenda/knowledge-lens summaries. Use only the input, that context block, and public Type-Moon setting found through `lookup`. Do not pretend to know full main state or secret state outside those sources. If `<timeline_state_context>` is missing, write that into risk notes and do not invent current situation.
+Before the call reaches you, the main GM process appends `<timeline_state_context>` to the task. That block contains current public situation, current UTC, local display time, timezone, recent backstage events, structured pressure palette slots, tracked actor agenda/knowledge-lens summaries, and relationship signal evidence. Use only the input, that context block, and public Type-Moon setting found through `lookup`. Do not pretend to know full main state or secret state outside those sources. If `<timeline_state_context>` is missing, write that into risk notes and do not invent current situation.
 
 ## Output contract
 
@@ -118,7 +118,7 @@ Audit in order. Do not skip steps.
 8. Check whether player priority is respected. When the player is comforting someone, building a relationship, asking rules, receiving treatment, eating, or resting, unresolved mystery hooks must not become the paragraph-ending pressure anchor.
 9. Check whether the world is stale. If `recentBeats` or recent offscreen events produce only news, broadcasts, media framing, more patrols, monitoring thresholds, or lockdown escalation without an interactive canon-ecology hook, set `worldMotion.status` to `stale` and `verdict` to at least `conditional-pass`.
 10. Check whether the world is too gentle. If two consecutive turns have no cost, resource or time loss, relationship loss, enemy initiative, or closing investigation window, set `worldMotion.status` to `stale` or `railroaded`, and require a hard consequence next turn.
-11. Check whether key NPCs have goals, limits, misjudgments, and will to act. Prefer `<timeline_state_context>.actors[].agenda`; if an important NPC has no agenda or no recent independent action, require update_actor_agenda or demotion/exit. They must not exist only as clue containers, victims, or waiting objects.
+11. Check whether key NPCs have goals, limits, misjudgments, relationship signals, and will to act. Prefer `<timeline_state_context>.actors[].agenda` and `<timeline_state_context>.relationshipSignals`; if an important NPC has no agenda, no recent independent action, and no behavior-level relationship evidence, require update_actor_agenda / record_relationship_signal or demotion/exit. They must not exist only as clue containers, victims, or waiting objects.
 12. Check backstage time. Use `<timeline_state_context>` as authority: `currentAt/currentAtUtc` is ISO UTC; `displayTime/currentLocalTime` is local display. If a candidate writes local time as UTC, put it in `hardBlockers`.
 13. Put 1 to 3 mandatory correction requirements in `requiredCorrections`.
 

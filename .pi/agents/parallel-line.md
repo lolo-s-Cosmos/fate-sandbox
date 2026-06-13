@@ -70,7 +70,7 @@ interface ParallelLineInput {
 }
 ```
 
-Before your call reaches you, the main GM process appends `<timeline_state_context>` to the task. That block contains current public situation, current UTC, local display time, timezone, recent backstage events, structured `pressurePalette`, and tracked actor `agenda` / `knowledgeLens` summaries. Use it to check repetition, NPC autonomy, and knowledge boundaries. Do not ask the main GM to repeat it. Do not pretend to know full main state outside that block. If `<timeline_state_context>` is missing and the input also lacks `recentOffscreenEvents`, mark repetition risk in `riskFlags`.
+Before your call reaches you, the main GM process appends `<timeline_state_context>` to the task. That block contains current public situation, current UTC, local display time, timezone, recent backstage events, structured `pressurePalette`, tracked actor `agenda` / `knowledgeLens` summaries, and recent `relationshipSignals`. Use it to check repetition, NPC autonomy, relationship costs, and knowledge boundaries. Do not ask the main GM to repeat it. Do not pretend to know full main state outside that block. If `<timeline_state_context>` is missing and the input also lacks `recentOffscreenEvents`, mark repetition risk in `riskFlags`.
 
 ## Output contract
 
@@ -135,7 +135,7 @@ interface ParallelLineOutput {
 ## Backstage pressure discipline
 
 - Factions keep acting and applying pressure by default. Unless the time window is extremely short or the scope is a safe establishing shot, prefer `progress` or `escalation`. Repeated `no-change` makes the world static and harmless.
-- A backstage event should create at least one real pressure: enemy gains information, resources move, action window shortens, target changes position, third party suffers, Mystery trace expands, faction misjudges, internal orders escalate, or the player's clue loses value.
+- A backstage event should create at least one real pressure: enemy gains information, resources move, action window shortens, target changes position, third party suffers, Mystery trace expands, faction misjudges, internal orders escalate, relationship trust frays, or the player's clue loses value.
 - High pressure does not require direct combat. Use fees, time, fatigue, mana drain, evidence contamination, route closure, NPC attitude change, innocent involvement, or enemy first-move setup.
 - If the player side rests, receives treatment, stays overnight, or reorganizes supplies, do not pause the backstage world. Use a low-disturbance projection, but `privateSummary` must still advance at least one faction goal.
 - Use `no-change` only when information is insufficient, the time window is too short, all reasonable actions are hard-forbidden, or the faction truly chooses to lie low and pays an opportunity cost. Do not use it to avoid pressure design.

@@ -2,6 +2,7 @@ import type { PublicGameState } from "./state.ts";
 
 import { formatHumanTime } from "./date-time.ts";
 import { formatHookLedger } from "./hooks.ts";
+import { recentPlayerKnownRelationshipSignals } from "./relationship-signal.ts";
 
 export function buildGmBrief(publicState: PublicGameState): string {
   const protagonist = publicState.actors[publicState.protagonistActorId];
@@ -24,6 +25,7 @@ export function buildGmBrief(publicState: PublicGameState): string {
     `当前威胁：${formatSceneThreats(publicState, { separator: "；", colon: ":" })}`,
     ...formatOpenObligationLines(publicState),
     ...formatHookLedgerLines(publicState),
+    `最近关系信号：${formatRecentRelationshipSignals(publicState)}`,
     `最近重大记忆：${formatRecentEvents(publicState)}`,
     "本轮工具纪律：每轮 time 必须用 elapsed/travel 推进时间；Scene Beat lifecycle 用 progress_scene_beat；非 Scene Beat lifecycle 的多状态变化用 commit_turn；actor 入场/离场用 set_scene_presence。不要输出 JSON、数值表、schema 字段。",
   ].join("\n");
@@ -203,6 +205,18 @@ function formatRecentEvents(publicState: PublicGameState): string {
   return recent.length === 0
     ? "无"
     : recent.map((event) => `${event.title}：${event.summary}`).join("；");
+}
+
+function formatRecentRelationshipSignals(publicState: PublicGameState): string {
+  const recent = recentPlayerKnownRelationshipSignals(publicState, 4);
+  return recent.length === 0
+    ? "无"
+    : recent
+        .map(
+          (signal) =>
+            `${actorDisplayName(publicState, signal.actorId)}→${actorDisplayName(publicState, signal.targetActorId)}：${signal.signal}（边界：${signal.boundary}）`,
+        )
+        .join("；");
 }
 
 function formatPresentActors(publicState: PublicGameState): string {

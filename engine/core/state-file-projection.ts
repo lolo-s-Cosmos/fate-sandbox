@@ -26,6 +26,7 @@ export interface TimelineStateContext {
     threats: string[];
   };
   actors: TimelineActorContext[];
+  relationshipSignals: TimelineRelationshipSignalContext[];
   recentOffscreenEvents: TimelineOffscreenEventContext[];
   pressurePalette: TimelinePressureSlotContext[];
 }
@@ -67,12 +68,24 @@ export interface TimelineOffscreenEventContext {
   futureHooks: string[];
 }
 
+export interface TimelineRelationshipSignalContext {
+  id: string;
+  actorId: string;
+  targetActorId: string;
+  signal: string;
+  interpretation: string;
+  boundary: string;
+  sourceEventId: string | null;
+  visibility: string;
+}
+
 export interface TimelinePressureSlotContext extends TimelinePressureSlot {
   recentUses: number;
   coolingDown: boolean;
 }
 
 const RECENT_OFFSCREEN_LIMIT = 6;
+const RECENT_RELATIONSHIP_SIGNAL_LIMIT = 8;
 
 export function buildTimelineStateContextFromRaw(raw: unknown): TimelineStateContext {
   const state = selectStateRecord(raw);
@@ -83,6 +96,10 @@ export function buildTimelineStateContextFromRaw(raw: unknown): TimelineStateCon
   const scene = requireRecord(publicState["scene"], "public.scene");
   const actors = requireRecord(publicState["actors"], "public.actors");
   const offscreenEventLog = optionalArray(secrets["offscreenEventLog"]);
+  const relationshipSignals = recentRelationshipSignals(
+    optionalArray(publicState["relationshipSignals"]),
+    optionalArray(secrets["relationshipSignals"]),
+  );
   const actorAgendas = indexByActorId(optionalArray(secrets["actorAgendas"]), "actorAgendas");
   const actorKnowledgeLenses = indexByActorId(
     optionalArray(secrets["actorKnowledgeLenses"]),
@@ -118,6 +135,7 @@ export function buildTimelineStateContextFromRaw(raw: unknown): TimelineStateCon
     actors: Object.entries(actors).map(([actorId, actor]) =>
       actorContext(actorId, actor, actorAgendas.get(actorId), actorKnowledgeLenses.get(actorId)),
     ),
+    relationshipSignals,
     recentOffscreenEvents,
     pressurePalette: buildPressurePaletteContext(timeline, recentOffscreenEvents),
   };
@@ -176,6 +194,47 @@ function knowledgeLensContext(actorId: string, value: unknown): TimelineActorKno
       `actorKnowledgeLenses.${actorId}.forbiddenKnowledge`,
     ),
   };
+}
+
+function relationshipSignalContext(
+  value: unknown,
+  index: number,
+): TimelineRelationshipSignalContext {
+  const signal = requireRecord(value, `relationshipSignals[${index}]`);
+  return {
+    id: requireString(signal["id"], `relationshipSignals[${index}].id`),
+    actorId: requireString(signal["actorId"], `relationshipSignals[${index}].actorId`),
+    targetActorId: requireString(
+      signal["targetActorId"],
+      `relationshipSignals[${index}].targetActorId`,
+    ),
+    signal: requireString(signal["signal"], `relationshipSignals[${index}].signal`),
+    interpretation: requireString(
+      signal["interpretation"],
+      `relationshipSignals[${index}].interpretation`,
+    ),
+    boundary: requireString(signal["boundary"], `relationshipSignals[${index}].boundary`),
+    sourceEventId: nullableString(
+      signal["sourceEventId"],
+      `relationshipSignals[${index}].sourceEventId`,
+    ),
+    visibility: requireString(signal["visibility"], `relationshipSignals[${index}].visibility`),
+  };
+}
+
+function recentRelationshipSignals(
+  publicSignals: readonly unknown[],
+  secretSignals: readonly unknown[],
+): TimelineRelationshipSignalContext[] {
+  return [...publicSignals, ...secretSignals]
+    .map((signal, index) => relationshipSignalContext(signal, index))
+    .toSorted((left, right) => relationshipSignalOrder(left.id) - relationshipSignalOrder(right.id))
+    .slice(-RECENT_RELATIONSHIP_SIGNAL_LIMIT);
+}
+
+function relationshipSignalOrder(id: string): number {
+  const match = /-(\d+)$/u.exec(id);
+  return match === null ? 0 : Number(match[1]);
 }
 
 function offscreenEventContext(value: unknown, index: number): TimelineOffscreenEventContext {

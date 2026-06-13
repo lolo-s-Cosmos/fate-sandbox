@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { recordActorKnowledgeFact, upsertActorAgenda } from "../engine/core/actor-agenda.ts";
 import { configureCampaign } from "../engine/core/campaign.ts";
+import { recordRelationshipSignal } from "../engine/core/relationship-signal.ts";
 import { createInitialState } from "../engine/core/state-store.ts";
 import { isRecord } from "../engine/core/typebox-validation.ts";
 import { buildTimelineStateContext } from "../extensions/subagents/timeline/index.ts";
@@ -21,6 +22,15 @@ void test("timeline subagent context renders campaign timezone local time", () =
     lastIndependentActionAt: null,
   });
   recordActorKnowledgeFact(draft, "protagonist", "suspects", "the cordon is not random");
+  recordRelationshipSignal(draft, {
+    actorId: "protagonist",
+    targetActorId: "protagonist",
+    signal: "keeps moving instead of asking for help",
+    interpretation: "self-protection is overriding trust",
+    boundary: "do not frame this as resolved trust",
+    sourceEventId: null,
+    visibility: "player-known",
+  });
   draft.secrets.offscreenEventLog.push({
     id: "offscreen-1",
     lineId: "orlando-police",
@@ -55,6 +65,7 @@ void test("timeline subagent context renders campaign timezone local time", () =
   assert.ok(protagonist);
   assert.equal(protagonist.agenda?.goal, "leave the exposed street");
   assert.deepEqual(protagonist.knowledgeLens?.suspects, ["the cordon is not random"]);
+  assert.equal(context.relationshipSignals[0]?.signal, "keeps moving instead of asking for help");
 
   const institutional = context.pressurePalette.find(
     (slot) => slot.id === "fsf-institutional-line",

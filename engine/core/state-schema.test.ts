@@ -168,6 +168,68 @@ void test("parseStateSchema normalizes actor agenda independent-action time", ()
   assert.equal(parsed.secrets.actorAgendas[0]?.lastIndependentActionAt, "2004-01-30T07:00:00.000Z");
 });
 
+void test("parseStateSchema validates relationship signal actor refs, visibility layers, and ids", () => {
+  const raw = rawState();
+  section(raw, "public")["relationshipSignals"] = [
+    {
+      id: "relationship-signal-1",
+      actorId: "protagonist",
+      targetActorId: "protagonist",
+      signal: "hesitates before answering",
+      interpretation: "guarded concern",
+      boundary: "do not overstate intimacy",
+      sourceEventId: null,
+      visibility: "player-known",
+    },
+  ];
+  section(raw, "secrets")["relationshipSignals"] = [
+    {
+      id: "relationship-signal-1",
+      actorId: "protagonist",
+      targetActorId: "protagonist",
+      signal: "tests the boundary",
+      interpretation: "private suspicion",
+      boundary: "do not render directly",
+      sourceEventId: null,
+      visibility: "secret",
+    },
+  ];
+
+  assert.throws(() => parseStateSchema(raw), /重复 relationship signal id/);
+
+  section(raw, "secrets")["relationshipSignals"] = [
+    {
+      id: "relationship-signal-2",
+      actorId: "ghost",
+      targetActorId: "protagonist",
+      signal: "tests the boundary",
+      interpretation: "private suspicion",
+      boundary: "do not render directly",
+      sourceEventId: null,
+      visibility: "secret",
+    },
+  ];
+  assert.throws(
+    () => parseStateSchema(raw),
+    /非法secrets\.relationshipSignals\[\]\.actorId: actor ghost 不存在/,
+  );
+
+  section(raw, "public")["relationshipSignals"] = [
+    {
+      id: "relationship-signal-3",
+      actorId: "protagonist",
+      targetActorId: "protagonist",
+      signal: "hesitates before answering",
+      interpretation: "guarded concern",
+      boundary: "do not overstate intimacy",
+      sourceEventId: null,
+      visibility: "secret",
+    },
+  ];
+  section(raw, "secrets")["relationshipSignals"] = [];
+  assert.throws(() => parseStateSchema(raw), /public\.relationshipSignals 只能包含 player-known/);
+});
+
 void test("parseStateSchema rejects dangling contractedServantIds", () => {
   const raw = rawState();
   const protagonist = section(section(section(raw, "public"), "actors"), "protagonist");

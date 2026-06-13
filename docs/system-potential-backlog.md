@@ -4,10 +4,10 @@
 原则轴：把还停留在 prompt 里的纪律下沉为结构；把 GM 手工装配的活变成 engine 自动供给。
 每项做完勾掉，动手前先重读对应小节，按当时代码现状校正方案。
 
-优先级总览（2026-06-14 更新：#12 已验收；#1/#15/#17 已落地）：
+优先级总览（2026-06-14 更新：#12 已验收；#1/#15/#16/#17 已落地）：
 
-1. 已完成地基：#8 JSONL 审计脚本、#12 双 pass、#1 输出契约机械执法、#15 NPC agenda/knowledge lens、#17 pressure palette、#18 Windows 启动 parity
-2. 当前建议下一批：#16 关系信号账本 → #5 parallel-line 调用工具化（吃 #15/#17 红利）→ #6 上下文经济
+1. 已完成地基：#8 JSONL 审计脚本、#12 双 pass、#1 输出契约机械执法、#15 NPC agenda/knowledge lens、#16 关系信号账本、#17 pressure palette、#18 Windows 启动 parity
+2. 当前建议下一批：#5 parallel-line 调用工具化（吃 #15/#16/#17 红利）→ #6 上下文经济
 3. 可随时穿插的正交项：#9 RNG
 4. 后置增强：#10 玩家侧小件、#14 heavy 轮并行渲染选优、#7 canon 研究缓存
 
@@ -320,7 +320,7 @@ interface ActorKnowledgeLens {
 
 ## 16. 关系信号账本（relationship signal ledger）
 
-- [ ] 状态：未开始（2026-06-14 叙事多样性盘点新增）
+- [x] 状态：已完成（2026-06-14，schema v8）。新增 `public.relationshipSignals` 与 `secrets.relationshipSignals` 分层账本（id/actorId/targetActorId/signal/interpretation/boundary/sourceEventId/visibility），`engine/core/relationship-signal.ts` 负责记录、分层和未揭示秘密字符串防漏；`record_relationship_signal` 工具已注册。GM brief 露出最近 player-known 信号，timeline 子代理上下文注入 recent relationshipSignals，tool-policy/social/direction prompt 已要求关系转折先落行为证据。迁移 v7→v8 与 schema/invariant/tool 测试已补齐。
 
 已有 `relationshipToProtagonist.stance/summary`，但它是当前摘要，不保留「关系为何变成这样」的行为证据。情感线需要记录微动作，而不是好感数值。
 
@@ -386,7 +386,7 @@ interface TimelinePressureSlot {
 
 ## 实施纪律提醒
 
-- 改 state 结构的项（#2 #3 #4 #5 #6a #9）都要：bump `schemaVersion` + 线性 migration + migration 测试 + protected paths 同步
+- 改 state 结构的项（#2 #3 #4 #5 #6a #9 #16）都要：bump `schemaVersion` + 线性 migration + migration 测试 + protected paths 同步
 - 新工具在 `tools/registry.ts` 注册，description 含「必须调用场景 + 严禁行为」
 - 子代理改动保持 project-scope、explicit `tools`/`extensions`、bare JSON 约束
 - 每项完成 = `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test` 全过
