@@ -67,10 +67,6 @@ void test("packet contract files agree on binding fields", () => {
   for (const field of ["playerAction", "resolvedChanges", "endWindow"]) {
     const bindingPattern = new RegExp(`\`${field}\`[^\\n]*binding`, "u");
     assert.match(direction, bindingPattern, `gm-direction.md: ${field} must be marked binding`);
-    assert.match(
-      renderSystem,
-      bindingPattern,
-      `system-render.md: ${field} must be marked binding`,
-    );
+    assert.match(renderSystem, bindingPattern, `system-render.md: ${field} must be marked binding`);
   }
 });

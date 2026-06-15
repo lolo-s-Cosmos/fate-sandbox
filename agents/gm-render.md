@@ -39,4 +39,3 @@ When multiple people are present, do not write only “everyone together.” At 
 - Who slows down because of someone else, who refuses help from pride, who hurries them verbally while still not letting go.
 
 Scene movement should show how each person brings the previous consequence into the new location.
-

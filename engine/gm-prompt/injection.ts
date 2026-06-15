@@ -37,7 +37,9 @@ const PROJECT_ROOT = join(__dirname, "..", "..");
 
 export function buildSystemPrompt(baseSystemPrompt: string): string {
   return (
-    baseSystemPrompt + "\n" + readFileSync(join(PROJECT_ROOT, "agents", "system-settlement.md"), "utf-8")
+    baseSystemPrompt +
+    "\n" +
+    readFileSync(join(PROJECT_ROOT, "agents", "system-settlement.md"), "utf-8")
   );
 }
 
