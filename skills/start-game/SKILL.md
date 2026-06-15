@@ -334,6 +334,7 @@ Fate/Labyrinth 注意：
 preset 的 `openingHooks` 字段按主角类型提供了具体的第一帧锚点。开场叙事**必须**以对应 hook 作为骨架，不得从零即兴构建开场。
 
 查找顺序：
+
 1. 主角是从者 → 用 `openingHooks.servant`
 2. 主角是御主/魔术师 → 用 `openingHooks.master`
 3. 主角是普通人/本地人/穿越者 → 用 `openingHooks.human`
