@@ -46,6 +46,7 @@ export function buildSystemPrompt(baseSystemPrompt: string): string {
 /** 结算器（Pass A）主循环注入：只装 settlement/both 模块，零 style/render 模块。 */
 export function injectGmPromptMessages<TMessage>(
   messages: ReadonlyArray<TMessage>,
+  lastRenderedProse?: string,
 ): Array<TMessage | TextMessage> {
   if (!hasUserMessage(messages)) {
     return [...messages];
@@ -54,9 +55,29 @@ export function injectGmPromptMessages<TMessage>(
   return [
     ...buildSlotMessages("pre-history"),
     ...messages,
+    ...buildProseContinuityMessages(lastRenderedProse),
     ...buildSlotMessages("pre-response"),
     ...buildSlotMessages("final-contract"),
   ];
+}
+
+/**
+ * 渲染器（Pass B）最终正文回写：上一轮渲染器产出的叙事作为物理连续性锚
+ * 注入结算器上下文。解决的问题：direction packet 只声明意图（"offer to carry"），
+ * 渲染器可能将其渲染为已完成动作（"已经抱起来了"），但下一轮结算器
+ * 看不到渲染结果，导致物理状态（空间位置、身体接触、队形）跨轮断裂。
+ */
+function buildProseContinuityMessages(lastRenderedProse: string | undefined): TextMessage[] {
+  if (lastRenderedProse === undefined || lastRenderedProse.length === 0) {
+    return [];
+  }
+  const body = [
+    "以下是上一轮渲染器产出的最终正文（玩家实际看到的叙事）。本轮结算必须与这段正文保持物理连续性——人物空间位置、身体接触与搬运状态、队形、持有物姿态等不得在无玩家行动的前提下无故变化。",
+    "如果玩家本轮行动导致物理配置变化，在 resolvedChanges 中显式写出变化过程。",
+    "",
+    lastRenderedProse,
+  ].join("\n");
+  return [buildInjectedUserMessage("prose_continuity", body)];
 }
 
 /**

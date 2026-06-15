@@ -74,3 +74,37 @@ void test("long player input is excerpted", () => {
   );
   assert.match(summary, /…」/);
 });
+
+void test("buildSettlementCompactionSummary includes prose excerpt when prose message exists", () => {
+  const summary = buildSettlementCompactionSummary(
+    [
+      userMessage("抱起她"),
+      proseMessage("你一手托住膝弯，一手稳住她的后背，站起来的瞬间她整个人的重量压过来。"),
+      packetCallMessage({
+        needsRender: true,
+        playerAction: "Saber offers to carry",
+        resolvedChanges: ["princess carry established"],
+      }),
+    ],
+    undefined,
+  );
+
+  assert.match(summary, /▸ 正文：/);
+  assert.match(summary, /一手托住膝弯/);
+});
+
+void test("buildSettlementCompactionSummary omits prose marker when no prose message", () => {
+  const summary = buildSettlementCompactionSummary(
+    [
+      userMessage("行动"),
+      packetCallMessage({ needsRender: true, playerAction: "行动落地" }),
+    ],
+    undefined,
+  );
+
+  assert.doesNotMatch(summary, /▸ 正文/);
+});
+
+function proseMessage(text: string): Record<string, unknown> {
+  return { role: "custom", customType: "fsn-prose", content: text };
+}

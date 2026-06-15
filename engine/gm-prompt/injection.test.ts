@@ -54,7 +54,7 @@ void test("injectGmPromptMessages inserts slot-based prompt stack", () => {
   for (const text of texts) {
     assert.doesNotMatch(
       text,
-      /<style_blacklist>|<writing_guide>|<render_protocol>|<output_contract>/,
+      /<style_rules>|<style_blacklist>|<render_protocol>|<output_contract>/,
     );
   }
 });
@@ -64,9 +64,8 @@ void test("buildRendererSystemPrompt assembles clean-room render stack", () => {
 
   assert.match(prompt, /prose renderer \(Pass B\)/);
   assert.match(prompt, /Direction Packet Contract/);
-  assert.match(prompt, /<creative_constitution>/);
+  assert.match(prompt, /<style_rules>/);
   assert.match(prompt, /<style_blacklist>/);
-  assert.match(prompt, /<writing_guide>/);
   assert.match(prompt, /<render_protocol>/);
   assert.match(prompt, /<protagonist_impression>/);
   assert.match(prompt, /<output_contract>/);
@@ -107,6 +106,34 @@ void test("injectGmPromptMessages keeps conversation history contiguous before r
   assert.equal(texts[7], "第一句。");
   assert.equal(texts[8], "第二句。");
   assert.match(texts[9] ?? "", /<mechanical_state>/);
+});
+
+void test("injectGmPromptMessages injects prose continuity when last rendered prose is provided", () => {
+  resetState();
+  const messages: UserMessage[] = [createUserMessage("继续。")];
+  const prose = "你抱起少女走进通道。";
+
+  const injected = injectGmPromptMessages<UserMessage>(messages, prose);
+  const texts = injected.map((message) => textOf(message));
+
+  // prose_continuity 插在 conversation 和 pre-response 之间
+  assert.equal(injected.length, 13);
+  assert.equal(texts[7], "继续。");
+  assert.match(texts[8] ?? "", /<prose_continuity>/);
+  assert.match(texts[8] ?? "", /物理连续性/);
+  assert.match(texts[8] ?? "", /你抱起少女走进通道/);
+  assert.match(texts[9] ?? "", /<mechanical_state>/);
+});
+
+void test("injectGmPromptMessages skips prose continuity when no prose provided", () => {
+  resetState();
+  const messages: UserMessage[] = [createUserMessage("继续。")];
+
+  const withUndefined = injectGmPromptMessages<UserMessage>(messages, undefined);
+  const withEmpty = injectGmPromptMessages<UserMessage>(messages, "");
+
+  assert.equal(withUndefined.length, 12);
+  assert.equal(withEmpty.length, 12);
 });
 
 function createUserMessage(text: string): UserMessage {

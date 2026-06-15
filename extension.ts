@@ -33,13 +33,24 @@ export default function extension(pi: ExtensionAPI): void {
 
   pi.on("context", async (event, ctx) => {
     syncStateFromSessionManager(ctx.sessionManager);
-    // 结算器（Pass A）投影：渲染产物不进结算上下文——它的记忆是
-    // state + 历届 direction packet（在工具调用参数里），不是散文。
-    const settlementMessages = event.messages.filter(
-      (message) => !(isRecord(message) && message["customType"] === PROSE_CUSTOM_TYPE),
-    );
+    // 结算器（Pass A）投影：渲染产物不作为对话流消息进结算上下文，但最后一轮渲染正文
+    // 作为物理连续性锚注入 pre-response slot，防止跨轮物理状态断裂。
+    let lastRenderedProse: string | undefined;
+    const settlementMessages = event.messages.filter((message) => {
+      if (isRecord(message) && message["customType"] === PROSE_CUSTOM_TYPE) {
+        const text = extractProseText(message);
+        if (text.length > 0) {
+          lastRenderedProse = text;
+        }
+        return false;
+      }
+      return true;
+    });
     return {
-      messages: injectGmPromptMessages<ContextEvent["messages"][number]>(settlementMessages),
+      messages: injectGmPromptMessages<ContextEvent["messages"][number]>(
+        settlementMessages,
+        lastRenderedProse,
+      ),
     };
   });
 
@@ -70,4 +81,23 @@ export default function extension(pi: ExtensionAPI): void {
   });
 
   registerAllTools(pi);
+}
+
+/** 从 fsn-prose custom message 中提取纯文本。 */
+function extractProseText(message: Record<string, unknown>): string {
+  const content = message["content"];
+  if (typeof content === "string") {
+    return content.trim();
+  }
+  if (!Array.isArray(content)) {
+    return "";
+  }
+  return content
+    .filter(
+      (part): part is { type: "text"; text: string } =>
+        isRecord(part) && part["type"] === "text" && typeof part["text"] === "string",
+    )
+    .map((part) => part.text)
+    .join("\n")
+    .trim();
 }

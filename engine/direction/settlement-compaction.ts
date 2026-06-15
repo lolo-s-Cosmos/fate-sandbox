@@ -8,7 +8,7 @@
  */
 
 import { isRecord } from "../core/typebox-validation.ts";
-import { SUBMIT_DIRECTION_PACKET_TOOL } from "./render-turn.ts";
+import { PROSE_CUSTOM_TYPE, SUBMIT_DIRECTION_PACKET_TOOL } from "./render-turn.ts";
 
 /** 摘要行总数上限（含上次摘要折叠进来的行）。 */
 const MAX_DIGEST_LINES = 80;
@@ -42,22 +42,35 @@ export function buildSettlementCompactionSummary(
 function extractTurnLines(messages: ReadonlyArray<unknown>): string[] {
   const lines: string[] = [];
   let currentInputs: string[] = [];
+  let pendingProseExcerpt: string | undefined;
   for (const message of messages) {
     const userText = playerInputText(message);
     if (userText !== undefined) {
       currentInputs.push(userText);
       continue;
     }
+    const prose = proseMessageText(message);
+    if (prose !== undefined) {
+      pendingProseExcerpt = excerpt(prose, PROSE_EXCERPT_CHARS);
+      continue;
+    }
     const args = submitPacketArgs(message);
     if (args !== undefined) {
-      lines.push(formatTurnLine(currentInputs, args));
+      lines.push(formatTurnLine(currentInputs, args, pendingProseExcerpt));
       currentInputs = [];
+      pendingProseExcerpt = undefined;
     }
   }
   return lines;
 }
 
-function formatTurnLine(inputs: readonly string[], args: Record<string, unknown>): string {
+const PROSE_EXCERPT_CHARS = 60;
+
+function formatTurnLine(
+  inputs: readonly string[],
+  args: Record<string, unknown>,
+  proseExcerpt?: string,
+): string {
   const input = excerpt(inputs.join(" / "), PLAYER_INPUT_EXCERPT_CHARS);
   if (args["needsRender"] === false) {
     return `- 玩家「${input}」｜meta/OOC 轮，直接作答`;
@@ -68,7 +81,16 @@ function formatTurnLine(inputs: readonly string[], args: Record<string, unknown>
     ? args["resolvedChanges"].filter((entry): entry is string => typeof entry === "string")
     : [];
   const changeText = changes.length > 0 ? `→ ${changes.join("；")}` : "";
-  return `- 玩家「${input}」｜${playerAction}${changeText}`;
+  const proseText = proseExcerpt !== undefined ? ` ▸ 正文：${proseExcerpt}` : "";
+  return `- 玩家「${input}」｜${playerAction}${changeText}${proseText}`;
+}
+
+function proseMessageText(message: unknown): string | undefined {
+  if (!isRecord(message) || message["role"] !== "custom") return undefined;
+  if (message["customType"] !== PROSE_CUSTOM_TYPE) return undefined;
+  const content = message["content"];
+  if (typeof content === "string") return content.trim() === "" ? undefined : content;
+  return undefined;
 }
 
 /** 上次摘要里的索引行（"- " 开头）原样折叠进来，保持跨多次 compaction 的连续性。 */
