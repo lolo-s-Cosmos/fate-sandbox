@@ -31,6 +31,10 @@ function proseMessage(text: string): Record<string, unknown> {
   return { role: "custom", customType: PROSE_CUSTOM_TYPE, content: text, display: true };
 }
 
+function proseCustomEntry(text: string): Record<string, unknown> {
+  return { type: "custom_message", customType: PROSE_CUSTOM_TYPE, content: text, display: true };
+}
+
 function injectedPromptMessage(header: string): Record<string, unknown> {
   return {
     role: "user",
@@ -65,6 +69,15 @@ void test("findPendingDirectionPacket ignores already-rendered turns", () => {
     userMessage("贴上去！"),
     packetCallMessage(PACKET_ARGS),
     proseMessage("已渲染的正文。"),
+  ]);
+  assert.equal(pending, undefined);
+});
+
+void test("findPendingDirectionPacket ignores persisted custom_message prose entries", () => {
+  const pending = findPendingDirectionPacket([
+    userMessage("贴上去！"),
+    packetCallMessage(PACKET_ARGS),
+    proseCustomEntry("已持久化的正文。"),
   ]);
   assert.equal(pending, undefined);
 });
@@ -109,6 +122,27 @@ void test("buildRendererMessages builds an append-only conversation shape", () =
   assert.match(final, /eventWeight=normal; resolvedChanges=1; npcStances=0/);
   assert.match(final, /First turn # Current Player Input into in-scene action or speech/);
   assert.match(final, /Output only Chinese body prose/);
+});
+
+void test("buildRendererMessages includes persisted custom_message prose history", () => {
+  const messages = buildRendererMessages(
+    [
+      userMessage("第一轮输入"),
+      packetCallMessage(PACKET_ARGS),
+      proseCustomEntry("第一轮持久化正文。"),
+      userMessage("继续。"),
+      packetCallMessage(PACKET_ARGS),
+    ],
+    parseDirectionPacket(PACKET_ARGS, "packet"),
+  );
+
+  assert.deepEqual(
+    messages.map((entry) => entry.role),
+    ["user", "assistant", "user"],
+  );
+  assert.equal(messages[0]?.text, "第一轮输入");
+  assert.equal(messages[1]?.text, "第一轮持久化正文。");
+  assert.match(messages[2]?.text ?? "", /继续。/);
 });
 
 void test("buildRendererMessages keeps player input and filters injected settlement prompts", () => {

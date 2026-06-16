@@ -281,9 +281,7 @@ export function buildLintRetryMessages(
 }
 
 function isProseMessage(message: unknown): message is Record<string, unknown> {
-  return (
-    isRecord(message) && message["role"] === "custom" && message["customType"] === PROSE_CUSTOM_TYPE
-  );
+  return isRecord(message) && message["customType"] === PROSE_CUSTOM_TYPE;
 }
 
 function customMessageText(message: Record<string, unknown>): string {
