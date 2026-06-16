@@ -213,7 +213,7 @@ function allProseRules(): ProseRule[] {
   return [...PROSE_RULES, ...loadLocalProseRules()];
 }
 
-function minimumProseUnits(context: ProseLengthContext): number {
+export function minimumProseUnits(context: ProseLengthContext): number {
   const policy = PROSE_LENGTH_POLICIES[context.eventWeight];
   const resolvedChangeCount = Math.max(0, context.resolvedChangeCount);
   const npcStanceCount = Math.max(0, context.npcStanceCount);

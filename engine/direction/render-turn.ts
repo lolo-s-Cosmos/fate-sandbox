@@ -5,6 +5,7 @@ import {
   findSecretLeaks,
   lintFinalProse,
   lintProseLength,
+  minimumProseUnits,
   proseLengthContextFromPacket,
 } from "../audit/lint-rules.ts";
 import { isRecord } from "../core/typebox-validation.ts";
@@ -119,10 +120,28 @@ export function buildRendererMessages(
     JSON.stringify(packet, null, 2),
     "```",
     "",
+    ...buildLengthFloorSection(packet),
     "Render this turn under the system-prompt contract. First turn # Current Player Input into in-scene action or speech, then render consequences under the Direction Packet constraints. Output only Chinese body prose.",
   );
   result.push({ role: "user", text: finalSections.join("\n") });
   return result;
+}
+
+function buildLengthFloorSection(packet: DirectionPacket): string[] {
+  const context = proseLengthContextFromPacket(packet);
+  if (context === undefined) {
+    return [];
+  }
+  const minimum = minimumProseUnits(context);
+  return [
+    "# Render Length Floor (linted)",
+    "",
+    `Minimum readable units for this turn: ${minimum} 字.`,
+    `Lint context: eventWeight=${context.eventWeight}; resolvedChanges=${context.resolvedChangeCount}; npcStances=${context.npcStanceCount}.`,
+    "This floor is checked before and after the lint retry. Count CJK characters and Latin/number words; punctuation, headings, labels, XML, and Markdown do not help.",
+    "Meet the floor by unfolding real process: player action, every resolvedChange, NPC reaction or silence, body cost, space or object change, and endWindow pressure. Do not pad, summarize, or repeat.",
+    "",
+  ];
 }
 
 function collectRenderedTurns(
