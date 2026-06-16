@@ -21,6 +21,8 @@ The local data store is an index and guardrail. It confirms who to look up, whic
 
 When exact canon is required, retrieve sources directly. Do not hard-code from memory or incomplete local fields, especially for Servant parameters, skills, Noble Phantasms, class eligibility, true names, appearance, faction relationships, and version differences.
 
+Possession, disguise, split identity, altered appearance, mirror/self-perception, summoning exceptions, cross-world identity, route timing, and who-knows-what boundaries are canon-sensitive. A one-line local summary is not enough. Confirm the identity layer, appearance layer, knowledge boundary, and timing before staging the character.
+
 Same-name cross-version characters are high risk. Rin Tohsaka, Shinji Matou, Rider, Saber, and similar names cannot be substituted across FSN / EXTRA / CCC / FSF. Before a preset character first appears, first speaks, or first affects the player's choice, confirm that version's appearance, position, relationships, and action limits.
 
 Source priority: official sites / official material / original text quotes > TYPE-MOON Wiki JP > TMdict > TYPE-MOON Fandom / English wiki > Chinese wiki. Power rankings, forum posts, video explainers, SEO articles, and AI summary pages are not canon sources.
