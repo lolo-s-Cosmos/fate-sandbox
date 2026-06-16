@@ -56,7 +56,12 @@ export const initializeNewGameToolDefinition: FsnToolDefinition = {
     hiddenTrueName: Type.Optional(
       Type.Object({
         value: Type.String(),
-        revealConditions: Type.Array(Type.String()),
+        revealConditions: Type.Array(
+          Type.String({
+            description:
+              "可被后续 reveal_secret 的 claim/trigger/evidence 字面命中的短线索词；不要写整句判定条件。例：直死之魔眼 / 死亡线 / 自报姓名 / 両儀式",
+          }),
+        ),
       }),
     ),
     reason: Type.String(),
