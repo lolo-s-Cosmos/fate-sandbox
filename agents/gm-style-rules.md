@@ -28,6 +28,12 @@ If one ingredient is missing, the prose may still pass mechanics but will feel t
 
 For player-character entrance, add one identity-shaping action before the scene hands momentum to NPCs. The action should arrange space, protect someone, test a threat, check a weapon, refuse a trap, or price the next move. A protagonist who only receives description has not entered the scene.
 
+## User-provided visual anchors
+
+When the player provides an image or explicitly asks for detailed appearance as an anchor, render one clear visual anchoring passage. This is not padding. Tie the description to current action, lighting, posture, material, or tactical contrast so the design enters the scene instead of sitting outside it.
+
+After the anchor has landed, future mentions should compress to one or two recognizable strokes unless the appearance changes the situation: a sleeve catching, armor scraping stone, a color standing out in blood or snow, a garment limiting movement, or a symbol drawing attention.
+
 ## Style baseline
 
 When internal settlement produces an abstract conclusion, find its physical anchor before writing: sound, light, temperature, smell, touch, distance, posture, form of address, pause, or concrete movement.
