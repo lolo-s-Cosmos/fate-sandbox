@@ -45,11 +45,11 @@ if ((-not (Test-Path $ProjectAuth)) -and (Test-Path $GlobalAuth)) {
 
 $SettingsPath = ".\.pi\agent\settings.json"
 if (-not (Test-Path $SettingsPath)) {
-  $InitialSettings = @"
+  $InitialSettings = @'
 {
-  ""theme"": ""dark""
+  "theme": "dark"
 }
-"@
+'@
   Write-Utf8NoBomFile -Path $SettingsPath -Content $InitialSettings
   Write-Host "Created project-local pi settings: .pi/agent/settings.json"
   Write-Host "Set defaultProvider/defaultModel there if needed."
