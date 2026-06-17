@@ -25,6 +25,7 @@ import {
   type RendererMessage,
 } from "../../engine/direction/render-turn.ts";
 import { buildRendererSystemPrompt } from "../../engine/gm-prompt/injection.ts";
+import { registerRerollCommand } from "./reroll.ts";
 
 const RENDERER_MAX_TOKENS = 8192;
 /** 伪流式预览 widget：只展示尾部若干行，避免长正文压满屏幕。 */
@@ -45,6 +46,17 @@ const IDLE_POLL_MAX_ATTEMPTS = 400;
  */
 export default function twoPassRenderExtension(pi: ExtensionAPI): void {
   pi.registerMessageRenderer(PROSE_CUSTOM_TYPE, renderProseMessage);
+  registerRerollCommand(pi, {
+    render: (ctx, messages, packet, variantKey) => {
+      syncStateFromSessionManager(ctx.sessionManager);
+      const unrevealedSecrets = collectUnrevealedSecretStrings(getState().secrets);
+      return renderProse(ctx, messages, packet, unrevealedSecrets, { variantKey });
+    },
+    afterSend: (ctx, pending, prose) => {
+      void writeTurnDigest(ctx, pending, prose);
+    },
+    cleanup: clearRenderWidget,
+  });
 
   const renderedToolCallIds = new Set<string>();
 
@@ -119,11 +131,16 @@ function rendererNameEntries(state: ReturnType<typeof getState>): Array<{
     .filter((entry) => entry.renderName !== entry.displayName);
 }
 
+interface RenderProseOptions {
+  variantKey?: string;
+}
+
 async function renderProse(
   ctx: ExtensionContext,
   loopMessages: ReadonlyArray<unknown>,
   packet: RenderDirectionPacket,
   unrevealedSecrets: readonly string[],
+  options: RenderProseOptions = {},
 ): Promise<RenderedProse | undefined> {
   const model = resolveRendererModel(ctx);
   if (model === undefined) {
@@ -148,6 +165,10 @@ async function renderProse(
     loadProseDigests(),
     rendererNameEntries(state),
   );
+  const rendererMessages =
+    options.variantKey === undefined
+      ? baseMessages
+      : buildRerollRendererMessages(baseMessages, options.variantKey);
 
   try {
     setWorking(ctx, "渲染本轮正文…");
@@ -156,7 +177,7 @@ async function renderProse(
       model,
       auth,
       systemPrompt,
-      baseMessages,
+      rendererMessages,
       "渲染中",
       "render",
     );
@@ -172,7 +193,7 @@ async function renderProse(
       model,
       auth,
       systemPrompt,
-      buildLintRetryMessages(baseMessages, first, firstReport.findings),
+      buildLintRetryMessages(rendererMessages, first, firstReport.findings),
       "重写中",
       "lint-retry",
     );
@@ -192,6 +213,25 @@ async function renderProse(
   } finally {
     setWorking(ctx, undefined);
   }
+}
+
+function buildRerollRendererMessages(
+  baseMessages: readonly RendererMessage[],
+  variantKey: string,
+): RendererMessage[] {
+  return [
+    ...baseMessages,
+    {
+      role: "user",
+      text: [
+        "# Reroll Request",
+        "",
+        "Rewrite this same turn from scratch. Preserve every binding fact in the Direction Packet exactly: no new outcomes, time jumps, secret reveals, injuries, items, money changes, or relationship changes.",
+        "Change only the visible prose surface: pacing, sentence shape, sensory focus, blocking, and dialogue texture.",
+        `Variant key: ${variantKey}`,
+      ].join("\n"),
+    },
+  ];
 }
 
 /**

@@ -2,6 +2,8 @@
 
 ## v0.1.0 (未发布)
 
+- 新增 `/reroll` 正文重 roll 命令（`extensions/two-pass-render/`）：复用上一轮结算包，
+  只重跑渲染段并替换最后一条 `fsn-prose`，不改变游戏状态。
 - 新增 `/fuck [N]` 快速回退命令（`extensions/rewind/`）：中断当前生成、回到倒数第 N 条用户输入之前、从 session 文件物理删除废弃分支，原输入回填输入框便于修改重发；游戏状态由 session_tree 钩子自动从回退点快照重新水合。
 
 - 架构：工具契约（name/description/parameters）与实现合并到同一文件：每个工具导出 `FsnToolDefinition`，`tools/registry.ts` 从 1087 行缩为 60 行注册清单；共享 entry schema 片段归位各工具文件（time policy 入 `time-policy-tool-schema.ts`）；`reset_state`/`lookup`/`patch_state`/`resolve_combat_exchange` 边界改收 `unknown` 并自行归一化，删除 `PatchOp`/`RawCombatExchangeInput` 死类型；registry 测试升级为全工具文件的 loose-schema 守卫 + registry 瘦身断言。
