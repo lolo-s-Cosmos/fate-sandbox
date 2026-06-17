@@ -28,6 +28,8 @@ import { buildRendererSystemPrompt } from "../../engine/gm-prompt/injection.ts";
 import { registerRerollCommand } from "./reroll.ts";
 
 const RENDERER_MAX_TOKENS = 8192;
+const DEFAULT_RENDER_LINT_RETRIES = 3;
+const MAX_RENDER_LINT_RETRIES = 6;
 /** 伪流式预览 widget：只展示尾部若干行，避免长正文压满屏幕。 */
 const RENDER_WIDGET_KEY = "fsn-render-preview";
 const RENDER_WIDGET_TAIL_LINES = 12;
@@ -172,7 +174,7 @@ async function renderProse(
 
   try {
     setWorking(ctx, "渲染本轮正文…");
-    const first = await streamProse(
+    let draft = await streamProse(
       ctx,
       model,
       auth,
@@ -181,32 +183,36 @@ async function renderProse(
       "渲染中",
       "render",
     );
-    const firstReport = lintRenderedProse(first, unrevealedSecrets, packet);
-    if (firstReport.findings.length === 0) {
-      return { text: first, lintRuleIds: [] };
+    let report = lintRenderedProse(draft, unrevealedSecrets, packet);
+    if (report.findings.length === 0) {
+      return { text: draft, lintRuleIds: [] };
     }
 
-    // 一次重试：把首次产出与违规清单回喂渲染器重写全文。
-    setWorking(ctx, "文风返工重写中…");
-    const second = await streamProse(
-      ctx,
-      model,
-      auth,
-      systemPrompt,
-      buildLintRetryMessages(rendererMessages, first, firstReport.findings),
-      "重写中",
-      "lint-retry",
-    );
-    const secondReport = lintRenderedProse(second, unrevealedSecrets, packet);
-    const lintRuleIds = secondReport.findings.map((finding) => finding.ruleId);
-    if (secondReport.leaks.length > 0) {
-      notify(ctx, "two-pass render: secret leak persisted after retry, redacted", "error");
-      return { text: redactSecrets(second, unrevealedSecrets), lintRuleIds };
+    const maxRetries = resolveRenderLintRetries(ctx);
+    for (let retryIndex = 1; retryIndex <= maxRetries; retryIndex++) {
+      setWorking(ctx, `文风返工重写中…(${retryIndex}/${maxRetries})`);
+      draft = await streamProse(
+        ctx,
+        model,
+        auth,
+        systemPrompt,
+        buildLintRetryMessages(rendererMessages, draft, report.findings),
+        `重写中 ${retryIndex}/${maxRetries}`,
+        "lint-retry",
+      );
+      report = lintRenderedProse(draft, unrevealedSecrets, packet);
+      if (report.findings.length === 0) {
+        return { text: draft, lintRuleIds: [] };
+      }
     }
-    if (lintRuleIds.length > 0) {
-      notify(ctx, `two-pass render: style findings remain (${lintRuleIds.join(", ")})`, "warning");
+
+    const lintRuleIds = report.findings.map((finding) => finding.ruleId);
+    if (report.leaks.length > 0) {
+      notify(ctx, "two-pass render: secret leak persisted after retries, redacted", "error");
+      return { text: redactSecrets(draft, unrevealedSecrets), lintRuleIds };
     }
-    return { text: second, lintRuleIds };
+    notify(ctx, `two-pass render: style findings remain (${lintRuleIds.join(", ")})`, "warning");
+    return { text: draft, lintRuleIds };
   } catch (error) {
     notify(ctx, `two-pass render failed (${formatError(error)}), falling back`, "warning");
     return undefined;
@@ -501,6 +507,27 @@ function resolveRenderCacheRetention(ctx: ExtensionContext): CacheRetention {
   }
   notify(ctx, `FATE_RENDER_CACHE 应为 none|short|long，得到：${raw}，已回退 short`, "warning");
   return "short";
+}
+
+/**
+ * 文风 lint 失败后的整轮重写次数。默认 3 次；`FATE_RENDER_LINT_RETRIES=0`
+ * 可关闭自动返工，最大 6 次避免坏模型烧空上下文和预算。
+ */
+function resolveRenderLintRetries(ctx: ExtensionContext): number {
+  const raw = process.env["FATE_RENDER_LINT_RETRIES"]?.trim();
+  if (raw === undefined || raw === "") {
+    return DEFAULT_RENDER_LINT_RETRIES;
+  }
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 0 || value > MAX_RENDER_LINT_RETRIES) {
+    notify(
+      ctx,
+      `FATE_RENDER_LINT_RETRIES 应为 0~${MAX_RENDER_LINT_RETRIES} 的整数，得到：${raw}，已回退 ${DEFAULT_RENDER_LINT_RETRIES}`,
+      "warning",
+    );
+    return DEFAULT_RENDER_LINT_RETRIES;
+  }
+  return value;
 }
 
 /**
