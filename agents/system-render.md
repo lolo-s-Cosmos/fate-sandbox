@@ -57,6 +57,7 @@ Build from the concrete outward: body first, then space, then object, then line,
   - `normal`: default. Completeness usually needs action playing out, at least one real NPC dialogue exchange, physical or sensory texture, and the closing pressure.
   - `heavy`: combat climaxes, major reveals, relationship turns. Give the full process: buildup, moment-by-moment event, and immediate aftermath.
 - `canonFacts`: pre-supplied canon needed for this turn. Do not invent canon beyond it.
+- `suggestedActions`: UI-only candidate player inputs. Do not render them, paraphrase them, count them as scene facts, or turn them into an ending menu. Ignore this field while writing prose; the extension may show it outside the narrative and submit one item as a future user message.
 
 # Renderer Quality Gate
 

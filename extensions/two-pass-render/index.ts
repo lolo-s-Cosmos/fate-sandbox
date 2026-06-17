@@ -4,7 +4,10 @@ import type {
   MessageRenderer,
 } from "@earendil-works/pi-coding-agent";
 
-import type { RenderDirectionPacket } from "../../engine/direction/packet-schema.ts";
+import type {
+  RenderDirectionPacket,
+  SuggestedAction,
+} from "../../engine/direction/packet-schema.ts";
 
 import { stream, streamSimple } from "@earendil-works/pi-ai";
 import { getMarkdownTheme } from "@earendil-works/pi-coding-agent";
@@ -13,6 +16,7 @@ import { Markdown, Text } from "@earendil-works/pi-tui";
 import { collectUnrevealedSecretStrings } from "../../engine/audit/lint-rules.ts";
 import { syncStateFromSessionManager } from "../../engine/core/session-hydration.ts";
 import { getState } from "../../engine/core/state-store.ts";
+import { isRecord } from "../../engine/core/typebox-validation.ts";
 import { loadProseDigests, saveProseDigest } from "../../engine/direction/prose-digest-store.ts";
 import {
   buildLintRetryMessages,
@@ -25,6 +29,7 @@ import {
   type RendererMessage,
 } from "../../engine/direction/render-turn.ts";
 import { buildRendererSystemPrompt } from "../../engine/gm-prompt/injection.ts";
+import { setChoiceWidget } from "../player-choices/index.ts";
 import { registerRerollCommand } from "./reroll.ts";
 
 const RENDERER_MAX_TOKENS = 8192;
@@ -55,6 +60,9 @@ export default function twoPassRenderExtension(pi: ExtensionAPI): void {
       return renderProse(ctx, messages, packet, unrevealedSecrets, { variantKey });
     },
     afterSend: (ctx, pending, prose) => {
+      if (pending.packet.needsRender) {
+        setChoiceWidget(ctx, pending.packet.suggestedActions ?? []);
+      }
       void writeTurnDigest(ctx, pending, prose);
     },
     cleanup: clearRenderWidget,
@@ -80,7 +88,11 @@ export default function twoPassRenderExtension(pi: ExtensionAPI): void {
       sendProseWhenIdle(pi, ctx, buildFallbackProse(packet), { kind: "render-fallback" });
       return;
     }
-    sendProseWhenIdle(pi, ctx, prose.text, { kind: "rendered", lintRuleIds: prose.lintRuleIds });
+    sendProseWhenIdle(pi, ctx, prose.text, {
+      kind: "rendered",
+      lintRuleIds: prose.lintRuleIds,
+      suggestedActions: packet.suggestedActions,
+    });
     // backlog #13：独立 writer 异步产出本轮高质量摘要，供后续轮次的摘要层使用。
     // 失败静默——机械 packet 摘要永远是兜底。
     void writeTurnDigest(ctx, pending, prose.text);
@@ -101,6 +113,8 @@ function sendProseWhenIdle(
 ): void {
   if (ctx.isIdle()) {
     sendProse(pi, text, details);
+    const suggestedActions = readSuggestedActionsFromDetails(details);
+    setChoiceWidget(ctx, suggestedActions);
     clearRenderWidget(ctx);
     return;
   }
@@ -598,6 +612,25 @@ function buildFallbackProse(packet: RenderDirectionPacket): string {
     "",
     `> ${packet.endWindow}`,
   ].join("\n");
+}
+
+function readSuggestedActionsFromDetails(details: Record<string, unknown>): SuggestedAction[] {
+  const raw = details["suggestedActions"];
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  const actions: SuggestedAction[] = [];
+  for (const action of raw) {
+    if (!isRecord(action)) {
+      continue;
+    }
+    const label = action["label"];
+    const submitText = action["submitText"];
+    if (typeof label === "string" && typeof submitText === "string") {
+      actions.push({ label, submitText });
+    }
+  }
+  return actions;
 }
 
 function sendProse(pi: ExtensionAPI, text: string, details: Record<string, unknown>): void {

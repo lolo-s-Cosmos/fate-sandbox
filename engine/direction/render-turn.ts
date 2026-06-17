@@ -129,6 +129,7 @@ export function buildRendererMessages(
     "```",
     "",
     ...buildLengthFloorSection(packet),
+    "suggestedActions, when present, are UI-only. Do not mention, number, summarize, or paraphrase them in prose; end on endWindow pressure instead.",
     "Render this turn under the system-prompt contract. First turn # Current Player Input into in-scene action or speech, then render consequences under the Direction Packet constraints. Output only Chinese body prose.",
   );
   result.push({ role: "user", text: finalSections.join("\n") });

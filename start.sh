@@ -93,6 +93,7 @@ pi \
   -e ./extension.ts \
   -e ./extensions/compaction-policy/index.ts \
   -e ./extensions/player-panel/index.ts \
+  -e ./extensions/player-choices/index.ts \
   -e ./extensions/rewind/index.ts \
   -e ./extensions/two-pass-render/index.ts \
   --session-dir ./sessions \

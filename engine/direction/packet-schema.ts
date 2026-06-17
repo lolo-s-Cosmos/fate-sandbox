@@ -28,6 +28,12 @@ export const NPC_STANCE_SCHEMA = Type.Object({
 });
 export type NpcStance = Static<typeof NPC_STANCE_SCHEMA>;
 
+export const SUGGESTED_ACTION_SCHEMA = Type.Object({
+  label: Type.String({ minLength: 1 }),
+  submitText: Type.String({ minLength: 1 }),
+});
+export type SuggestedAction = Static<typeof SUGGESTED_ACTION_SCHEMA>;
+
 export const RENDER_DIRECTION_PACKET_SCHEMA = Type.Object({
   needsRender: Type.Literal(true),
   /** 结算后的玩家行动认定（binding） */
@@ -42,6 +48,10 @@ export const RENDER_DIRECTION_PACKET_SCHEMA = Type.Object({
   eventWeight: stringEnumSchema(EVENT_WEIGHTS),
   /** 渲染所需 canon 预填；渲染器不得超出它编造原作设定 */
   canonFacts: Type.Array(Type.String({ minLength: 1 })),
+  /** UI 层候选行动，不进入正文；extension 可把 submitText 作为真正 user message 发出 */
+  suggestedActions: Type.Optional(
+    Type.Array(SUGGESTED_ACTION_SCHEMA, { minItems: 1, maxItems: 4 }),
+  ),
 });
 export type RenderDirectionPacket = Static<typeof RENDER_DIRECTION_PACKET_SCHEMA>;
 

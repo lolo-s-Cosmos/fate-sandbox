@@ -31,6 +31,58 @@ void test("parseDirectionPacket accepts a valid render packet", () => {
   }
 });
 
+void test("parseDirectionPacket accepts suggested UI actions", () => {
+  const packet = parseDirectionPacket(
+    {
+      ...VALID_RENDER_PACKET,
+      suggestedActions: [
+        { label: "追上去", submitText: "我追上去，先观察对方路线。" },
+        { label: "检查现场", submitText: "我先检查刚才留下的痕迹。" },
+      ],
+    },
+    "packet",
+  );
+  assert.equal(packet.needsRender, true);
+  if (packet.needsRender) {
+    assert.equal(packet.suggestedActions?.[0]?.label, "追上去");
+  }
+});
+
+void test("parseDirectionPacket rejects too many suggested UI actions", () => {
+  assert.throws(
+    () =>
+      parseDirectionPacket(
+        {
+          ...VALID_RENDER_PACKET,
+          suggestedActions: [
+            { label: "A", submitText: "A" },
+            { label: "B", submitText: "B" },
+            { label: "C", submitText: "C" },
+            { label: "D", submitText: "D" },
+            { label: "E", submitText: "E" },
+          ],
+        },
+        "packet",
+      ),
+    /suggestedActions/,
+  );
+});
+
+void test("scanDirectionPacket blocks secret in suggested action submitText", () => {
+  const packet = parseDirectionPacket(
+    {
+      ...VALID_RENDER_PACKET,
+      suggestedActions: [{ label: "说破", submitText: "我说出两仪式的名字。" }],
+    },
+    "packet",
+  );
+  const verdict = scanDirectionPacket(packet, ["两仪式"]);
+  assert.equal(verdict.kind, "blocked");
+  if (verdict.kind === "blocked") {
+    assert.equal(verdict.findings[0]?.path, "suggestedActions[0].submitText");
+  }
+});
+
 void test("parseDirectionPacket accepts a direct reply packet", () => {
   const packet = parseDirectionPacket(
     { needsRender: false, directReply: "这是 OOC 解答。" },

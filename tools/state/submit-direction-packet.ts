@@ -37,9 +37,10 @@ function formatAccepted(packet: DirectionPacket): string {
   if (!packet.needsRender) {
     return "direction packet 已接收（直答轮）：directReply 将原样回复玩家。";
   }
+  const suggestedActionCount = packet.suggestedActions?.length ?? 0;
   return [
     "direction packet 已接收并通过 secret 防火墙，本轮结算结束。",
-    `binding 事实 ${packet.resolvedChanges.length} 条 / NPC 立场 ${packet.npcStances.length} 条 / 篇幅 ${packet.eventWeight}。`,
+    `binding 事实 ${packet.resolvedChanges.length} 条 / NPC 立场 ${packet.npcStances.length} 条 / UI 候选 ${suggestedActionCount} 条 / 篇幅 ${packet.eventWeight}。`,
     "渲染器将接手产出玩家可见正文。",
   ].join("\n");
 }
@@ -54,7 +55,8 @@ export const submitDirectionPacketToolDefinition: FsnToolDefinition = {
     "【严禁的行为】\n" +
     "- 在调用前后输出叙事正文（玩家看不到，渲染器也看不到）\n" +
     "- 把未揭示真名/隐藏宝具名写进任何字段（防火墙会整包拒绝）\n" +
-    "- 用它替代领域工具落账：时间/伤势/金钱/揭示必须先用对应工具结算",
+    "- 用它替代领域工具落账：时间/伤势/金钱/揭示必须先用对应工具结算\n" +
+    "- 把 UI 候选行动写进 endWindow 或正文；候选只能放 suggestedActions，且 submitText 必须像玩家自然输入",
   parameters: Type.Object({
     needsRender: Type.Boolean({
       description: "true=叙事轮（渲染器产出正文）；false=meta/OOC 直答轮",
@@ -88,6 +90,23 @@ export const submitDirectionPacketToolDefinition: FsnToolDefinition = {
       Type.String({ description: "binding：结尾必须落在自然接续点（叙事轮必填）" }),
     ),
     eventWeight: Type.Optional(stringEnumSchema(EVENT_WEIGHTS)),
+    suggestedActions: Type.Optional(
+      Type.Array(
+        Type.Object({
+          label: Type.String({ description: "UI 显示短标签，2-12 字为宜" }),
+          submitText: Type.String({
+            description:
+              "作为真正 user message 发送的自然玩家输入；必须是玩家可说/可做的一句话，不是机械选项标签",
+          }),
+        }),
+        {
+          minItems: 1,
+          maxItems: 4,
+          description:
+            "可选：玩家下一步候选行动。只给 UI 使用，不进入正文；禁止把菜单写进 endWindow 或正文",
+        },
+      ),
+    ),
     canonFacts: Type.Optional(
       Type.Array(Type.String(), {
         description: "渲染所需原作事实预填；渲染器没有 lookup，缺位它就会编（叙事轮必填，可为空数组）",
