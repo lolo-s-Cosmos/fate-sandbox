@@ -12,10 +12,7 @@ import { PROSE_CUSTOM_TYPE } from "../../engine/direction/render-turn.ts";
 
 const CHOICE_WIDGET_KEY = "fsn-player-choices";
 
-export type ChoiceCommand =
-  | { kind: "show" }
-  | { index: number; kind: "submit" }
-  | { kind: "custom"; text: string };
+export type ChoiceCommand = { kind: "show" } | { index: number; kind: "submit" };
 
 interface ChoiceSet {
   proseEntryId: string;
@@ -68,10 +65,6 @@ export function parseChoiceCommand(args: string): ChoiceCommand | undefined {
   if (trimmed === "") {
     return { kind: "show" };
   }
-  const custom = /^custom\s+(.+)$/su.exec(trimmed)?.[1]?.trim();
-  if (custom !== undefined && custom.length > 0) {
-    return { kind: "custom", text: custom };
-  }
   if (/^\d+$/u.test(trimmed)) {
     return { kind: "submit", index: Number(trimmed) - 1 };
   }
@@ -85,11 +78,7 @@ async function handleChoiceCommand(
 ): Promise<void> {
   const command = parseChoiceCommand(args);
   if (command === undefined) {
-    ctx.ui.notify("用法：/choice 1，或 /choice custom <自定义行动>", "warning");
-    return;
-  }
-  if (command.kind === "custom") {
-    sendUserChoice(pi, ctx, command.text);
+    ctx.ui.notify("用法：/choice 1；也可以忽略候选，直接输入你的行动", "warning");
     return;
   }
 

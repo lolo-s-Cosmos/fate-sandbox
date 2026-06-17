@@ -3,13 +3,10 @@ import test from "node:test";
 
 import { buildChoiceWidgetLines, parseChoiceCommand } from "./index.ts";
 
-void test("parseChoiceCommand parses submit, show, and custom commands", () => {
+void test("parseChoiceCommand parses submit and show commands", () => {
   assert.deepEqual(parseChoiceCommand(""), { kind: "show" });
   assert.deepEqual(parseChoiceCommand("2"), { kind: "submit", index: 1 });
-  assert.deepEqual(parseChoiceCommand("custom 我先退到门边观察。"), {
-    kind: "custom",
-    text: "我先退到门边观察。",
-  });
+  assert.equal(parseChoiceCommand("custom 我先退到门边观察。"), undefined);
   assert.equal(parseChoiceCommand("abc"), undefined);
 });
 
