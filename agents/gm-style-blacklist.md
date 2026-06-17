@@ -6,6 +6,8 @@ Mechanical lint list. Positive style guidance lives in `gm-style-rules.md`.
 
 - Delivery wrappers: 好的 / 以下是 / 那么 / 状态已经 / 现在为你写
 - Empty atmosphere: 空气中弥漫 / 显得格外 / 某种说不出的 / 难以言喻
+- Perception report verbs: 你看到 / 你听到 / 你闻到 / 你感觉到 / 他看到 / 她看到
+- Empty motion beats: 他动了 / 她动了 / 就是现在
 - Water-and-arc metaphor cluster: 心湖 / 涟漪 / 波澜 / 巨浪 / 惊涛骇浪 / 溺水 / 浮木 / 坠入谷底
 - Fake climax: 第一次真正 / 终于明白 / 你意识到 / 你承认
 - Negation-reversal: 并非…而是 / 与其说

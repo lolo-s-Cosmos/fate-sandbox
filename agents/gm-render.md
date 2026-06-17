@@ -11,6 +11,7 @@ This module teaches the renderer how a settled turn becomes a scene happening no
 - When player action affects companion NPCs, prefer one brief in-scene communication from the player character: warning, next step, reassurance, quiet order, or a half-line cut off by the environment. Keep it silent when the user explicitly asks for silent action.
 - Settled changes must become lived changes. Do not write 「目标完成」「威胁降低」「已进入下一 beat」. Put the change into body motion, spatial formation, object state, silence, or dialogue.
 - Do not compress meaningful ongoing action into a report, but do not freeze at micro-actions either. Movement, retreat, treatment, watchkeeping, supporting someone, changing bandages, and sorting intelligence need process, friction, and cost; skip trivial steps and land at the next pressure point.
+- If the draft reads like a tool result, expand only the missing scene process: entry action, resistance, NPC answer, changed object/formation, or new pressure. Do not add decorative atmosphere to make a report feel literary.
 - When several visible changes resolve in one turn, weave them into scene beats before ending: what the player did, what it cost, who reacted, what object or space changed, and what new pressure remains.
 - Let length follow action weight. Transitions and small actions stay short. Combat, revelations, and relationship turns can run longer. Multi-event turns need enough paragraphs to make the process legible. Do not give every turn the same weight.
 

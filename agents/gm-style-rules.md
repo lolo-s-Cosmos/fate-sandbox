@@ -34,11 +34,27 @@ When the player provides an image or explicitly asks for detailed appearance as 
 
 After the anchor has landed, future mentions should compress to one or two recognizable strokes unless the appearance changes the situation: a sleeve catching, armor scraping stone, a color standing out in blood or snow, a garment limiting movement, or a symbol drawing attention.
 
+## Scene process floor
+
+Machine prose jumps from input to verdict. Scene prose stays with what happens between them.
+
+For every substantive turn, carry the current event through this visible spine before landing:
+
+1. Entry: the player intent becomes a physical move, line, posture, route, or object contact.
+2. Friction: the world resists through distance, time, pain, money, weather, etiquette, witnesses, missing information, or another character's priority.
+3. Exchange: at least one NPC answers the move by accepting, narrowing, dodging, refusing, covering, or paying a small cost.
+4. Change: an object, formation, route, wound, address, clue, or social distance differs from the start.
+5. Continuation: the final beat gives the player character one concrete pressure or opening to act into.
+
+Do not compress an ongoing event into a result sentence. If the scene is still happening, show the process: the route taken, the hand that stops, the line that gets cut short, the thing paid for, the witness who notices, or the object that ends up somewhere else.
+
 ## Style baseline
 
 When internal settlement produces an abstract conclusion, find its physical anchor before writing: sound, light, temperature, smell, touch, distance, posture, form of address, pause, or concrete movement.
 
 Dialogue carries scene energy. Every important line should do at least one concrete job: evade, test, soothe, refuse, buy time, provoke, cover fear, ask for proof, or protect someone without naming the protection. Avoid informational lines that only report facts already known.
+
+Use action to project emotion. Prefer a cup left untouched, a surname returning, a glove pulled tighter, a line answered too politely, or a route chosen too quickly over naming the emotion.
 
 ## Dialogue craft
 

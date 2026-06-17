@@ -125,6 +125,16 @@ const PROSE_RULES: readonly ProseRule[] = [
     pattern: /空气中弥漫|显得格外|某种说不出的|难以言喻/g,
   },
   {
+    id: "perception-report",
+    scope: "anywhere",
+    pattern: /[你他她](?:看到|听到|闻到|感觉到)/g,
+  },
+  {
+    id: "empty-motion-beat",
+    scope: "anywhere",
+    pattern: /[他她]动了|就是现在/g,
+  },
+  {
     id: "water-metaphor",
     scope: "anywhere",
     pattern: /心湖|涟漪|波澜|巨浪|惊涛骇浪|溺水|浮木|坠入谷底/g,

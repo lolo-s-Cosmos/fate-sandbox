@@ -109,6 +109,15 @@ void test("empty-atmosphere hits stock phrases", () => {
   assert.ok(ruleIds("一种难以言喻的感觉。").includes("empty-atmosphere"));
 });
 
+void test("perception-report hits tell-first sensory report verbs", () => {
+  assert.ok(ruleIds("你看到门缝里漏出一点光。").includes("perception-report"));
+  assert.ok(ruleIds("她听到楼上传来第二声脚步。").includes("perception-report"));
+});
+
+void test("empty-motion-beat hits battle stock beats", () => {
+  assert.ok(ruleIds("就是现在。她动了。").includes("empty-motion-beat"));
+});
+
 void test("water-metaphor hits banned cluster", () => {
   assert.ok(ruleIds("心湖泛起涟漪。").includes("water-metaphor"));
   assert.ok(ruleIds("像抓住最后一根浮木。").includes("water-metaphor"));

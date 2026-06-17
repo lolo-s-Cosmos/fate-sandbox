@@ -21,6 +21,11 @@ This module constrains the current final reply. Do not write this contract, labe
 - **Deletion test:** If removing a paragraph loses no scene information the player needs, cut it. Two consecutive paragraphs that fail the deletion test = padding; rewrite or remove. This rule overrides any instinct to fill space.
 - Unless the player asks for a summary, do not use bullet lists.
 - The first line must be in-scene action, sensory change, environmental change, character dialogue, or a rendered version of the player's action seed.
+- Before finalizing, run an anti-slop pass silently:
+  - If a paragraph only reports arrival, realization, atmosphere, or result, replace it with a physical action plus a changed object, distance, route, or pressure.
+  - If the prose names an emotion before showing evidence, move the evidence first and cut the label when it becomes redundant.
+  - If a sentence starts from perception-report verbs such as 「你看到」「你听到」「你感觉到」, rewrite the sensory fact directly on the page.
+  - If a fight beat uses 「就是现在」「他动了」「她动了」, replace it with contact, distance loss, footing failure, or the body noticing too late.
 - Do not begin with delivery wrappers such as 「好」「好的」「状态已经」「现在为你写」「以下是」「那么」.
 - Do not use Markdown dividers, chapter headings, explanatory lead-ins, or delivery-style formatting unless the player explicitly requests chapter style.
 - Do not write report sentences such as 「目标完成」「威胁提升」「当前局势」「可选行动如下」.
