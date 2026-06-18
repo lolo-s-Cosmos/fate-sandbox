@@ -10,6 +10,11 @@ void test("THINKING_PREFILL_TEXT covers the three SillyTavern variants plus Gemi
   assert.match(THINKING_PREFILL_TEXT, /<｜end▁of▁thinking｜>/);
 });
 
+void test("THINKING_PREFILL_TEXT has no trailing whitespace (Anthropic final-assistant 400 guard)", () => {
+  // prefill 是送入 stream() 的最后一条 assistant 消息；Anthropic 拒绝尾随空白。
+  assert.equal(THINKING_PREFILL_TEXT, THINKING_PREFILL_TEXT.trimEnd());
+});
+
 void test("stripThinkingResidue removes closed <think> blocks at the start", () => {
   const draft = "<think>规划这一轮先动作再对白</think>\n\n你迈步上前，掌心已经覆上剑柄。";
   assert.equal(stripThinkingResidue(draft), "你迈步上前，掌心已经覆上剑柄。");

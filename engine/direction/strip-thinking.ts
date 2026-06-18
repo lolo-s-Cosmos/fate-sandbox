@@ -26,13 +26,18 @@
  * - `<｜end▁of▁thinking｜>`：DeepSeek 系特殊词元（与咩咩预设 -3 同款）
  *
  * 多写一行不收钱、漏写一种就漏一种，闭合标签写错也没副作用——模型只会忽略。
+ *
+ * 不得以空白收尾：prefill 是送入 stream() 的**最后一条 assistant 消息**，
+ * Anthropic 渲染模型对 final assistant content 的尾随空白会直接 400
+ * （`final assistant content cannot end with trailing whitespace`）。模型在
+ * 末行 `<｜end▁of▁thinking｜>` 后同行接正文也无妨——`stripThinkingResidue`
+ * 的前导残留剥离对同行续写照样生效。回归测试见 strip-thinking.test.ts。
  */
 export const THINKING_PREFILL_TEXT = [
   "</thinking>",
   "</think>",
   "</thought>",
   "<｜end▁of▁thinking｜>",
-  "",
 ].join("\n");
 
 /** 闭合段 `<think>…</think>` / `<thinking>…</thinking>` / `<thought>…</thought>`，全文匹配。 */
