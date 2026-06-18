@@ -11,7 +11,7 @@ void test("parseChoiceCommand parses submit and show commands", () => {
 
 void test("buildChoiceWidgetLines renders numbered full command text", () => {
   assert.deepEqual(
-    buildChoiceWidgetLines([{ submitText: "我追上去。" }, { submitText: "我检查现场。" }]),
-    ["── 可选行动（可忽略，直接手打也可以）──", "/choice 1  我追上去。", "/choice 2  我检查现场。"],
+    buildChoiceWidgetLines([{ submitText: "追上去。" }, { submitText: "检查现场。" }]),
+    ["── 可选行动（可忽略，直接手打也可以）──", "/choice 1  追上去。", "/choice 2  检查现场。"],
   );
 });
