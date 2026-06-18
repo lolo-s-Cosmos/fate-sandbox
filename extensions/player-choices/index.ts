@@ -34,6 +34,14 @@ export default function playerChoicesExtension(pi: ExtensionAPI): void {
   pi.on("session_tree", async (_event, ctx) => {
     refreshChoiceWidget(ctx);
   });
+
+  // 新一轮开始（玩家提交行动）立即清掉上一轮的候选 widget。否则本轮结算期间
+  // widget 仍显示上轮候选，而 branch 里已经出现更新的 message，/choice 的
+  // findLatestChoiceSet 会因「最新 prose 之后还有 message」而返回 undefined，造成
+  // 「widget 显示候选、选择却报错」的错位。本轮 prose 落地时会重新填上当轮候选。
+  pi.on("turn_start", async (_event, ctx) => {
+    clearChoiceWidget(ctx);
+  });
 }
 
 export function setChoiceWidget(ctx: ExtensionContext, actions: readonly SuggestedAction[]): void {
@@ -121,7 +129,7 @@ function refreshChoiceWidget(ctx: ExtensionContext): void {
   setChoiceWidget(ctx, choiceSet.actions);
 }
 
-function findLatestChoiceSet(branch: readonly SessionEntry[]): ChoiceSet | undefined {
+export function findLatestChoiceSet(branch: readonly SessionEntry[]): ChoiceSet | undefined {
   const proseIndex = findLastProseIndex(branch);
   if (proseIndex === undefined) {
     return undefined;

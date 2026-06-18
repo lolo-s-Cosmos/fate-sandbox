@@ -176,7 +176,7 @@ async function renderAndReplaceProse(
     }
 
     const pruned = pruneAbandonedSubtree(ctx.sessionManager, target.proseEntry.id, target.parentId);
-    sendRerolledProse(pi, target, prose);
+    sendRerolledProse(pi, target, prose, pending.packet.suggestedActions);
     callbacks.afterSend?.(ctx, pending, prose.text);
     ctx.ui.notify(rerollSuccessMessage({ pruned }), "info");
   } catch (error) {
@@ -191,6 +191,7 @@ function sendRerolledProse(
   pi: ExtensionAPI,
   target: ReadyRerollTarget,
   prose: RerollRenderedProse,
+  suggestedActions: RenderDirectionPacket["suggestedActions"],
 ): void {
   pi.sendMessage(
     {
@@ -202,6 +203,9 @@ function sendRerolledProse(
         replacedEntryId: target.proseEntry.id,
         toolCallId: target.pending.toolCallId,
         lintRuleIds: prose.lintRuleIds,
+        // 必须随重 roll 的正文一起持久化，否则 /choice 的 findLatestChoiceSet 读这条
+        // 新 prose 时拿不到候选，widget 显示候选、选择却报「无可用候选」。
+        ...(suggestedActions === undefined ? {} : { suggestedActions }),
       },
     },
     { triggerTurn: false },
