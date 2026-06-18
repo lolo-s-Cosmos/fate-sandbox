@@ -197,7 +197,7 @@ void test("buildRecapMarkdown shows campaign overview", () => {
   const md = buildRecapMarkdown(draft.public);
 
   assert.match(md, /前情提要/);
-  assert.match(md, /Fate 沙盒/);
+  assert.match(md, /Fate 叙事/);
   assert.match(md, /protagonist/i);
   assert.match(md, /Summoning/);
   assert.match(md, /当前悬念/);

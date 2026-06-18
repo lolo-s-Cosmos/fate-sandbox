@@ -15,7 +15,7 @@ void test("configureCampaign applies FSF Snowfield preset", () => {
   });
 
   const state = draft;
-  assert.equal(result.message, "Campaign 已配置：Fate/strange Fake 沙盒 (fsf, America/Denver)。");
+  assert.equal(result.message, "Campaign 已配置：Fate/strange Fake 叙事 (fsf, America/Denver)。");
   assert.equal(state.public.campaign.timeline, "fsf");
   assert.equal(state.public.clock.timezone, "America/Denver");
   assert.equal(state.public.clock.currentAt, "2008-06-03T03:28:00.000Z");
@@ -35,7 +35,7 @@ void test("configureCampaign applies Fate EXTRA SE.RA.PH preset", () => {
   });
 
   const state = draft;
-  assert.equal(result.message, "Campaign 已配置：Fate/EXTRA 沙盒 (extra, UTC)。");
+  assert.equal(result.message, "Campaign 已配置：Fate/EXTRA 叙事 (extra, UTC)。");
   assert.equal(state.public.campaign.timeline, "extra");
   assert.deepEqual(state.public.campaign.activeRuleSetIds, [
     "fate-worldview-filter",
@@ -60,7 +60,7 @@ void test("configureCampaign applies Fate EXTRA CCC far side preset", () => {
   });
 
   const state = draft;
-  assert.equal(result.message, "Campaign 已配置：Fate/EXTRA CCC 沙盒 (extra-ccc, UTC)。");
+  assert.equal(result.message, "Campaign 已配置：Fate/EXTRA CCC 叙事 (extra-ccc, UTC)。");
   assert.equal(state.public.campaign.timeline, "extra-ccc");
   assert.deepEqual(state.public.campaign.activeRuleSetIds, [
     "fate-worldview-filter",
