@@ -43,7 +43,7 @@ function parseToolInput(params: unknown): UpsertActorImpressionInput {
     presence: requireString(params["presence"], "presence"),
     actionStyle: requireString(params["actionStyle"], "actionStyle"),
     relationshipPosture: requireString(params["relationshipPosture"], "relationshipPosture"),
-    voiceMaterial: optionalString(params["voiceMaterial"]),
+    voiceMaterial: requireString(params["voiceMaterial"], "voiceMaterial"),
   };
 }
 
@@ -51,12 +51,6 @@ function requireString(value: unknown, field: string): string {
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new Error(`${field} 必须是非空字符串。`);
   }
-  return value.trim();
-}
-
-function optionalString(value: unknown): string | undefined {
-  if (value === undefined || value === null) return undefined;
-  if (typeof value !== "string") return undefined;
   return value.trim();
 }
 
@@ -76,9 +70,11 @@ export const updateActorImpressionToolDefinition: FateToolDefinition = {
     presence: Type.String({ description: "外在气场：给人的第一印象、体格/气质/压迫感（1 行）" }),
     actionStyle: Type.String({ description: "行动风格：说话习惯、决策偏好、典型行为模式（1 行）" }),
     relationshipPosture: Type.String({ description: "当前对主角的姿态（1 行）" }),
-    voiceMaterial: Type.Optional(
-      Type.String({ description: "可选：语气材料（口头禅、断句习惯、情绪标记）" }),
-    ),
+    voiceMaterial: Type.String({
+      description:
+        "语癖/对话范例（必填）：2-3 句该角色口吻的具体示例台词 + 用词/断句/语气特征 + 典型闪避或调侪方式；" +
+        "要具体到「只有这个角色会这么说」，禁止写抽象中性描述（如「说话直接/语气冷淡」）。从 canon 语感蒸馏，随情绪变化更新",
+    }),
   }),
   execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>
     updateActorImpressionTool(params, ctx.sessionManager),

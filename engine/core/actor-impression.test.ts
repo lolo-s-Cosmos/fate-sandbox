@@ -56,6 +56,7 @@ void test("upsertActorImpression updates existing card", () => {
     presence: "Confident",
     actionStyle: "Direct",
     relationshipPosture: "Guarded",
+    voiceMaterial: "哼，这点程度的魔术。",
   });
 
   upsertActorImpression(draft, {
@@ -63,6 +64,7 @@ void test("upsertActorImpression updates existing card", () => {
     presence: "Shaken after battle",
     actionStyle: "Cautious, less decisive",
     relationshipPosture: "Closer, more honest",
+    voiceMaterial: "…别误会，我只是。",
   });
 
   assert.equal(draft.public.actorImpressions.length, 1);
@@ -78,6 +80,7 @@ void test("upsertActorImpression rejects missing actor", () => {
         presence: "test",
         actionStyle: "test",
         relationshipPosture: "test",
+        voiceMaterial: "test",
       }),
     /不存在/,
   );
@@ -93,12 +96,14 @@ void test("presentActorImpressions returns only in-scene cards", () => {
     presence: "Confident",
     actionStyle: "Direct",
     relationshipPosture: "Guarded",
+    voiceMaterial: "哼。",
   });
   upsertActorImpression(draft, {
     actorId: "sakura",
     presence: "Quiet",
     actionStyle: "Reserved",
     relationshipPosture: "Caring",
+    voiceMaterial: "…学长。",
   });
 
   draft.public.scene.presentActorIds = ["protagonist", "rin"];

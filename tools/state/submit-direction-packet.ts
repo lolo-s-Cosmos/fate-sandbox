@@ -76,6 +76,10 @@ export const submitDirectionPacketToolDefinition: FateToolDefinition = {
           actorId: Type.String(),
           stance: Type.String({ description: "行为基调" }),
           wants: Type.String({ description: "本轮驱动其主动行为的欲望" }),
+          move: Type.String({
+            description:
+              "binding：本轮该 NPC 为追求 wants 而主动说出/做出的一个具体行为（一句台词/一个要求/一个肢体动作）；哪怕过场轮也要有。必须是该 NPC 自己的主动 beat，不是对玩家/环境的被动反应；缺位会让该 NPC 被渲染成被动布景",
+          }),
           refusesToSay: Type.String({
             description: "绝不说出口的话题；只描述拒说什么，严禁写入秘密本体",
           }),

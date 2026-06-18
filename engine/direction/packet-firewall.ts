@@ -44,6 +44,7 @@ function* packetStrings(packet: DirectionPacket): Generator<[path: string, text:
   for (const [i, stance] of packet.npcStances.entries()) {
     yield [`npcStances[${i}].stance`, stance.stance];
     yield [`npcStances[${i}].wants`, stance.wants];
+    yield [`npcStances[${i}].move`, stance.move];
     yield [`npcStances[${i}].refusesToSay`, stance.refusesToSay];
   }
 }

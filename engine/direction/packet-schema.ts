@@ -11,8 +11,8 @@ import { isRecord, parseTypeBoxValue, trimStringsDeep } from "../core/typebox-va
  * 接缝契约已由 docs/spike-two-pass/ 验证（GO）。
  *
  * 分层语义：
- * - binding（playerAction / resolvedChanges / endWindow）：渲染器必须落地，不得改写。
- * - free（sensoryAnchors / npcStances）：质感建议，渲染器可自由取舍。
+ * - binding（playerAction / resolvedChanges / endWindow / npcStances[].move）：渲染器必须落地，不得改写。
+ * - free（sensoryAnchors / npcStances 的 stance·wants·refusesToSay）：质感建议，渲染器可自由取舍。
  * - needsRender=false 的轮（meta/OOC）跳过渲染，直接回复 directReply。
  */
 
@@ -23,6 +23,12 @@ export const NPC_STANCE_SCHEMA = Type.Object({
   actorId: Type.String({ minLength: 1 }),
   stance: Type.String({ minLength: 1 }),
   wants: Type.String({ minLength: 1 }),
+  /**
+   * binding：本轮该 NPC 为追求 wants 而「主动」说出/做出的一个具体行为——一句台词、
+   * 一个要求、一个肢体动作。渲染器必须把它演成该 NPC 自己的主动 beat，不得下变换成
+   * 「观望/小心行走/沉默不语」等被动反应，也不得只让其对玩家或环境做出回应。
+   */
+  move: Type.String({ minLength: 1 }),
   /** 该角色本轮绝不说出口的内容。只描述「拒说什么」，禁止把秘密本体写进来。 */
   refusesToSay: Type.String({ minLength: 1 }),
 });

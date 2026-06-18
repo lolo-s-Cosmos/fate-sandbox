@@ -14,7 +14,7 @@ export interface UpsertActorImpressionInput {
   presence: string;
   actionStyle: string;
   relationshipPosture: string;
-  voiceMaterial?: string;
+  voiceMaterial: string;
 }
 
 export function upsertActorImpression(
@@ -30,7 +30,7 @@ export function upsertActorImpression(
     presence: assertNonEmptyString(input.presence, "presence"),
     actionStyle: assertNonEmptyString(input.actionStyle, "actionStyle"),
     relationshipPosture: assertNonEmptyString(input.relationshipPosture, "relationshipPosture"),
-    voiceMaterial: input.voiceMaterial?.trim() ?? "",
+    voiceMaterial: assertNonEmptyString(input.voiceMaterial, "voiceMaterial"),
     updatedAt: draft.public.clock.currentAt,
   };
   const index = draft.public.actorImpressions.findIndex((existing) => existing.actorId === actorId);
@@ -66,7 +66,7 @@ export function formatPresenceImpressionCards(state: State): string | null {
       `  对主角姿态：${card.relationshipPosture}`,
     );
     if (card.voiceMaterial.length > 0) {
-      lines.push(`  语气材料：${card.voiceMaterial}`);
+      lines.push(`  语癖/对话范例：${card.voiceMaterial}`);
     }
     lines.push("");
   }

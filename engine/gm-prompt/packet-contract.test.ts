@@ -16,6 +16,7 @@ const PACKET_FIELDS = [
   "playerAction",
   "resolvedChanges",
   "npcStances",
+  "move",
   "sensoryAnchors",
   "endWindow",
   "eventWeight",

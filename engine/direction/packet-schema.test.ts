@@ -13,6 +13,7 @@ const VALID_RENDER_PACKET = {
       actorId: "saber_shiki",
       stance: "平静但手腕绷紧",
       wants: "护住御主并寻找破局点",
+      move: "上前半步把御主拦在身后，护手点向敌人要一句话",
       refusesToSay: "自己还藏着一张足以终结战斗的底牌",
     },
   ],
@@ -145,6 +146,7 @@ void test("scanDirectionPacket blocks secret in refusesToSay with field path", (
           actorId: "saber_shiki",
           stance: "平静",
           wants: "保密",
+          move: "收刀入鞘，只留一句冷淡的驱逐",
           refusesToSay: "自己的真名是两仪式",
         },
       ],
@@ -156,6 +158,44 @@ void test("scanDirectionPacket blocks secret in refusesToSay with field path", (
   if (verdict.kind === "blocked") {
     assert.equal(verdict.findings.length, 1);
     assert.equal(verdict.findings[0]?.path, "npcStances[0].refusesToSay");
+    assert.equal(verdict.findings[0]?.secret, "两仪式");
+  }
+});
+
+void test("parseDirectionPacket rejects npcStance missing move", () => {
+  assert.throws(
+    () =>
+      parseDirectionPacket(
+        {
+          ...VALID_RENDER_PACKET,
+          npcStances: [{ actorId: "saber_shiki", stance: "平静", wants: "护主" }],
+        },
+        "packet",
+      ),
+    /move/,
+  );
+});
+
+void test("scanDirectionPacket blocks secret in npcStance move with field path", () => {
+  const packet = parseDirectionPacket(
+    {
+      ...VALID_RENDER_PACKET,
+      npcStances: [
+        {
+          actorId: "saber_shiki",
+          stance: "平静",
+          wants: "表明身份",
+          move: "报出真名两仪式，要求结盟",
+          refusesToSay: "底牌",
+        },
+      ],
+    },
+    "packet",
+  );
+  const verdict = scanDirectionPacket(packet, ["两仪式"]);
+  assert.equal(verdict.kind, "blocked");
+  if (verdict.kind === "blocked") {
+    assert.equal(verdict.findings[0]?.path, "npcStances[0].move");
     assert.equal(verdict.findings[0]?.secret, "两仪式");
   }
 });

@@ -14,6 +14,7 @@ const RENDER_PACKET = {
       actorId: "saber_shiki",
       stance: "平静但手腕绷紧",
       wants: "护住御主",
+      move: "上前半步拦在御主身前，冷声要对方报上来意",
       refusesToSay: "自己还藏着底牌",
     },
   ],

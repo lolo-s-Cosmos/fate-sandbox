@@ -18,7 +18,11 @@ Fields marked `binding` must reach the rendered scene. Fields marked `free` are 
 
 - `playerAction` (`binding`): the settled player intent as actively performed this turn. Preserve the core meaning while completing reasonable speech, movement, reactions, and minor tactics. Do not turn it into a new major decision, protected disclosure, or irreversible commitment.
 - `resolvedChanges` (`binding`): every settled visible fact that landed this turn. Include time, wounds, mana, money, location, revelation, beat transition, combat verdict, relationship signal, and cost when relevant. Write what the player should see, hear, feel, or infer.
-- `npcStances` (`player-safe`): the important NPC moves for this turn: what they demand, block, concede, dodge, or practically care about. Do not place the secret itself in `refusesToSay`.
+- `npcStances` (`player-safe`): one entry per present important NPC. `stance` is baseline tone, `wants` is the standing desire, `refusesToSay` is the dodged topic (never the secret itself). `move` (`binding`) is the single concrete thing this NPC actively says or does THIS turn to push `wants` — a line, a demand, a physical initiative — authored as the NPC's own initiative, not a reaction to the player or the environment, and required even in a quiet transit turn. A present important NPC with no `move` is a bug: the renderer then falls back to describing them as passive scenery, which is exactly the failure this field exists to prevent.
+  - `move` examples (write the third kind):
+    - Bad — passive reaction: "reacts to the danger", "walks carefully to save mana", "watches the corridor". This is scenery, not a move.
+    - Bad — narrated subtext: "pretends to praise the blade while actually reassessing attack range". Do not pre-explain the hidden purpose; the renderer will narrate it out loud. Keep the private reason in `wants`/`refusesToSay`.
+    - Good — own initiative with a public surface: "cuts in over the player to demand a two-minute halt before walking in blind", "tosses out that the steam ahead is thickening, without turning around". A concrete act the renderer can stage; let voice and a physical tell carry the private agenda.
 - `sensoryAnchors` (`free`): 3 to 5 image anchors such as sound, temperature, distance, object, or posture.
 - `endWindow` (`binding`): the new actionable situation where the scene stops for the player character. Use pressure, opening, challenge, exposed clue, changed formation, route change, or a cost only the player can answer. Do not turn it into a menu.
 - `eventWeight`: use `light` for pure transitions or simple confirmations, `normal` by default, and `heavy` for battles, major revelations, or relationship turns needing full process. This is a scene-completeness signal, not a word quota.
@@ -29,4 +33,4 @@ Fields marked `binding` must reach the rendered scene. Fields marked `free` are 
 
 ## Quality floor
 
-The packet is the renderer's only input. Missing settled changes disappear from the player's scene. Missing `npcStances` makes important NPCs inert. Missing `canonFacts` makes the renderer guess canon.
+The packet is the renderer's only input. Missing settled changes disappear from the player's scene. Missing `npcStances` makes important NPCs inert. An `npcStances` entry whose `move` is vague, reactive, or environment-driven ("reacts to the danger", "walks carefully", "stays alert") also makes the NPC inert: write a concrete agenda-driven act the renderer can stage verbatim. Missing `canonFacts` makes the renderer guess canon.

@@ -207,6 +207,7 @@ function buildPresenceImpressionsText(): string {
       text,
       "",
       "NPC 台词、行动、情绪必须与印象卡一致。重大变化后用 update_actor_impression 更新。",
+      "台词必须复刻「语癖/对话范例」里的用词、断句与语气：一句换个角色说也成立的中性功能台词算失败。宁可说得片面、留白、跳跃，也要是这个角色会说的话。",
     ].join("\n");
   } catch {
     return "印象卡注入失败；可能尚未初始化状态。";

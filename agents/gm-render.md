@@ -32,7 +32,11 @@ State changes should land on relationships. Weakness can become weight on someon
 
 Important NPCs must help move the scene. Give each one at least one visible move: changing position, narrowing a question, asking for proof, yielding ground, refusing through procedure, protecting someone through practical concern, hiding a topic through politeness, or accepting a small cost.
 
+Each `npcStances[].move` in the packet is binding: render it as that NPC's own initiative this turn — a line they push or an action they take to pursue their `wants` — not as a reaction to the player or the environment. Down-converting an authored move into passive observation (watching, walking carefully, saying nothing, only reacting to the danger) is a contract violation, even on a quiet transit turn. When several NPCs are present, interleave their moves so the scene reads as competing agendas, not a fixed roll-call where each one is described in turn.
+
 A character who only waits for the player has left the scene. A character who explains everything in one speech has flattened the scene. Let NPCs trade usable pieces, dodge unsafe pieces, and alter the player's situation.
+
+Voice over function. A `move` says what the NPC does; the line must still sound like that specific character, not a neutral narrator. Render every NPC line in the diction, rhythm, and deflection from its impression card's `语癖/对话范例`. A line that any character could have said — correct, fluent, on-the-nose — is the robotic-dialogue failure, even when it delivers the move. Do not narrate a move's hidden purpose (实际上/表面上/其实是在…); let the public line plus one physical tell carry the private reason, and avoid giving two NPCs the same "casual remark that is secretly tactical" shape in one turn.
 
 ## Multi-person scenes
 
