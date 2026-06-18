@@ -1,91 +1,60 @@
 # Tool Policy Module
 
-This Module only decides whether to call tools and which tool has priority. Final narration must not repeat this Module.
+This Module decides whether tools are needed and which tool family has priority.
 
-## Read state first
+## Core rules
 
-- Tool returns override the GM Brief. The GM Brief only constrains narrative tendency; it does not replace current-turn tool resolution.
-- Ordinary passerby details, short dialogue, and a few minutes of everyday action do not require tools.
-- Narration must not claim that time, location, resources, wounds, contracts, memory, or secret revelation changed before the corresponding tool succeeded. Resolve the tool first, then write the change.
+- Tool returns override the GM Brief.
+- Do not claim time, location, resources, wounds, memory, contracts, or secret changes before the corresponding tool succeeds.
+- Low-stakes passerby detail, short dialogue, and a few minutes of ordinary action usually do not need tools.
+- If a tool call fails, repair and retry. Do not bypass the failure in narration.
 
-## Tool failure
+## Canon lookup boundary
 
-- When a tool call fails, first repair the payload and retry. Do not bypass the tool by writing the failed state into narration.
-- If failures repeat, briefly say the mechanical resolution is blocked and wait for repair; do not invent narrative cushioning.
+Call `lookup` before settling when the turn depends on canon-sensitive identity, version, appearance, route timing, or who-knows-what facts, especially:
 
-## Canon queries
+- preset character first appearance
+- possession, disguise, split identity, altered appearance, or cross-world identity
+- true-name / public-name separation
+- version-specific relationships, limits, or presentation
 
-- **Canon-sensitive trigger (mandatory):** If the current turn depends on possession, disguise, split identity, altered appearance, mirror/self-perception, summoning exceptions, true-name/public-name separation, cross-world identity, route timing, or who knows a canon fact, do not proceed from memory or a short local summary. Call `lookup` first. If the local entry does not explicitly answer identity layer, appearance layer, knowledge boundary, and timing, use `web_search` with narrow queries and `fetch_content` for the page body before settling or rendering the scene.
-- **First-turn / new-character rule (mandatory):** On the opening turn of a new game, and whenever a preset character appears in a scene for the first time, call `lookup` for every actor in `presentActorIds` plus the current location **before** writing the direction packet. Put the returned appearance, personality, voice, relationship boundaries, and ability presentation into `canonFacts`. The renderer has no lookup access; if you skip this, it will hallucinate. Even if you "remember" the character from training data, call lookup anyway — training memory is not canon.
-- **User-provided reference rule (mandatory):** If the user provides a file, image, source excerpt, or says a local file is the appearance/reference for an actor, inspect that reference before `initialize_new_game`, `upsert_actor`, `update_actor_condition` outfit changes, or the direction packet that first renders the actor. Put extracted visual facts into actor `outfit.details`, `presentation`, or `canonFacts`. Do not create the actor first and plan to fill appearance later.
-- **Distinct-person rule (mandatory):** Possession, disguise, projection, or appearance override does not merge people. If canon says two minds/persons exist, materialize them as separate actors when both can matter to state, secrets, knowledge, relationships, or future autonomy. Use public appearance and knowledge boundaries to explain what observers see; do not collapse the hidden person into an alias of the visible one.
-- When preset characters, locations, concepts, timelines, or ability details are involved, and the current public brief / current tool results / explicit conversation context are insufficient: call `lookup` first to confirm local index and version limits.
-- When `lookup` gives only an index, boundary, or incomplete material, and exact canon is still required: call `web_search`, then `fetch_content` for the specific page body. Do not settle facts from search summaries alone.
-- Web research must answer the canon dimensions that make the scene risky, not just find a general wiki paragraph. For possession/disguise/summoning cases, explicitly verify: strict actor, active controller, public name, external appearance, self-perceived appearance, who knows the identity, when the state begins, when it ends, and what changes after it ends.
-- Before a preset character first appears, becomes scene focus, acts, or speaks in a way that reveals personality or relationships, use external research if local material lacks version-specific appearance, relationships, voice, current position, and action limits.
-- Before writing long-term state, staging a preset character, or resolving combat with Servant parameters, skills, Noble Phantasms, class eligibility, true names, appearance, faction relationships, or version differences, externally confirm if local data is incomplete or source quality is unclear.
-- External research is not the default action. First identify the single canon question for this turn. Calls to `web_search` must set `workflow: "none"` to disable the interactive curator. If using `queries`, each query must still be narrow.
-- Prefer Japanese name + work title + target field in search queries, such as `ペイルライダー Fate strange Fake ステータス` or `Fate EXTRA 遠坂リン 性格`. Do not search only `Rider` or `遠坂凛`.
-- External research results default to GM knowledge. Whether they can enter Public Game State, Campaign Memory, NPC dialogue, or body text is governed by information-safety rules.
-- If external research reveals a durable correction to local data, do not rely on memory next time. Carry it in this turn's `canonFacts`, and outside live gameplay patch the relevant `data/` entry so future sessions inherit the corrected canon.
+If local data is still insufficient for the current canon question, use `web_search` with narrow queries and then `fetch_content`. Do not settle exact canon from memory or search summaries alone.
 
-## Scene Beat lifecycle
+If the user supplied a file, image, or explicit appearance reference, inspect it before first render or outfit-changing state updates.
 
-- Entering complex investigation, infiltration, confrontation, retreat, or battle preparation: prefer `progress_scene_beat kind=begin`; close it with `kind=complete`. Outside beat lifecycle, use `commit_turn`. Top-level `time` is mandatory either way.
+## Turn structure
 
-## Turn pacing boundary
+- Use `progress_scene_beat` for complex investigation, infiltration, confrontation, retreat, or battle preparation.
+- Otherwise use `commit_turn` for aggregated state landing inside the current player action window.
+- Canonical turn tools require top-level `time`.
+- Resolve one player action window and its immediate consequences per reply.
+- If continuing would require another canonical turn, stop at the next actionable window for the player.
 
-- One assistant reply should resolve one player action window and its immediate consequences. Do not play through a second foreground action window in the same reply.
-- After a tool result closes a beat, defeats or retires an actor, records a major memory, advances sleep/rest/travel by more than 30 minutes, or introduces a new opponent / next beat / new scene pressure, stop forward-progress tools unless a state repair or required backstage landing remains.
-- If continuing would require another canonical turn, leave the next state as the final action window and wait for the player. The final prose must spend enough paragraphs on the resolved process before that window.
-- `parallel-line` may run for time skips or beat closures, but after its canonical landing, do not also play through the next foreground beat in the same reply.
+## State landing priorities
 
-## Domain Event Tool routing
+- wounds / fatigue → `update_actor_condition`
+- mana / Saint Graph loss → `update_servant_form`
+- money / material resources → `update_economy`
+- relationship movement with behavior evidence → `record_relationship_signal`
+- lasting hostility, missed windows, or durable residue → `record_memory`
+- offscreen hostile progress or world movement → `record_offscreen_event`
+- NPC goal / order / fear / initiative shift → `update_actor_agenda`
+- NPC knowledge / suspicion / false belief shift → `record_actor_knowledge`
+- important NPC voice / stance refresh → `update_actor_impression`
+- older logged facts needed again → `recall_memory`
 
-Per-tool usage rules live in each tool's schema description; follow them. Cross-tool routing:
+## Offscreen orchestration
 
-- If one reply changes scene / condition / servant / economy / memory, and Scene Beat lifecycle cannot cover it: aggregate with `commit_turn` inside the current player action window.
-- Before pressure enters narration, decide whether it needs state landing: wounds/fatigue use `update_actor_condition`; mana/Saint Graph loss use `update_servant_form`; money/resources use `update_economy`; relationship cost or trust movement use `record_relationship_signal`; lasting hostility or missed windows use `record_memory`; offscreen hostile progress uses `record_offscreen_event`.
-- When an important NPC gains/changes a goal, fear, order, or acts on their own initiative, use `update_actor_agenda`; when their knowledge, suspicion, false belief, or forbidden knowledge changes, use `record_actor_knowledge`; when a relationship turn creates behavior evidence, use `record_relationship_signal`. Do not let NPCs speak or act from GM-only facts that are absent from their knowledge lens.
-- 重要 NPC 入场、态度或关系重大变化、beat 结束、arc 转换、或 compaction 前，用 `update_actor_impression` 蒸馏或更新印象卡（presence / actionStyle / relationshipPosture / voiceMaterial）。印象卡在该 actor 在场时自动注入 pre-response，保证 compaction 后 NPC 声音一致性。
-- 需要回忆旧事实（GM brief 只有最近 3 条 eventLog）时，调用 `recall_memory`（关键词/actor/地点/scope 过滤），不要凭模型记忆编造已记录事实。
+Project-scope subagents are auditors or candidate generators only; the main GM still lands canonical state.
 
-## Project subagent routing
+- Call `timeline-showrunner` when timeline tone drifts, a beat spins in place, a mystery hook is being forced back without novelty, or the next offscreen ecosystem is unclear.
+- Advance `parallel-line` when time meaningfully advances, the turn includes rest / sleep / treatment / hiding / overnight stay, the beat closes, the arc transitions, or two consecutive turns lack meaningful cost or hostile movement.
+- Use `run_parallel_line` to assemble input; do not hand-write full `ParallelLineInput`.
 
-When calling subagents, explicitly use `agentScope: "project"`. Subagents provide audits or offscreen candidates only; the main GM remains responsible for state landing and player-visible narration.
+## Combat boundary
 
-### `timeline-showrunner`
+Call `resolve_combat_exchange` before writing the outcome of high-risk contested action: combat, pressured retreat, protection, restraint breaking, ability probing, or Noble Phantasm exchange.
 
-Call `timeline-showrunner` first in these cases:
+`resolve_combat_exchange` judges only the current exchange window. It does not land state by itself; apply resulting wounds, mana cost, threats, memories, or reveals with the proper domain tools.
 
-- Timeline tone drifts, mystery drags without actionable information, or a beat spins in place.
-- Two consecutive turns of progress or offscreen results contain only news, broadcasts, media framing, denser patrols, monitoring thresholds, or lockdown escalation without an interactive canon-ecology hook.
-- The player explicitly ignores, parks, or bypasses the same mystery hook, but the GM wants it to grab focus again without new information, new consequences, or payoff.
-- A key NPC becomes only a clue container, victim, waiting object, or repeatedly yields/protects/cooperates without personal cost.
-- The main GM is unsure which ecosystem slot the next `parallel-line` should use.
-
-### `parallel-line`
-
-Call `parallel-line` to advance one relevant offscreen faction in these cases, unless there is no backstage action space this turn and the internal plan states the skip reason:
-
-- Time advances more than 10-30 minutes, or the turn includes rest, sleep, treatment, hiding, or overnight stay.
-- The current beat closes, an arc transition occurs, or the player gains a safety window.
-- Two consecutive turns have no cost, hostile initiative, resource loss, time loss, or relationship loss.
-
-**使用 `run_parallel_line` 工具装配输入**：不要手写完整 `ParallelLineInput`。调用 `run_parallel_line`，只需传 `lineId` + `timeWindow` + 可选偏好（`preferredPressureType` / `excludedActorIds` / `excludedPressureTypes` / `majorBeatEnd` / `arcTransition`），engine 从 secret state、actor agenda、offscreenEventLog、pressure palette 自动装配其余字段。
-
-工具返回装配好的 JSON 后，将其作为 task 传给 `parallel-line` 子代理（`agentScope: "project"`）。子代理返回后审查候选结果，用 `record_offscreen_event` 或其它领域工具落地。
-
-Use `excludedActorIds` / `excludedPressureTypes` only for hard bans; ordinary repetition is automatically tracked in `recentOffscreenEvents` and cooldown flags so the subagent can downrank it.
-
-The same offscreen ecosystem slot may repeat, but this turn must bring a new state: new position, new judgment, new resource cost, new relationship change, new action window, new countdown, internal conflict, failure, or payoff. Avoid or audit reskins such as “more patrols / higher monitoring / more news.”
-
-Subagent output is not canonical state. When it needs to land, the main GM reviews it and then uses `record_offscreen_event`, a public clue/threat/memory, or an ordinary Domain Event Tool.
-
-## Combat and risk boundary
-
-- “Do not trigger combat” means do not force the player into untelegraphed face-to-face battle. It does not forbid distant clashes, Servant action, enemy probes, battle aftermath, avoidable countdowns, or offscreen conflict.
-- For high-risk combat, retreat, protection, ability probing, restraint breaking, Noble Phantasm exchange, or any contested action where Fate parameters / Mystery / resources decide the result, call `resolve_combat_exchange` before writing the outcome.
-- `resolve_combat_exchange` only judges the current exchange window. It does not change state and does not finish the whole fight by itself; apply required wounds, mana, scene threats, memories, or reveals with the appropriate domain tools.
-- Do not feed hidden GM facts into `knownAdvantages` / `knownDisadvantages`; use only player-visible facts, current tool results, public state, or safely abstracted secret-resolution outputs.
-- High risk, recovery, sleep, treatment, and mana replenishment must record a cost.
+Do not feed hidden GM facts into public-facing combat inputs.

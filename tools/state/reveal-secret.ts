@@ -58,28 +58,19 @@ function secretMessage(output: RevealSecretToolResult): string {
 export const revealSecretToolDefinition: FsnToolDefinition = {
   name: "reveal_secret",
   description:
-    "配置或揭示 actor hidden-canonical secret。配置模式只写入 secrets；揭示模式必须验证玩家可见证据后才更新 public。\n\n" +
-    "【必须调用的场景】\n" +
-    "- 从者首次入场且使用 upsert_actor(kind=upsert-servant) 后：调用 kind=configure-servant-secrets 写入真名/隐藏宝具 secret slot\n" +
-    "- 重要非从者 NPC 首次入场且后续 private_resolve 需要隐藏反应时：调用 kind=configure-actor-secrets 写入 privateMotives/unrevealedAffiliations\n" +
-    "- 玩家提出真名/宝具/隐藏身份 claim，或场内触发了公开揭示条件：调用 claim-reveal / observed-reveal\n" +
-    "- GM 准备把 foreshadowed 线索升级为已揭示事实\n\n" +
-    "【配置模式】\n" +
-    "- configure-servant-secrets / configure-actor-secrets 是写入幕后 secret slot，不会公开揭示\n" +
-    "- revealConditions 必须是之后 claim/trigger/evidence 能字面命中的短线索词，不要写整句判定条件\n" +
-    "- 好例子：直死之魔眼、死亡线、自报姓名、両儀式、短剑、契约解除\n" +
-    "- 坏例子：The Saber-class protagonist gives her name in-scene. / 玩家证据足够时 / 剧情合适时\n\n" +
-    "【揭示模式】\n" +
-    "- claim-reveal / observed-reveal 必须同时满足：claim/trigger 命中 secret 值或 revealConditions，且 evidence 命中 revealConditions\n" +
-    "- GM 自己知道 secret、或刚配置 secret，不构成 reveal 证据\n\n" +
-    "【严禁的行为】\n" +
-    "- 对同一从者反复配置相同 secret；首次入场配置一次，后续只追加新隐藏宝具\n" +
-    "- 要求列出 secret slots 或幕后真相\n" +
+    "配置或揭示 hidden-canonical secret。配置模式只写 secrets；揭示模式只在玩家可见证据成立时更新 public。\n\n" +
+    "【使用边界】\n" +
+    "- 首次建立从者或重要 NPC 的隐藏真相时，用 configure-* 写入 secret slot\n" +
+    "- 玩家提出真名/宝具/隐藏身份 claim，或场内触发揭示条件时，用 claim-reveal / observed-reveal\n" +
+    "- revealConditions 必须是之后 claim/trigger/evidence 能字面命中的短线索词\n\n" +
+    "【严禁】\n" +
+    "- 重复配置相同 secret\n" +
+    "- 列出 secret slots 或幕后真相\n" +
     "- 证据不足时泄露正确答案",
   parameters: Type.Object({
     kind: Type.String({
       description:
-        "允许: claim-reveal / observed-reveal / configure-servant-secrets / configure-actor-secrets",
+        "claim-reveal / observed-reveal / configure-servant-secrets / configure-actor-secrets",
     }),
     actorId: Type.String(),
     claim: Type.Optional(Type.String()),
@@ -87,12 +78,9 @@ export const revealSecretToolDefinition: FsnToolDefinition = {
     evidence: Type.Optional(Type.String()),
     trueName: Type.Optional(
       Type.Object({
-        value: Type.String({ description: "隐藏真名，如 美狄亚" }),
+        value: Type.String({ description: "隐藏真名" }),
         revealConditions: Type.Array(
-          Type.String({
-            description:
-              "可被 claim/trigger/evidence 字面命中的短线索词；不要写整句判定条件。例：直死之魔眼 / 死亡线 / 自报姓名 / 両儀式",
-          }),
+          Type.String({ description: "可被 claim/trigger/evidence 命中的短线索词" }),
         ),
       }),
     ),
@@ -101,18 +89,15 @@ export const revealSecretToolDefinition: FsnToolDefinition = {
         Type.Object({
           value: Type.Object({
             name: Type.String(),
-            rank: Type.String({ description: "Fate rank；非真正宝具/无宝具可填 none" }),
-            kind: Type.String({ description: "宝具类型，如 对魔术宝具" }),
+            rank: Type.String({ description: "Fate rank；非宝具可填 none" }),
+            kind: Type.String({ description: "宝具类型" }),
             status: Type.String({
-              description: "隐藏宝具状态，允许: hidden / suspected / revealed",
+              description: "hidden / suspected / revealed",
             }),
             summary: Type.String(),
           }),
           revealConditions: Type.Array(
-            Type.String({
-              description:
-                "可被 claim/trigger/evidence 字面命中的短线索词；不要写整句判定条件。例：短剑 / 契约解除 / Rule Breaker",
-            }),
+            Type.String({ description: "可被 claim/trigger/evidence 命中的短线索词" }),
           ),
         }),
       ),
@@ -120,12 +105,9 @@ export const revealSecretToolDefinition: FsnToolDefinition = {
     privateMotives: Type.Optional(
       Type.Array(
         Type.Object({
-          value: Type.String({ description: "NPC 隐藏动机；不会直接公开给玩家" }),
+          value: Type.String({ description: "NPC 隐藏动机" }),
           revealConditions: Type.Array(
-            Type.String({
-              description:
-                "可被 claim/trigger/evidence 字面命中的短线索词；不要写整句判定条件。例：慎二 / 间桐 / 旧识",
-            }),
+            Type.String({ description: "可被 claim/trigger/evidence 命中的短线索词" }),
           ),
         }),
       ),
@@ -133,12 +115,9 @@ export const revealSecretToolDefinition: FsnToolDefinition = {
     unrevealedAffiliations: Type.Optional(
       Type.Array(
         Type.Object({
-          value: Type.String({ description: "NPC 未公开隶属/身份；不会直接公开给玩家" }),
+          value: Type.String({ description: "NPC 未公开隶属/身份" }),
           revealConditions: Type.Array(
-            Type.String({
-              description:
-                "可被 claim/trigger/evidence 字面命中的短线索词；不要写整句判定条件。例：圣堂教会 / 监督者 / 令咒",
-            }),
+            Type.String({ description: "可被 claim/trigger/evidence 命中的短线索词" }),
           ),
         }),
       ),

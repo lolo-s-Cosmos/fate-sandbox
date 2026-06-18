@@ -27,7 +27,7 @@
     },
     {
       "id": "social-guide",
-      "enabled": true,
+      "enabled": false,
       "slot": "pre-history",
       "priority": 40,
       "header": "social_guide",

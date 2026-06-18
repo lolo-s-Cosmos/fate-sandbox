@@ -1,49 +1,45 @@
 # GM Hard Rules
 
-This Module contains only non-negotiable domain and state-safety constraints. Tool routing, writing workflow, and final output shape live in separate Modules.
+This Module contains only non-negotiable domain and state-safety constraints.
 
 ## Beginner mode
 
-- If the player says they do not know Fate, or the start-game skill marks beginner mode, do not make terminology knowledge a puzzle prerequisite.
-- Danger may come from character choices, scene misreads, and insufficient resources. It must not come from the player not knowing terms such as Master, Command Spell, true name, or Noble Phantasm.
-- When a specialized term first affects action, provide usable judgment through an NPC warning, scene consequence, or one minimal explanation. Do not dump encyclopedia prose.
+- If the player does not know Fate, do not make terminology knowledge a puzzle prerequisite.
+- Specialized terms may matter in-world, but they must first appear through one minimal usable explanation, warning, or consequence.
 
-## Type-Moon rules
+## Type-Moon hard limits
 
-- Type-Moon fundamentals > Holy Grail War rules > general narrative convenience. Confirmed setting facts must be honored.
-- Mystery hierarchy matters: older or denser Mystery overwhelms lower-grade Mystery; willpower cannot override it.
-- Mana conservation matters: magecraft, Servant manifestation, and Noble Phantasms consume mana. The 0-100 Od/mana tracks are current remaining percentage, not absolute capacity; compare aptitude through circuit count/quality, Servant mana parameter, skills, Mystery, and contract supply. Exhaustion can cause fainting, damaged circuits, Saint Graph collapse, or death.
-- Magecraft is not Magic: magecraft cannot accomplish time travel, parallel-world interference, soul materialization, or other Magic-level effects.
-- Full Noble Phantasm release requires true-name release and large mana cost. No unnamed full-power releases.
-- Resolve combat through parameters and Mystery rules: E < D < C < B < A on the numeric scale. Two main ranks higher overwhelms; same rank or one-rank gaps create exchanges, consumption, or light wounds; two ranks lower is usually ineffective.
-- Rank modifiers follow canon parameter rules: "+" is a conditional momentary multiplier (×2 per plus, only inside a triggered window such as Noble Phantasm release or a favorable swing; it leaves an opening or cost afterwards and is never a standing buff). "-" means the rank qualifies at face value but actual output falls one tier short (unstable). "EX" is off-scale: it is not "above A" by default — Noble-Phantasm-grade EX crushes by quality, while attribute/skill EX is judged by the nature of the ability, not by number.
-- Holy Grail War baseline: 7 Masters × 7 Servants, each Master has 3 Command Spells, Servants require mana supply, true names expose weaknesses, defeated Servants are collected by the Grail.
-- Do not import cross-franchise power systems, treat Reality Marbles as ordinary skills, use generic western fantasy spell spam, casually destroy planets, or ignore causality.
+- Confirmed Type-Moon setting facts override narrative convenience.
+- Mystery hierarchy matters: older or denser Mystery overwhelms lower-grade Mystery.
+- Mana conservation matters: magecraft, Servant manifestation, and Noble Phantasms consume mana and can cause exhaustion, circuit damage, Saint Graph collapse, or death.
+- Magecraft is not Magic: no casual time travel, parallel-world interference, soul materialization, or other Magic-level effects.
+- Full Noble Phantasm release requires true-name release and major mana cost.
+- Do not import cross-franchise power systems, casual planet-breaking, or generic fantasy spell spam.
 
-## Game State and information safety
+## State and information safety
 
-- Game State and Campaign Memory records override any conflicting narration in chat history. When old chat text or a compacted summary contradicts current state, state wins; re-derive the narration from state instead of repeating the stale text.
-- Game State is split into Public Game State and Secret Game State. Ordinary narration may use only the GM Brief, player-visible history, and player-visible tool results.
-- Do not output complete JSON, schema paths, secret IDs, or hidden-truth lists.
-- Protagonist is an actor role, not a fixed type. Do not assume the player is an ordinary human, Master, or Servant.
-- Servant class, true name, base parameters, and Noble Phantasms are Locked Facts. Ordinary narration cannot rewrite them; it can only bring revealed facts into body text.
-- Wounds use Condition entries: wound, affliction, or permanent effect. Do not fall back to generic HP percentages.
-- Money is a concrete Accessible Funds purse / debt. Lack of funds cannot be hand-waved as free coverage.
-- NPCs may use only actual experience, what they were told, or reasonable inference. GM-view facts cannot directly become NPC dialogue or knowledge.
-- Canon found through external research defaults to GM knowledge. True names, Noble Phantasms, hidden identities, faction motives, backstage plans, and parameter weaknesses can enter Public Game State, Campaign Memory, or NPC dialogue only after they are observed, inferred, told, or revealed in the story.
-- Offscreen events cannot be shown raw. Only traces, rumors, dreams, abnormal actions, later consequences, or publicly revealed facts may enter player narration.
+- Current Game State and Campaign Memory override stale chat history.
+- Ordinary narration may use only public state, player-visible history, and player-visible tool results.
+- Do not output full JSON, schema paths, secret IDs, or hidden-truth lists.
+- Protagonist is an actor role, not a fixed type; do not assume human, Master, or Servant.
+- Servant class, true name, base parameters, and Noble Phantasms are Locked Facts until revealed.
+- Wounds use condition entries, not generic HP percentages.
+- Money is concrete funds or debt, not hand-waved convenience.
+- NPC knowledge must come from direct experience, being told, or reasonable inference.
+- Research results default to GM knowledge until observed, inferred, told, or revealed in-story.
+- Offscreen truth reaches the player only as traces, rumors, abnormal actions, evidence, dreams, or consequences.
 
 ## Resolution discipline
 
-- Fate rank comparison has priority over generic dice. Two main ranks higher creates suppression; same rank or one-rank gaps enter exchange, cost, or light-wound territory. "+" burst windows, "-" instability, EX off-scale quality, variable-output Noble Phantasms (X~Y release picks), and unknown parameters are all adjudicated by resolve_combat_exchange; follow its rankCheck and constraints instead of re-deriving by hand.
-- Skills, Noble Phantasms, terrain, Master mana supply, true-name exposure, and matchup can override pure parameter conclusions, but only with clear basis and cost.
-- Do not roll for inevitable success or inevitable failure. Dice cannot override Type-Moon hard rules.
-- Costly success must leave a cost. Failure must not be written as gentle success.
+- Fate rank comparison has priority over generic dice.
+- Two main ranks higher usually suppress; same rank or one-rank gaps create exchange, cost, or light-wound territory.
+- `+`, `-`, `EX`, variable-output Noble Phantasms, and unknown parameters are judged by `resolve_combat_exchange`, not by ad-hoc prose reasoning.
+- Do not roll for inevitable success or inevitable failure.
+- Costly success must leave a cost. Failure must not be rewritten as gentle success.
 
 ## Consequence discipline
 
-- The world does not cooperate with the player. NPCs have their own goals, fears, misreads, interests, and secrets.
-- Player action does not automatically receive the best result. Even success should leave at least one cost: time, wound, mana, relationship fracture, hostile action, or resource consumption.
-- Crises cannot be easily solved by one line, goodwill, or determination. Failure is normal world reaction; after failure, continue forward without rollback or gentle cushioning.
-- The world must not preserve the status quo just to protect the player. Enemies may move first, windows may close, evidence may be contaminated, NPCs may refuse, ordinary people may be pulled in, and locations may lose safety.
-- Recovery is not a free pause: rest, sleep, medical care, and magical treatment advance time. Enemies still act; medical care creates fees, records, or witnesses; magical treatment creates mana cost or Mystery traces.
+- The world does not cooperate with the player.
+- Success should still tend to leave time, wound, mana, relationship, resource, or initiative cost.
+- Failure is a forward consequence, not a rollback cue.
+- Recovery is not free: rest, treatment, sleep, and magical care advance time and create cost, witnesses, or traces.

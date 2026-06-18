@@ -155,33 +155,33 @@ const EXTEND_DUE_VALIDATOR = Compile(EXTEND_DUE_SCHEMA);
 export const manageFactionClockToolDefinition: FsnToolDefinition = {
   name: "manage_faction_clock",
   description:
-    "管理幕后阵营进度钟与到期义务（secret state）；「世界不为玩家暂停」的机械载体。时钟与到期事件对玩家不可见，到期/填满时 canonical commit 会在返回值里催账。\n\n" +
-    "【必须调用的场景】\n" +
-    "- 幕后势力开始一条有方向的行动线（搜捕、仪式准备、地盘扩张）：upsert-clock 建钟，size 4/6/8 对应短/中/长线\n" +
-    "- parallel-line 推进或幕后事件表明势力有实质进展：advance-clock（重大进展可一次多 tick）\n" +
-    "- 未来某个游戏内时刻必然发生的事（增援抵达、仪式完成、尸体被发现）：schedule-event\n" +
-    "- commit 返回值出现 ⏰ 催账：本轮内 resolve-due 兑现，或 extend-due 显式展期并给理由\n" +
-    "- 时钟填满：先在叙事与状态里兑现一次格局变化，再 reset-clock（写 outcomeSummary）或 retire-clock\n\n" +
-    "【严禁的行为】\n" +
-    "- 把时钟内容、进度或到期事件直接透露给玩家正文；玩家只能看到 leaked 钟的征兆\n" +
-    "- 无理由 advance；ticks 必须对应已发生的幕后推进\n" +
-    "- 用 extend-due 无限拖延同一事件；展期理由必须是幕后局势的真实变化\n" +
-    "- 时钟填满后只归零不兑现格局变化",
+    "管理幕后阵营进度钟与到期义务。时钟与到期事件对玩家不可见；到期或填满时 canonical commit 会催账。\n\n" +
+    "【使用边界】\n" +
+    "- 幕后势力开始持续行动线：upsert-clock\n" +
+    "- 幕后势力有实质进展：advance-clock\n" +
+    "- 未来某时必然发生的事：schedule-event\n" +
+    "- commit 返回催账时：resolve-due 或 extend-due\n" +
+    "- 时钟填满后：先兑现格局变化，再 reset-clock 或 retire-clock\n\n" +
+    "【严禁】\n" +
+    "- 直接把时钟内容或到期事件写给玩家\n" +
+    "- 无理由 advance\n" +
+    "- 用 extend-due 无限拖延\n" +
+    "- 时钟填满后只归零不兑现变化",
   parameters: Type.Object({
     kind: Type.String({
-      description: "允许: upsert-clock / advance-clock / reset-clock / retire-clock / schedule-event / resolve-due / extend-due",
+      description: "upsert-clock / advance-clock / reset-clock / retire-clock / schedule-event / resolve-due / extend-due",
     }),
-    clockId: Type.Optional(Type.String({ description: "advance/reset/retire 必填；upsert 可选（更新已有钟）" })),
-    factionId: Type.Optional(Type.String({ description: "upsert-clock 必填：阵营/势力标识" })),
-    label: Type.Optional(Type.String({ description: "upsert-clock 必填：时钟在追踪什么" })),
+    clockId: Type.Optional(Type.String({ description: "advance/reset/retire 必填；upsert 可选" })),
+    factionId: Type.Optional(Type.String({ description: "upsert-clock 必填：阵营标识" })),
+    label: Type.Optional(Type.String({ description: "upsert-clock 必填：时钟内容" })),
     size: Type.Optional(Type.Integer({ description: "upsert-clock 必填：2-12 段" })),
-    visibility: Type.Optional(Type.String({ description: "upsert-clock 必填: hidden / leaked" })),
+    visibility: Type.Optional(Type.String({ description: "upsert-clock 必填：hidden / leaked" })),
     ticks: Type.Optional(Type.Integer({ description: "advance-clock 必填：推进段数" })),
     reason: Type.Optional(Type.String({ description: "advance/retire/extend 必填：依据" })),
-    outcomeSummary: Type.Optional(Type.String({ description: "reset-clock/resolve-due 必填：兑现了什么" })),
+    outcomeSummary: Type.Optional(Type.String({ description: "reset-clock/resolve-due 必填：兑现结果" })),
     dueAt: Type.Optional(Type.String({ description: "schedule-event 必填：游戏内 ISO 时刻" })),
     eventId: Type.Optional(Type.String({ description: "resolve-due/extend-due 必填" })),
-    newDueAt: Type.Optional(Type.String({ description: "extend-due 必填：新的到期时刻" })),
+    newDueAt: Type.Optional(Type.String({ description: "extend-due 必填：新到期时刻" })),
     summary: Type.Optional(Type.String({ description: "schedule-event 必填：到期会发生什么" })),
   }),
   execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>

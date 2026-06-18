@@ -117,25 +117,24 @@ const RETIRE_VALIDATOR = Compile(RETIRE_SCHEMA);
 export const updateHookToolDefinition: FsnToolDefinition = {
   name: "update_hook",
   description:
-    `Mystery hook 账本：悬念的登记与生命周期（active/parked/paid/escalated/retired）。active+escalated 同时最多 ${MAX_ACTIVE_HOOKS} 条，超额 open/复活会被拒绝。\n\n` +
-    "【必须调用的场景】\n" +
-    "- 正文里第一次引入一个挂起的悬念（异响、失踪、监视感、神秘伤口）：open\n" +
-    "- 已登记的悬念再次出现在正文：surface，novelty 必填——这次复现带来了什么新信息/新后果/新行动窗口\n" +
-    "- 玩家明确无视/绕开悬念，或选择日常休整：park，悬念降为背景压力\n" +
-    "- 悬念压力实质上调（从暗示到直接威胁）：escalate，novelty 必填\n" +
-    "- 悬念的承诺以可见后果兑现（真相揭开、威胁成型）：pay，payoff 必填\n" +
-    "- 悬念不再有兑现价值：retire，给理由\n\n" +
-    "【严禁的行为】\n" +
-    "- 不登记就让悬念在正文反复出现——账本外的悬念审计视为违规\n" +
-    "- surface/escalate 写空泛 novelty（「气氛更紧张了」不是新状态；新信息/新代价/新窗口才是）\n" +
-    "- 用反复 surface 同一句描写维持存在感；没有新状态就让它 parked\n" +
-    "- 预算满时硬开新悬念；先收掉一条旧的",
+    `Mystery hook 账本：悬念的登记与生命周期（active/parked/paid/escalated/retired）。active+escalated 同时最多 ${MAX_ACTIVE_HOOKS} 条。\n\n` +
+    "【使用边界】\n" +
+    "- 正文第一次引入悬念：open\n" +
+    "- 已登记悬念再次出现：surface，novelty 必填\n" +
+    "- 玩家明确无视/绕开悬念：park\n" +
+    "- 悬念压力实质上调：escalate，novelty 必填\n" +
+    "- 悬念兑现：pay\n" +
+    "- 悬念不再有价值：retire\n\n" +
+    "【严禁】\n" +
+    "- 不登记就反复让悬念出现在正文\n" +
+    "- 用空泛 novelty 维持存在感\n" +
+    "- 预算满时硬开新悬念",
   parameters: Type.Object({
-    kind: Type.String({ description: "允许: open / surface / park / escalate / pay / retire" }),
-    label: Type.Optional(Type.String({ description: "open 必填：悬念是什么" })),
+    kind: Type.String({ description: "open / surface / park / escalate / pay / retire" }),
+    label: Type.Optional(Type.String({ description: "open 必填：悬念内容" })),
     hookId: Type.Optional(Type.String({ description: "除 open 外必填" })),
-    novelty: Type.Optional(Type.String({ description: "surface/escalate 必填：本次复现带来的新状态" })),
-    payoff: Type.Optional(Type.String({ description: "pay 必填：兑现了什么" })),
+    novelty: Type.Optional(Type.String({ description: "surface/escalate 必填：新状态" })),
+    payoff: Type.Optional(Type.String({ description: "pay 必填：兑现内容" })),
     reason: Type.Optional(Type.String({ description: "park/retire 必填" })),
   }),
   execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>

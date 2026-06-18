@@ -200,21 +200,21 @@ function assertActorKind(value: unknown, fieldName: string): void {
 export const upsertActorToolDefinition: FsnToolDefinition = {
   name: "upsert_actor",
   description:
-    "将 protagonist setup、玩家可见 NPC 摘要、NPC 安全 skeleton、或从者完整数据写入 public actor registry。\n\n" +
-    "【必须调用的场景】\n" +
-    "- 重要 NPC 正式入场且只需要可被 scene/presence 引用：使用 kind=ensure-public-npc（幂等，不覆盖已有 actor）\n" +
-    "- 重要 NPC 需要完整公开投影：使用 kind=upsert-public-npc（仅公开身份/外观/关系）\n" +
-    "- 开局 setup 确认玩家角色身份后：使用 kind=setup-protagonist\n" +
-    "- 从者入场（有完整职阶/参数/技能/宝具）：使用 kind=upsert-servant\n" +
-    "- 创建无主从者时 contractStatus 填 masterless，并省略 masterActorId/masterName，或填 null/none/无\n\n" +
-    "【严禁的行为】\n" +
+    "将 protagonist、公开 NPC skeleton、公开 NPC 摘要或从者数据写入 public actor registry。\n\n" +
+    "【使用边界】\n" +
+    "- 重要 NPC 只需可被 scene/presence 引用：ensure-public-npc\n" +
+    "- 重要 NPC 需要完整公开投影：upsert-public-npc\n" +
+    "- 开局确认玩家角色：setup-protagonist\n" +
+    "- 从者正式入场：upsert-servant\n" +
+    "- 无主从者用 masterless，并省略或置空 masterActorId/masterName\n\n" +
+    "【严禁】\n" +
     "- 对普通 NPC 使用 upsert-servant\n" +
-    "- 用 upsert-public-npc 写入魔术、真名、宝具、隐藏身份\n" +
-    "- 把世界角色数据库全量塞进 state；只写本局需要追踪的 actor",
+    "- 用 upsert-public-npc 写入魔术、真名、宝具或隐藏身份\n" +
+    "- 把本局不需要追踪的角色全量写进 state",
   parameters: Type.Object({
     kind: Type.String({
       description:
-        "允许: setup-protagonist, ensure-public-npc, upsert-public-npc, upsert-servant",
+        "setup-protagonist / ensure-public-npc / upsert-public-npc / upsert-servant",
     }),
     actor: Type.Optional(publicActorSchema()),
     npc: Type.Optional(loosePublicNpcSchema()),
@@ -227,22 +227,20 @@ export const upsertActorToolDefinition: FsnToolDefinition = {
 
 function loosePublicNpcSchema(): ReturnType<typeof Type.Object> {
   return Type.Object({
-    id: Type.Optional(Type.String({ description: "upsert-public-npc 使用：actor id" })),
-    actorId: Type.Optional(Type.String({ description: "ensure-public-npc 使用：actor id" })),
+    id: Type.Optional(Type.String({ description: "upsert-public-npc：actor id" })),
+    actorId: Type.Optional(Type.String({ description: "ensure-public-npc：actor id" })),
     kind: Type.Optional(
-      Type.String({ description: "upsert-public-npc 使用：human / outsider / spirit / other" }),
+      Type.String({ description: "upsert-public-npc：human / outsider / spirit / other" }),
     ),
     npcKind: Type.Optional(
-      Type.String({ description: "ensure-public-npc 使用：human / outsider / spirit / other" }),
+      Type.String({ description: "ensure-public-npc：human / outsider / spirit / other" }),
     ),
-    displayName: Type.String({ description: "玩家可见称呼/姓名；可保留职阶名或英文名" }),
-    renderName: Type.Optional(
-      Type.String({ description: "正文固定用名；中文名/规范译名优先，如 沙条爱歌" }),
-    ),
-    publicIdentity: Type.String({ description: "玩家当前可知身份摘要；不得写隐藏身份" }),
+    displayName: Type.String({ description: "玩家可见称呼/姓名" }),
+    renderName: Type.Optional(Type.String({ description: "正文固定用名" })),
+    publicIdentity: Type.String({ description: "玩家当前可知的身份摘要" }),
     apparentAge: Type.Optional(Type.String()),
     outfit: Type.Optional(Type.Object({ label: Type.String(), details: Type.String() })),
-    demeanor: Type.Optional(Type.String({ description: "玩家可见举止；不得写私密动机" })),
+    demeanor: Type.Optional(Type.String({ description: "玩家可见举止" })),
     publicRoles: Type.Optional(Type.Array(looseActorRoleSchema())),
     relationshipToProtagonist: Type.Optional(
       Type.Object({
@@ -266,11 +264,9 @@ function looseActorRoleSchema(): ReturnType<typeof Type.Object> {
 }
 function looseServantSchema(): ReturnType<typeof Type.Object> {
   return Type.Object({
-    id: Type.String({ description: "从者 actor id，如 caster 或 assassin" }),
-    displayName: Type.String({ description: "玩家可见称呼，如 Caster 或 佐佐木小次郎" }),
-    renderName: Type.Optional(
-      Type.String({ description: "正文固定用名；中文名/规范译名优先，如 佐佐木小次郎" }),
-    ),
+    id: Type.String({ description: "从者 actor id" }),
+    displayName: Type.String({ description: "玩家可见称呼" }),
+    renderName: Type.Optional(Type.String({ description: "正文固定用名" })),
     publicIdentity: Type.String({ description: "玩家当前可知的公开身份摘要" }),
     apparentAge: Type.String(),
     outfit: Type.Object({ label: Type.String(), details: Type.String() }),
@@ -278,10 +274,10 @@ function looseServantSchema(): ReturnType<typeof Type.Object> {
     className: Type.String({
       description: "Saber / Archer / Lancer / Rider / Caster / Assassin / Berserker",
     }),
-    trueNameDisplay: Type.String({ description: "真名显示文本；hidden 时填职阶名如 Caster" }),
+    trueNameDisplay: Type.String({ description: "真名显示文本；hidden 时填职阶名" }),
     trueNameStatus: Type.String({ description: "hidden / suspected / revealed" }),
     parameters: Type.Object({
-      strength: Type.String({ description: "Fate rank，如 B 或 A+" }),
+      strength: Type.String({ description: "Fate rank" }),
       endurance: Type.String(),
       agility: Type.String(),
       mana: Type.String(),
@@ -306,20 +302,16 @@ function looseServantSchema(): ReturnType<typeof Type.Object> {
       Type.Object({
         name: Type.String(),
         rank: Type.String({ description: "Fate rank" }),
-        kind: Type.String({ description: "宝具类型，如 对魔术宝具" }),
+        kind: Type.String({ description: "宝具类型" }),
         status: Type.String({ description: "hidden / suspected / revealed" }),
         summary: Type.String(),
       }),
     ),
     spiritualCore: Type.Integer({ description: "0-100 灵核完整度" }),
     mana: Type.Integer({ description: "0-100 从者魔力余量" }),
-    spiritualCondition: Type.String({ description: "灵核状态描述，如 完好" }),
-    masterActorId: Type.Optional(
-      Type.Unknown({ description: "当前御主 actor id；无主从者可省略、填 null 或填 none" }),
-    ),
-    masterName: Type.Optional(
-      Type.Unknown({ description: "当前御主玩家可见姓名；无主从者可省略、填 null 或填 无" }),
-    ),
+    spiritualCondition: Type.String({ description: "灵核状态描述" }),
+    masterActorId: Type.Optional(Type.Unknown({ description: "当前御主 actor id；无主可置空" })),
+    masterName: Type.Optional(Type.Unknown({ description: "当前御主玩家可见姓名；无主可置空" })),
     contractStatus: Type.String({ description: "stable / weak / cut / masterless" }),
     manaSupply: Type.String({ description: "sufficient / strained / starved" }),
     currentOrder: Type.String({ description: "当前御主命令或自主行动目标" }),
@@ -338,13 +330,13 @@ function looseServantSchema(): ReturnType<typeof Type.Object> {
 function publicActorSchema(): ReturnType<typeof Type.Object> {
   return Type.Object({
     id: Type.String(),
-    kind: Type.String({ description: "actor 类型，允许: human / outsider / spirit / other" }),
+    kind: Type.String({ description: "human / outsider / spirit / other" }),
     roles: Type.Array(looseActorRoleSchema()),
     magecraft: Type.Unknown({
-      description: "魔术回路对象或 null；内部字段由 upsert_actor 工具校验。",
+      description: "魔术回路对象或 null；内部字段由工具校验",
     }),
     servantForm: Type.Unknown({
-      description: "从者形态对象或 null；内部字段由 upsert_actor 工具校验。",
+      description: "从者形态对象或 null；内部字段由工具校验",
     }),
     identity: Type.Object({
       publicIdentity: Type.String(),
@@ -371,7 +363,7 @@ function publicActorSchema(): ReturnType<typeof Type.Object> {
     ),
     relationshipToProtagonist: Type.Object({
       stance: Type.String({
-        description: "关系立场，允许: self / ally / friendly / neutral / wary / hostile / unknown",
+        description: "self / ally / friendly / neutral / wary / hostile / unknown",
       }),
       summary: Type.String(),
     }),
