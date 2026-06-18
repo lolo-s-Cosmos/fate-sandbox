@@ -141,16 +141,16 @@ const CLEAR_VALIDATOR = Compile(CLEAR_SCHEMA);
 export const recordActorKnowledgeToolDefinition: FsnToolDefinition = {
   name: "record_actor_knowledge",
   description:
-    "记录 NPC 的认知边界（secret state）：知道什么、怀疑什么、误信什么、以及绝不应该凭空知道什么。它是防止 NPC 说出 GM 视角事实/隐藏真名/幕后真相的账本。\n\n" +
-    "【必须调用的场景】\n" +
-    "- NPC 获得新情报、误判、被欺骗、或被明确告知某事：add-fact\n" +
-    "- NPC 的整个认知边界需要重建：upsert-lens，四个数组都显式给出\n" +
-    "- 谣言被证伪、误信被纠正、或信息过期：remove-fact\n" +
-    "- NPC 离开本局跟踪：clear，给 reason\n\n" +
-    "【严禁的行为】\n" +
-    "- 用这个工具公开秘密；它只写 secret state，正文仍只能呈现角色有理由知道/怀疑的东西\n" +
-    "- 把玩家现实知识、GM lookup 结果、未揭示真名或隐藏宝具塞进 NPC knows，除非剧情内已经成立\n" +
-    "- 让 NPC 说出 forbiddenKnowledge 中的事实；若剧情需要揭示，先通过 reveal_secret 或前台证据改变认知边界",
+    "记录 NPC 认知边界（secret state）：知道/怀疑/误信/绝不应凭空知道的事。防止 NPC 说出 GM 视角事实、隐藏真名、幕后真相。\n\n" +
+    "【使用边界】\n" +
+    "- NPC 获新情报/误判/被欺/被告知：add-fact\n" +
+    "- 重建整个认知边界：upsert-lens（四数组显式给出）\n" +
+    "- 谣言证伪/误信纠正/信息过期：remove-fact\n" +
+    "- NPC 离开本局跟踪：clear + reason\n\n" +
+    "【严禁】\n" +
+    "- 用它公开秘密：它只写 secret state\n" +
+    "- 把玩家现实知识/GM lookup/未揭示真名/隐藏宝具塞进 knows（除非剧情已成立）\n" +
+    "- 让 NPC 说出 forbiddenKnowledge；需揭示先走 reveal_secret 或前台证据",
   parameters: Type.Object({
     kind: Type.String({ description: "允许: upsert-lens / add-fact / remove-fact / clear" }),
     actorId: Type.String({ description: "目标 actor id；必须已存在于 public actors" }),

@@ -45,17 +45,16 @@ function normalizeSourceEventId(params: unknown): unknown {
 export const recordMemoryToolDefinition: FsnToolDefinition = {
   name: "record_memory",
   description:
-    "写入玩家已知的长期事实、重大事件或日常摘要。每条 public memory 必须提供 claims：用结构化 claim 表达事实类型、确定性和证据；普通事实用 kind=mundane。\n\n" +
-    "【必须调用的场景】\n" +
-    "- 玩家身世确定；契约成立/解除/变更；NPC 死亡、失踪、重伤\n" +
-    "- 真名公开、宝具首次解放、令咒使用、阵营变化、永久缺损\n" +
-    "- 单次采购、调查发现、战斗结论等需要长期保留的事件：用 record-major-event，并提供 claims\n" +
-    "- 半天以上时间跳过、日终或章节结束摘要：才用 record-daily-summary\n\n" +
-    "【严禁的行为】\n" +
-    "- 记录 GM 猜测、幕后真相、普通闲聊或短暂情绪\n" +
+    "写入玩家已知的长期事实、重大事件或日常摘要。每条 public memory 必须给 claims（事实类型+确定性+证据）；普通事实用 kind=mundane。\n\n" +
+    "【使用边界】\n" +
+    "- 身世/契约/生死/真名/宝具/令咒/阵营/永久缺损等重大变化：record-major-event + claims\n" +
+    "- 单次采购/调查/战斗结论等需长期保留的事件：也用 record-major-event\n" +
+    "- 仅半天以上跳过、日终/章节摘要：record-daily-summary\n\n" +
+    "【严禁】\n" +
+    "- 记 GM 猜测、幕后真相、闲聊或短暂情绪\n" +
     "- 把玩家未确认秘密写进 public memory\n" +
-    "- 非 mundane claim 缺少 evidence 或 relatedSecretSlotIds 却写成 confirmed/observed/inferred\n" +
-    "- 用 record-daily-summary 绕过 claims 记录单次采购、单次调查或单次战斗结论",
+    "- 非 mundane claim 缺 evidence/relatedSecretSlotIds 却标 confirmed/observed/inferred\n" +
+    "- 用 record-daily-summary 绕过 claims 记单次事件",
   parameters: Type.Object({
     kind: Type.String({
       description: "允许: pin-fact / record-major-event / record-daily-summary",

@@ -102,18 +102,15 @@ function optionalBoolean(value: unknown): boolean | undefined {
 export const runParallelLineToolDefinition: FsnToolDefinition = {
   name: "run_parallel_line",
   description:
-    "由 engine 自动装配 parallel-line 子代理的完整输入。GM 只需提供 lineId + timeWindow + 可选偏好，engine 从 secret state、actor agenda、offscreenEventLog、pressure palette 装配其余字段，返回可直接传给子代理的 JSON。\n\n" +
-    "【必须调用的场景】\n" +
-    "- 需要推进后台世界线但不想手写 ParallelLineInput 的全部字段\n" +
-    "- 时间推进超过 10-30 分钟、beat 关闭、连续 2 轮无代价——gm-tool-policy 要求 parallel-line 时\n\n" +
-    "【使用流程】\n" +
-    "1. 调用 run_parallel_line，拿到装配好的 JSON\n" +
-    "2. 把 JSON 作为 task 传给 parallel-line 子代理（agentScope: project）\n" +
-    "3. 子代理返回后，审查候选结果，用 record_offscreen_event 或其它领域工具落地\n\n" +
-    "【严禁的行为】\n" +
-    "- 绕过 engine 装配直接手写完整 ParallelLineInput 传给子代理（除非 engine 装配有明确缺陷需要覆盖）\n" +
-    "- 把 engine 装配的 privateFacts 原样写进玩家可见正文\n" +
-    "- 不审查子代理候选结果就直接落地",
+    "由 engine 自动装配 parallel-line 子代理输入。GM 只给 lineId + timeWindow + 可选偏好，engine 从 secret state / agenda / offscreenEventLog / pressure palette 补齐其余字段，返回可直接传给子代理的 JSON。\n\n" +
+    "【使用边界】\n" +
+    "- 需推进后台世界线，不想手写全部 ParallelLineInput\n" +
+    "- gm-tool-policy 触发 parallel-line（跳时 >10-30min、beat 关闭、连续 2 轮无代价）\n" +
+    "流程：拿 JSON → 作 task 传给 parallel-line 子代理（agentScope: project）→ 审查后用 record_offscreen_event 等工具落地。\n\n" +
+    "【严禁】\n" +
+    "- 绕过 engine 装配手写完整 ParallelLineInput\n" +
+    "- 把 privateFacts 原样写进玩家可见正文\n" +
+    "- 不审查子代理候选就落地",
   parameters: Type.Object({
     lineId: Type.String({ description: "后台线标识，如 caster-ryudou、lancer-church" }),
     timeWindow: Type.Object({
