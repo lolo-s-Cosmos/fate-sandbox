@@ -13,6 +13,7 @@ import { syncStateFromSessionManager } from "./engine/core/session-hydration.ts"
 import { exportState } from "./engine/core/state-store.ts";
 import { isRecord } from "./engine/core/typebox-validation.ts";
 import { PROSE_CUSTOM_TYPE } from "./engine/direction/render-turn.ts";
+import { stripLeakedSettlementProse } from "./engine/direction/settlement-prose-firewall.ts";
 import { buildSystemPrompt, injectGmPromptMessages } from "./engine/gm-prompt/injection.ts";
 import {
   buildTimelineStateContextBlock,
@@ -36,16 +37,21 @@ export default function extension(pi: ExtensionAPI): void {
     // 结算器（Pass A）投影：渲染产物不作为对话流消息进结算上下文，但最后一轮渲染正文
     // 作为物理连续性锚注入 pre-response slot，防止跨轮物理状态断裂。
     let lastRenderedProse: string | undefined;
-    const settlementMessages = event.messages.filter((message) => {
-      if (isRecord(message) && message["customType"] === PROSE_CUSTOM_TYPE) {
-        const text = extractProseText(message);
-        if (text.length > 0) {
-          lastRenderedProse = text;
+    const settlementMessages = event.messages
+      .filter((message) => {
+        if (isRecord(message) && message["customType"] === PROSE_CUSTOM_TYPE) {
+          const text = extractProseText(message);
+          if (text.length > 0) {
+            lastRenderedProse = text;
+          }
+          return false;
         }
-        return false;
-      }
-      return true;
-    });
+        return true;
+      })
+      // 历史里已落盘的结算器漏稿（message_end 上线前的回合）在此就地中和：只整形
+      // 喂给结算模型的 per-call 视图，不改存档。新存档由 message_end 源头收口，
+      // 老存档靠这层兜底，二者互补。
+      .map((message) => stripLeakedSettlementProse(message) ?? message);
     return {
       messages: injectGmPromptMessages<ContextEvent["messages"][number]>(
         settlementMessages,
