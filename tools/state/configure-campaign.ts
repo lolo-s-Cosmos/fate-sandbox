@@ -40,15 +40,15 @@ function normalizeCurrencyAlias(params: unknown): unknown {
 export const configureCampaignToolDefinition: FsnToolDefinition = {
   name: "configure_campaign",
   description:
-    "配置开局 campaign preset、时间线、本地时区、起始时间、地点和经济规则；这是进入正式剧情前的第一步，也可用于修正当前存档的 campaign 元数据。\n\n" +
-    "【必须调用的场景】\n" +
-    "- 开局确认时间线/城市/本地时区/货币/开场地点后，正式剧情推进前\n" +
-    "- 用户把 FSN 改成 FSF、EXTRA、空境、月姬或 custom 线，需要同步 campaign 与 clock\n" +
-    "- 当前存档 campaign.timeline/timezone 与实际地点不一致，需要热修\n\n" +
-    "【严禁的行为】\n" +
-    "- 在剧情中随意改时间线或时区来逃避后果\n" +
-    "- 用它替代 Scene Beat 或普通地点移动；复杂 beat 用 progress_scene_beat，普通移动用 commit_turn\n" +
-    "- 未写 reason 就修改 campaign 语义",
+    "配置开局 campaign preset、时间线、本地时区、起始时间、地点和经济规则；进正式剧情前的第一步，也可热修当前存档 campaign 元数据。\n\n" +
+    "【使用边界】\n" +
+    "- 开局定好时间线/城市/时区/货币/开场地点，推进前\n" +
+    "- 换线（FSF/EXTRA/空境/月姬/custom）需同步 campaign 与 clock\n" +
+    "- 存档 timeline/timezone 与实际地点不一致，热修\n\n" +
+    "【严禁】\n" +
+    "- 剧情中随意改时间线/时区逃避后果\n" +
+    "- 用它替代 Scene Beat/地点移动（复杂 beat 用 progress_scene_beat，普通移动用 commit_turn）\n" +
+    "- 未写 reason 就改 campaign 语义",
   parameters: Type.Object({
     presetId: Type.String({
       description:

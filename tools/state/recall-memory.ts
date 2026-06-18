@@ -123,14 +123,14 @@ export const recallMemoryToolDefinition: FsnToolDefinition = {
   name: "recall_memory",
   description:
     "检索 campaign memory（pinnedFacts + eventLog + dailySummaries）。按关键词/actor/地点/scope 过滤，返回匹配条目。不改状态。\n\n" +
-    "【何时调用】\n" +
-    "- 需要回忆旧事实但 GM brief 只有最近 3 条 eventLog\n" +
-    "- 玩家提到某个过去事件、某人、某地，需要确认记忆一致性\n" +
-    "- 写对话或内心描写前，需要确认某个 NPC/地点的已记录事实\n" +
-    "- compaction 后需要恢复上下文\n\n" +
-    "【不需要调用】\n" +
-    "- 最近 2-3 轮刚记录的事件（GM brief 已注入）\n" +
-    "- 纯创作性描写，不涉及已记录事实",
+    "【使用边界】\n" +
+    "- 需回忆旧事实但 GM brief 只有最近 3 条 eventLog\n" +
+    "- 玩家提到过去事件/人/地，需确认记忆一致性\n" +
+    "- 写对话/内心前需确认某 NPC/地点已记录事实\n" +
+    "- compaction 后恢复上下文\n\n" +
+    "【不需调用】\n" +
+    "- 最近 2-3 轮刚记的事件（brief 已注入）\n" +
+    "- 纯创作性描写",
   parameters: Type.Object({
     keywords: Type.Optional(
       Type.Array(Type.String(), { description: "关键词列表（OR 匹配，中英文均可）" }),

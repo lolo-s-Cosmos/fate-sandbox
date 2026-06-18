@@ -132,16 +132,15 @@ const CLEAR_VALIDATOR = Compile(CLEAR_SCHEMA);
 export const updateActorAgendaToolDefinition: FsnToolDefinition = {
   name: "update_actor_agenda",
   description:
-    "记录或更新 NPC/势力代理人的主动性账本（secret state）：目标、恐惧、当前指令与最近自主行动时间。它不是玩家可见关系摘要，而是防止 NPC 退化成等待物/线索容器的后台账本。\n\n" +
-    "【必须调用的场景】\n" +
-    "- 重要 NPC 或阵营代理人开始一条可持续行动线：kind=upsert，写 goal/fear/currentOrder\n" +
-    "- NPC 在玩家视野外或玩家场景边缘做出自主行动：kind=mark-independent-action，自动用当前游戏时钟登记 lastIndependentActionAt\n" +
-    "- 当前目标/命令/恐惧发生实质变化：kind=upsert 覆盖旧账本\n" +
-    "- NPC 退出本局跟踪、死亡、离开舞台或行动线终结：kind=clear，给 reason\n\n" +
-    "【严禁的行为】\n" +
-    "- 把 agenda 内容直接写给玩家；它是 GM/子代理用的隐藏主动性账本\n" +
-    "- 用空泛 goal（例如“制造剧情张力”）；必须是角色或阵营在世界内想达成的事\n" +
-    "- 让重要 NPC 连续多轮只等待玩家询问；要么 mark-independent-action，要么降权/退场/改写目标",
+    "记录/更新 NPC/势力代理人的主动性账本（secret state）：目标/恐惧/当前指令/最近自主行动时间。防止 NPC 退化成等待物。\n\n" +
+    "【使用边界】\n" +
+    "- 开启/改写行动线（目标/命令/恐惧变化）：kind=upsert，覆盖旧账本\n" +
+    "- NPC 在视野外做自主行动：kind=mark-independent-action（自动登记时钟）\n" +
+    "- 退出跟踪/死亡/离场/行动线终结：kind=clear + reason\n\n" +
+    "【严禁】\n" +
+    "- 把 agenda 内容直接写给玩家\n" +
+    "- 用空泛 goal（如“制造剧情张力”）；必须是世界内想达成的事\n" +
+    "- 让重要 NPC 连续多轮只等玩家询问",
   parameters: Type.Object({
     kind: Type.String({ description: "允许: upsert / mark-independent-action / clear" }),
     actorId: Type.String({ description: "目标 actor id；必须已存在于 public actors" }),

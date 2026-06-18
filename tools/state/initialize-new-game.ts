@@ -20,16 +20,15 @@ export function initializeNewGameTool(params: unknown, sessionManager: unknown):
 export const initializeNewGameToolDefinition: FsnToolDefinition = {
   name: "initialize_new_game",
   description:
-    "初始化新游戏 Game State 的单入口 recipe：重置 state、配置 campaign、写入 protagonist、设置在场 actor、必要时配置 protagonist 从者隐藏真名。\n\n" +
-    "【必须调用的场景】\n" +
-    "- /skill:start-game 已收集好时间线、玩家立场和开场身份，准备进入正式剧情前\n" +
-    "- 新游戏或重新开始，需要一次性建立可运行 campaign state\n" +
-    "- protagonist 是从者/非人现界者，且真名或宝具需要 hidden-canonical secret slot\n\n" +
-    "【严禁的行为】\n" +
-    "- 用它续局、修档或在剧情中重置后果\n" +
+    "初始化新游戏 Game State 的单入口 recipe：重置 state、配置 campaign、写 protagonist、设在场 actor、必要时配 protagonist 从者隐藏真名。\n\n" +
+    "【使用边界】\n" +
+    "- /skill:start-game 已定好时间线/立场/开场身份，进正式剧情前一次性建立可运行 state\n" +
+    "- protagonist 是从者/非人现界者且真名/宝具需 hidden-canonical secret slot\n\n" +
+    "【严禁】\n" +
+    "- 用它续局、修档或剧情中重置后果\n" +
     "- 把 player-only 原作知识写成 public world fact\n" +
-    "- protagonist 从者开局直接 public revealed 真名；未剧情内公开必须 hidden/suspected 并用 hiddenTrueName 配置 secret\n" +
-    "- 用它替代后续剧情中的领域事件工具",
+    "- protagonist 从者开局直接 public revealed 真名（未公开必须 hidden/suspected + hiddenTrueName secret）\n" +
+    "- 用它替代后续领域事件工具",
   parameters: Type.Object({
     kind: Type.String({ description: "human-protagonist / servant-protagonist" }),
     campaign: Type.Object({
