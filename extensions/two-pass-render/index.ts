@@ -151,13 +151,13 @@ function rendererNameEntries(state: ReturnType<typeof getState>): Array<{
   internalName: string;
   renderName: string;
 }> {
-  return Object.values(state.public.actors)
-    .map((actor) => ({
-      actorId: actor.id,
-      internalName: actor.presentation.internalName,
-      renderName: actor.presentation.renderName,
-    }))
-    .filter((entry) => entry.renderName !== entry.internalName);
+  // 每个具名 actor 都需要绑定 renderName，防止渲染器重新音译（例：Manaka 被随机译成不同中文）。
+  // 不能只在 renderName !== internalName 时才发；那样同名（常见情况）会丢掉所有锚点。
+  return Object.values(state.public.actors).map((actor) => ({
+    actorId: actor.id,
+    internalName: actor.presentation.internalName,
+    renderName: actor.presentation.renderName,
+  }));
 }
 
 interface RenderProseOptions {

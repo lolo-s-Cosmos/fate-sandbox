@@ -140,16 +140,26 @@ function buildRendererNameSection(nameEntries: readonly RendererNameEntry[]): st
   if (nameEntries.length === 0) {
     return [];
   }
-  return [
+  const hasHiddenInternal = nameEntries.some((entry) => entry.internalName !== entry.renderName);
+  const lines = [
     "# Actor Render Names (binding)",
     "",
-    "Use renderName exactly for Chinese prose. internalName is an internal/binding label only (it may hold a not-yet-revealed true name) and must never appear in prose or be transliterated into new Chinese homophones.",
-    ...nameEntries.map(
-      (entry) =>
-        `- ${entry.actorId}: internalName=${entry.internalName}; renderName=${entry.renderName}`,
-    ),
-    "",
+    "Use each renderName exactly for every appearance in Chinese prose. Never invent, vary, or re-transliterate these names into different Chinese homophones \u2014 reuse the spelling below verbatim each turn.",
   ];
+  if (hasHiddenInternal) {
+    lines.push(
+      "When an entry also lists internalName, that label is an internal/binding identity (it may hold a not-yet-revealed true name) and must never appear in prose.",
+    );
+  }
+  for (const entry of nameEntries) {
+    lines.push(
+      entry.internalName === entry.renderName
+        ? `- ${entry.actorId}: renderName=${entry.renderName}`
+        : `- ${entry.actorId}: internalName=${entry.internalName}; renderName=${entry.renderName}`,
+    );
+  }
+  lines.push("");
+  return lines;
 }
 
 function buildLengthFloorSection(packet: DirectionPacket): string[] {
