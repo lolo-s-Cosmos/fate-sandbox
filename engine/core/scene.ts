@@ -290,7 +290,7 @@ function resolveSingleObjectiveId(
   }
   if (objectiveSummary !== undefined) {
     const normalizedSummary = assertNonEmptyString(objectiveSummary, "objectiveSummary");
-    const objective = findObjectiveBySummary(objectives, normalizedSummary);
+    const objective = findEntryBySummary(objectives, normalizedSummary);
     if (objective === undefined) {
       throw new Error(formatObjectiveSummaryNotFoundError(normalizedSummary, objectives));
     }
@@ -346,7 +346,7 @@ function resolveSingleThreatId(
   }
   if (threatSummary !== undefined) {
     const normalizedSummary = assertNonEmptyString(threatSummary, "threatSummary");
-    const threat = findThreatBySummary(threats, normalizedSummary);
+    const threat = findEntryBySummary(threats, normalizedSummary);
     if (threat === undefined) {
       throw new Error(formatThreatSummaryNotFoundError(normalizedSummary, threats));
     }
@@ -355,17 +355,26 @@ function resolveSingleThreatId(
   throw new Error(formatMissingThreatSelectorError(threats));
 }
 
-function findThreatBySummary(
-  threats: ReadonlyArray<{ id: SceneThreatId; summary: string }>,
+// summary 查找：先逐字命中，再双向子串模糊。objective / threat 共用（同为 {id, summary}）。
+function findEntryBySummary<T extends { summary: string }>(
+  entries: ReadonlyArray<T>,
   summary: string,
-): { id: SceneThreatId; summary: string } | undefined {
-  const exact = threats.find((entry) => entry.summary === summary);
+): T | undefined {
+  const exact = entries.find((entry) => entry.summary === summary);
   if (exact !== undefined) {
     return exact;
   }
-  return threats.find(
+  return entries.find(
     (entry) => entry.summary.includes(summary) || summary.includes(entry.summary),
   );
+}
+
+function renderIdSummaryList(entries: ReadonlyArray<{ id: string; summary: string }>): string[] {
+  return entries.map((entry) => `- ${entry.id}: ${entry.summary}`);
+}
+
+function renderSummaryList(entries: ReadonlyArray<{ summary: string }>): string[] {
+  return entries.map((entry) => `- ${entry.summary}`);
 }
 
 function formatThreatIdNotFoundError(
@@ -375,7 +384,7 @@ function formatThreatIdNotFoundError(
   return [
     `威胁不存在: ${threatId}`,
     "可用 threatId / threatSummary：",
-    ...threats.map((threat) => `- ${threat.id}: ${threat.summary}`),
+    ...renderIdSummaryList(threats),
   ].join("\n");
 }
 
@@ -386,7 +395,7 @@ function formatMissingThreatSelectorError(
     "clear-threat 必须提供 threatId 或 threatSummary。",
     "优先用 threatSummary 逐字复制 GM Brief「当前威胁」里的 summary。",
     "可用 threatId / threatSummary：",
-    ...threats.map((threat) => `- ${threat.id}: ${threat.summary}`),
+    ...renderIdSummaryList(threats),
   ].join("\n");
 }
 
@@ -394,11 +403,7 @@ function formatThreatSummaryNotFoundError(
   summary: string,
   threats: ReadonlyArray<{ id: SceneThreatId; summary: string }>,
 ): string {
-  return [
-    `威胁摘要不存在: ${summary}`,
-    "可用威胁摘要：",
-    ...threats.map((threat) => `- ${threat.summary}`),
-  ].join("\n");
+  return [`威胁摘要不存在: ${summary}`, "可用威胁摘要：", ...renderSummaryList(threats)].join("\n");
 }
 
 function resolveObjectiveIds(
@@ -416,26 +421,13 @@ function resolveObjectiveIds(
   }
   for (const summary of summaries) {
     const normalizedSummary = assertNonEmptyString(summary, "resolvedObjectiveSummaries[]");
-    const objective = findObjectiveBySummary(objectives, normalizedSummary);
+    const objective = findEntryBySummary(objectives, normalizedSummary);
     if (objective === undefined) {
       throw new Error(formatObjectiveSummaryNotFoundError(normalizedSummary, objectives));
     }
     resolved.add(objective.id);
   }
   return [...resolved];
-}
-
-function findObjectiveBySummary(
-  objectives: ReadonlyArray<{ id: SceneObjectiveId; summary: string }>,
-  summary: string,
-): { id: SceneObjectiveId; summary: string } | undefined {
-  const exact = objectives.find((entry) => entry.summary === summary);
-  if (exact !== undefined) {
-    return exact;
-  }
-  return objectives.find(
-    (entry) => entry.summary.includes(summary) || summary.includes(entry.summary),
-  );
 }
 
 function formatActiveBeatExistsError(storyWindow: StoryWindowState): string {
@@ -451,7 +443,7 @@ function formatUnresolvedObjectivesError(
   return [
     "无法 transition beat：仍有未解决目标。",
     "可用 resolvedObjectiveSummaries 或 resolveAllObjectives=true。",
-    ...objectives.map((objective) => `- ${objective.id}: ${objective.summary}`),
+    ...renderIdSummaryList(objectives),
   ].join("\n");
 }
 
@@ -462,7 +454,7 @@ function formatObjectiveIdNotFoundError(
   return [
     `目标不存在: ${objectiveId}`,
     "可用 objectiveId / objectiveSummary：",
-    ...objectives.map((objective) => `- ${objective.id}: ${objective.summary}`),
+    ...renderIdSummaryList(objectives),
   ].join("\n");
 }
 
@@ -473,7 +465,7 @@ function formatMissingObjectiveSelectorError(
     "resolve-objective 必须提供 objectiveId 或 objectiveSummary。",
     "如果当前 beat 已全部完成，优先使用 progress_scene_beat kind=complete。",
     "可用 objectiveId / objectiveSummary：",
-    ...objectives.map((objective) => `- ${objective.id}: ${objective.summary}`),
+    ...renderIdSummaryList(objectives),
   ].join("\n");
 }
 
@@ -481,11 +473,9 @@ function formatObjectiveSummaryNotFoundError(
   summary: string,
   objectives: ReadonlyArray<{ id: SceneObjectiveId; summary: string }>,
 ): string {
-  return [
-    `目标摘要不存在: ${summary}`,
-    "可用目标摘要：",
-    ...objectives.map((objective) => `- ${objective.summary}`),
-  ].join("\n");
+  return [`目标摘要不存在: ${summary}`, "可用目标摘要：", ...renderSummaryList(objectives)].join(
+    "\n",
+  );
 }
 
 function assertBeatObjectives(objectives: readonly string[]): void {

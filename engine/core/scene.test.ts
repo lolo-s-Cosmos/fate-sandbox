@@ -514,3 +514,54 @@ void test("updateScene clear-threat by unknown summary lists available summaries
     },
   );
 });
+
+void test("updateScene resolve-objective by unknown id lists available objectives", () => {
+  const draft = createInitialState();
+  updateScene(draft, {
+    kind: "add-objective",
+    summary: "确认当前圣杯战争的基本局势",
+    reason: "测试",
+  });
+
+  assert.throws(
+    () =>
+      updateScene(draft, {
+        kind: "resolve-objective",
+        objectiveId: "objective-does-not-exist",
+        reason: "x",
+      }),
+    (error) => {
+      const message = String(error);
+      assert.match(message, /目标不存在: objective-does-not-exist/);
+      const id = draft.public.scene.objectives[0]?.id ?? "";
+      assert.ok(message.includes(`- ${id}: 确认当前圣杯战争的基本局势`));
+      return true;
+    },
+  );
+});
+
+void test("updateScene clear-threat by unknown id lists available threats", () => {
+  const draft = createInitialState();
+  updateScene(draft, {
+    kind: "add-threat",
+    summary: "黑水中抬升的庞然大物",
+    severity: "high",
+    reason: "群兽逼近",
+  });
+
+  assert.throws(
+    () =>
+      updateScene(draft, {
+        kind: "clear-threat",
+        threatId: "threat-does-not-exist",
+        reason: "x",
+      }),
+    (error) => {
+      const message = String(error);
+      assert.match(message, /威胁不存在: threat-does-not-exist/);
+      const id = draft.public.scene.threats[0]?.id ?? "";
+      assert.ok(message.includes(`- ${id}: 黑水中抬升的庞然大物`));
+      return true;
+    },
+  );
+});
