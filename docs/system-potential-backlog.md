@@ -396,6 +396,44 @@ interface TimelinePressureSlot {
 
 - [x] 状态：已完成（2026-06-14）。`start.ps1` 现在与 `start.sh` 一样加载 `extensions/two-pass-render/index.ts`，并提示 `FATE_RENDER_MODEL` 覆盖状态。后续维护启动脚本时必须保持两边 extension 列表一致。
 
+## 19. actor id opaque 化 + name→id resolver（关 firewall key 侧信道 / 换主角地基）
+
+- [ ] 状态：未开始。
+
+当前 actor id 由 LLM 自由起、编码语义（schema 只是 `Type.String`，无 id 命名约束文档）。同一块底层债从三个角度暴露：
+
+1. **firewall key 侧信道（最要紧，触及 ADR-0001）**：从者真名的权威本体在 secret 侧（`trueName: SecretSlot<string>`），public 侧只有 `trueNameDisplay`（hidden 时填职阶名）。但 actor id 是 `public.actors` 这个 record 的 **key**——是 public state 的结构组成。若 LLM 给隐藏真名的从者起 id=`gilgamesh`/`altria-pendragon`，藏在 secret 侧的真名就从 public key 漏了。字段层 firewall + session-audit 都管不到 key。现状只靠 LLM 自觉用职阶代号（`caster`/`assassin`）兑着——违反“prompt 不是防线，约束下沉 schema/boundary”。威胁模型：不泄叙事输出/面板视图（那些用 `renderName` 不显示 id）、LLM 作为 GM 本就知道真名；真正泄露面是**玩家翻存档 `state.json` 提前剧透**。
+2. **换主角撞谎**：种子主角 id=`protagonist` 编码的是“地位”而非“身份”；换主角后它变成“叫 protagonist 的 NPC”，id 撞谎。
+3. **无 resolver 易填错**：无 name→id 解析层，LLM 直接填 id；换主角后 `{actorId:"protagonist", stance:"ally"}` 这种自相矛盾行会消耗注意力、偶发填错（工具只挡得住“id 不存在”，挡不住“存在但错”）。
+
+**正解 = opaque 生成 id（系统生成、LLM 不再起 id）+ name→id resolver**，一个解同时关掉三件事：不编码身份→不泄真名；不编码地位→换主角不撞谎；有 resolver→LLM 不靠裸 id。项目已有 `createId(draft, prefix)` 生成器（fact/event/objective 都用），生成侧现成。难点在 resolver：剖夺 LLM 起 id 的权后，必须给它别的方式引用 actor（填 renderName / 创建时返回生成 id 让它记住）。
+
+```ts
+// 系统生成，不再收 LLM 起的 id
+const actorId = createId(draft, "actor"); // -> "actor-1" 等 opaque 句柄
+
+// 工具边界：LLM 填名字/模糊错，system 解析成 id
+interface ActorRef {
+  byRenderName?: string; // “远坂凛” -> actor-3
+  byActorId?: string; // 已知句柄直接传
+}
+```
+
+落地路线：
+
+1. 先建 name→id resolver（模糊匹配 renderName/internalName，参考 `scene.ts` 的 `findEntryBySummary`），作为工具入口的 actor 引用缓冲。
+2. `upsert-public-npc` / `upsert-servant` 改为系统生成 id，返回给 LLM；id 字段从输入降级为可选诊断输出。
+3. 种子主角 id 从 `state-store.ts` 单点常量（已收敛，见 commit `007e5cb`）改为中性生成值。
+4. 清扠20+ 个测试 fixture 里假设主角 id=`protagonist` 的处，改引用 `state.public.protagonistActorId`。
+5. `tools/state/upsert-actor.ts` 的 `guardProtagonistTrueName`（现靠 `id==="protagonist"` 字面量、已标 BACKLOG）随流程改靠 kind/指针。
+6. 考虑已有存档：schema migration 是否把存量语义 id rename 为 opaque（跨表引用全图重写），还是仅对新开局生效。
+
+前序工作：`e1d4205`（protagonistActorId 成主角身份唯一真相，斩断生产代码 `id==="protagonist"` 语义依赖）、`007e5cb`（种子 id 收敛单点）。这两步已把运行时“谁是主角”收到指针唯一真相、种子 id 收到单点，为本 slice 铺好地基。
+
+与 #15/#16 同属 actor 模型演进；与“换扣演者（换主角）”是同一 vertical slice，顺带需 `relationshipToProtagonist` N×1 → N×N 升级（有意简化，另评）。
+
+价值：把“actor id 不得编码真名/身份/地位”从隐性惯例下沉为系统保证；firewall 的 key 侧信道从根上焊死；为换主角能力清除最后的 id 层障碍。
+
 ---
 
 ## 实施纪律提醒
