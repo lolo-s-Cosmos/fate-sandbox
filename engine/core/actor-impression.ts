@@ -7,6 +7,7 @@
 
 import type { ActorImpression, State } from "./state.ts";
 
+import { actorDisplayName } from "./actor-display.ts";
 import { assertNonEmptyString } from "./typebox-validation.ts";
 
 export interface UpsertActorImpressionInput {
@@ -54,7 +55,7 @@ export function formatPresenceImpressionCards(state: State): string | null {
   if (cards.length === 0) return null;
   const lines: string[] = [];
   for (const card of cards) {
-    const name = state.public.actors[card.actorId]?.presentation.renderName ?? card.actorId;
+    const name = actorDisplayName(state.public, card.actorId);
     lines.push(
       `【${name}】`,
       `  气场：${card.presence}`,

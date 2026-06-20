@@ -1,5 +1,6 @@
 import type { PublicGameState } from "./state.ts";
 
+import { actorDisplayName } from "./actor-display.ts";
 import { formatHumanTime } from "./date-time.ts";
 import { formatHookLedger } from "./hooks.ts";
 import { recentPlayerKnownRelationshipSignals } from "./relationship-signal.ts";
@@ -132,11 +133,6 @@ function formatThreatRouting(publicState: PublicGameState): string {
     return "当前没有可清除的威胁；不要使用 clear-threat。";
   }
   return "用 commit_turn 局部清除威胁时，scene event 用 clear-threat，并用 threatSummary 逐字复制上方威胁的 summary（或用上方方括号前的 threatId）。";
-}
-
-function actorDisplayName(publicState: PublicGameState, actorId: string): string {
-  const actor = publicState.actors[actorId];
-  return actor === undefined ? actorId : actor.presentation.renderName;
 }
 
 function formatStoryWindow(publicState: PublicGameState): string {
