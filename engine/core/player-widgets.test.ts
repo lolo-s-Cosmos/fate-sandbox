@@ -56,6 +56,37 @@ void test("buildRelationsMarkdown shows allies and present NPCs", () => {
   assert.match(md, /Shinji.*Hostile rival/);
 });
 
+void test("buildRelationsMarkdown surfaces appearance for protagonist and NPCs", () => {
+  const draft = createInitialState();
+  addTestNpc(draft, "rin", "Guarded ally");
+  draft.public.actors["rin"]!.presentation = {
+    internalName: "Rin",
+    renderName: "Rin",
+    apparentAge: "17",
+    outfit: { label: "红色魔术礼装", details: "袖口有家纹" },
+    demeanor: "沉静",
+  };
+  const protagonist = draft.public.actors[draft.public.protagonistActorId];
+  if (protagonist !== undefined) {
+    protagonist.presentation = {
+      ...protagonist.presentation,
+      apparentAge: "16",
+      outfit: { label: "士郎的常服", details: "" },
+      demeanor: "倡强",
+    };
+  }
+  draft.public.allyActorIds = ["rin"];
+  draft.public.scene.presentActorIds = ["protagonist", "rin"];
+
+  const md = buildRelationsMarkdown(draft.public);
+
+  // NPC 的衣着与神态可见（之前整组哑字段）
+  assert.match(md, /红色魔术礼装/);
+  assert.match(md, /沉静/);
+  // 主角同样可见（对称修复）
+  assert.match(md, /士郎的常服/);
+});
+
 void test("buildRelationsMarkdown shows impression cards for present actors", () => {
   const draft = createInitialState();
   addTestNpc(draft, "rin", "Ally");

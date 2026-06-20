@@ -13,6 +13,21 @@ import { recentPlayerKnownRelationshipSignals } from "./relationship-signal.ts";
 
 // ─── /relations ──────────────────────────────────────────────────
 
+// 外观三件套：表观年龄 / 衣着 / 神态，非空项紧凑拼串（details 太细不进摘要）。
+function formatAppearance(actor: NonNullable<PublicGameState["actors"][string]>): string {
+  const p = actor.presentation;
+  return [p.apparentAge, p.outfit.label, p.demeanor]
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0)
+    .join(" · ");
+}
+
+function formatActorRelationLine(actor: NonNullable<PublicGameState["actors"][string]>): string {
+  const look = formatAppearance(actor);
+  const lookTag = look.length > 0 ? `（${look}）` : "";
+  return `- **${actor.presentation.renderName}**${lookTag}：${actor.relationshipToProtagonist.summary}`;
+}
+
 export function buildRelationsMarkdown(publicState: PublicGameState): string {
   const sections: string[] = ["## 关系概览", ""];
 
@@ -20,6 +35,10 @@ export function buildRelationsMarkdown(publicState: PublicGameState): string {
   const protagonist = publicState.actors[publicState.protagonistActorId];
   if (protagonist !== undefined) {
     sections.push(`### ${protagonist.presentation.renderName}（你）`, "");
+    const protagonistLook = formatAppearance(protagonist);
+    if (protagonistLook.length > 0) {
+      sections.push(`- 外观：${protagonistLook}`, "");
+    }
   }
 
   const allies = publicState.allyActorIds
@@ -28,9 +47,7 @@ export function buildRelationsMarkdown(publicState: PublicGameState): string {
   if (allies.length > 0) {
     sections.push("### 同行者", "");
     for (const ally of allies) {
-      sections.push(
-        `- **${ally.presentation.renderName}**：${ally.relationshipToProtagonist.summary}`,
-      );
+      sections.push(formatActorRelationLine(ally));
     }
     sections.push("");
   }
@@ -44,9 +61,7 @@ export function buildRelationsMarkdown(publicState: PublicGameState): string {
   if (presentNpcs.length > 0) {
     sections.push("### 当前在场", "");
     for (const npc of presentNpcs) {
-      sections.push(
-        `- **${npc.presentation.renderName}**：${npc.relationshipToProtagonist.summary}`,
-      );
+      sections.push(formatActorRelationLine(npc));
     }
     sections.push("");
   }
