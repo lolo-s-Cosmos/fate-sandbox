@@ -80,11 +80,10 @@ void test("buildRelationsMarkdown surfaces appearance for protagonist and NPCs",
 
   const md = buildRelationsMarkdown(draft.public);
 
-  // NPC 的衣着与神态可见（之前整组哑字段）
-  assert.match(md, /红色魔术礼装/);
-  assert.match(md, /沉静/);
-  // 主角同样可见（对称修复）
-  assert.match(md, /士郎的常服/);
+  // NPC 外观三件套（表观年龄 · 衣着 · 神态）整组可见，之前整组哑字段。
+  assert.ok(md.includes("（17 · 红色魔术礼装 · 沉静）"));
+  // 主角同样可见（对称修复）。
+  assert.ok(md.includes("16 · 士郎的常服 · 倡强"));
 });
 
 void test("buildRelationsMarkdown shows impression cards for present actors", () => {
