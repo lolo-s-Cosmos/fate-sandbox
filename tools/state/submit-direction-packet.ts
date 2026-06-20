@@ -73,7 +73,7 @@ export const submitDirectionPacketToolDefinition: FateToolDefinition = {
     npcStances: Type.Optional(
       Type.Array(
         Type.Object({
-          actorId: Type.String(),
+          actorId: Type.String({ description: "在场 NPC 的 actor id；必须已存在于 public actors" }),
           stance: Type.String({ description: "行为基调" }),
           wants: Type.String({ description: "本轮驱动其主动行为的欲望" }),
           move: Type.String({

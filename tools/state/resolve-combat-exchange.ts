@@ -116,7 +116,7 @@ export const resolveCombatExchangeToolDefinition: FateToolDefinition = {
     "- 把 outcome 当成自动状态变更\n" +
     "- 输出 HP、内部 score、DC 或未揭示秘密",
   parameters: Type.Object({
-    actorId: Type.String({ description: "本方 actor id" }),
+    actorId: Type.String({ description: "本方 actor id；必须已存在于 public actors" }),
     opponentId: Type.String({ description: "主要对手 actor id" }),
     intent: Type.String({ description: "当前动作意图" }),
     tactic: Type.String({

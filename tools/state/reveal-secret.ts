@@ -72,7 +72,7 @@ export const revealSecretToolDefinition: FateToolDefinition = {
       description:
         "claim-reveal / observed-reveal / configure-servant-secrets / configure-actor-secrets",
     }),
-    actorId: Type.String(),
+    actorId: Type.String({ description: "要揭示秘密的 actor id；必须已存在于 public actors" }),
     claim: Type.Optional(Type.String()),
     trigger: Type.Optional(Type.String()),
     evidence: Type.Optional(Type.String()),

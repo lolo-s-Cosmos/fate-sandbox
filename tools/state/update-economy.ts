@@ -67,7 +67,9 @@ export const updateEconomyToolDefinition: FateToolDefinition = {
         description: "不确定 purseId 时填写 actorId；若该 actor 只有一个 held purse 会自动选择",
       }),
     ),
-    debtorActorId: Type.Optional(Type.String()),
+    debtorActorId: Type.Optional(
+      Type.String({ description: "债务人 actor id；必须已存在于 public actors" }),
+    ),
     creditor: Type.Optional(Type.String()),
     source: Type.Optional(
       Type.String({

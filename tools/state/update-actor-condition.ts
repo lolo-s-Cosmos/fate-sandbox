@@ -35,7 +35,9 @@ export const updateActorConditionToolDefinition: FateToolDefinition = {
       description:
         "add-wound / update-wound / add-affliction / add-permanent-effect / update-magecraft-circuits / resolve-condition / change-outfit / update-outfit(alias) / change-clothes(alias) / transfer-tracked-item / update-tracked-item / add-tracked-item",
     }),
-    actorId: Type.Optional(Type.String()),
+    actorId: Type.Optional(
+      Type.String({ description: "目标 actor id；必须已存在于 public actors" }),
+    ),
     severity: Type.Optional(
       Type.String({ description: "minor / moderate / severe / critical" }),
     ),
@@ -62,8 +64,12 @@ export const updateActorConditionToolDefinition: FateToolDefinition = {
       }),
     ),
     itemId: Type.Optional(Type.String()),
-    holderActorId: Type.Optional(Type.Unknown({ description: "持有者 actorId 或 null" })),
-    ownerActorId: Type.Optional(Type.Unknown({ description: "所有者 actorId 或 null" })),
+    holderActorId: Type.Optional(
+      Type.Unknown({ description: "物品持有者 actor id；必须已存在于 public actors，或 null" }),
+    ),
+    ownerActorId: Type.Optional(
+      Type.Unknown({ description: "物品所有者 actor id；必须已存在于 public actors，或 null" }),
+    ),
     label: Type.Optional(Type.String({ description: "add-tracked-item 必填：玩家可见标签" })),
     itemKind: Type.Optional(
       Type.String({

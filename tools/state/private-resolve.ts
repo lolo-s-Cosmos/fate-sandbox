@@ -36,8 +36,10 @@ export const privateResolveToolDefinition: FateToolDefinition = {
     "- 用它替代 reveal_secret",
   parameters: Type.Object({
     kind: Type.String({ description: "允许: hidden-reaction / secret-compatibility" }),
-    actorId: Type.String(),
-    targetActorId: Type.Optional(Type.String()),
+    actorId: Type.String({ description: "主体 actor id；必须已存在于 public actors" }),
+    targetActorId: Type.Optional(
+      Type.String({ description: "对象 actor id；必须已存在于 public actors" }),
+    ),
     stimulus: Type.Optional(Type.String()),
     publicContext: Type.Optional(Type.String()),
     interaction: Type.Optional(Type.String()),

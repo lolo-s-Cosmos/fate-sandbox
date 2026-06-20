@@ -28,7 +28,7 @@ export const retireActorToolDefinition: FateToolDefinition = {
     "- 删除仍被契约/master role/tracked item 引用的 actor\n" +
     "- 用它隐藏仍属 active threat 的敌人（应留在 scene/threat 或 offscreen/memory 结算）",
   parameters: Type.Object({
-    actorId: Type.String(),
+    actorId: Type.String({ description: "要退场的 actor id；必须已存在于 public actors" }),
     reason: Type.String(),
   }),
   execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>

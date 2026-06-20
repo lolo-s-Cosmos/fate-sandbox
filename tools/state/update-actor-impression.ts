@@ -66,7 +66,7 @@ export const updateActorImpressionToolDefinition: FateToolDefinition = {
     "- 纯路人、无台词配角\n" +
     "- 已有印象卡且无变化的 NPC",
   parameters: Type.Object({
-    actorId: Type.String({ description: "actor 标识" }),
+    actorId: Type.String({ description: "目标 actor id；必须已存在于 public actors" }),
     presence: Type.String({ description: "外在气场：给人的第一印象、体格/气质/压迫感（1 行）" }),
     actionStyle: Type.String({ description: "行动风格：说话习惯、决策偏好、典型行为模式（1 行）" }),
     relationshipPosture: Type.String({ description: "当前对主角的姿态（1 行）" }),

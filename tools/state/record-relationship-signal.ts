@@ -86,8 +86,10 @@ export const recordRelationshipSignalToolDefinition: FateToolDefinition = {
     "- 用抽象判词代替行为证据\n" +
     "- 把 boundary 写成未来剧情指令",
   parameters: Type.Object({
-    actorId: Type.String({ description: "发出信号的 actor id；必须已存在" }),
-    targetActorId: Type.String({ description: "信号指向的 actor id；通常是 protagonist，也可以是 NPC" }),
+    actorId: Type.String({ description: "发出信号的 actor id；必须已存在于 public actors" }),
+    targetActorId: Type.String({
+      description: "信号指向的 actor id；必须已存在于 public actors；通常是 protagonist，也可以是 NPC",
+    }),
     signal: Type.String({ description: "行为证据：动作、称呼、距离、停顿、回避、照料或选择" }),
     interpretation: Type.String({ description: "当前解读：为什么这条行为改变关系读法" }),
     boundary: Type.String({ description: "边界：这条信号不能被过度解读成什么" }),

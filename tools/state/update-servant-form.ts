@@ -86,7 +86,7 @@ export const updateServantFormToolDefinition: FateToolDefinition = {
       description:
         "允许: spend-mana, restore-mana, damage-spiritual-core, add-param-modifier, change-contract, add-permanent-defect。锁定字段不可用本工具修改。",
     }),
-    actorId: Type.String(),
+    actorId: Type.String({ description: "目标从者 actor id；必须已存在于 public actors" }),
     amount: Type.Optional(
       Type.Unknown({ description: "数值；可填 number 或数字字符串，由领域工具校验。" }),
     ),
