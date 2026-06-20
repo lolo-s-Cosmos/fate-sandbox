@@ -7,6 +7,7 @@ import { migrateStateToolDefinition } from "./debug/migrate-state.ts";
 import { overrideLockedFactToolDefinition } from "./debug/override-locked-fact.ts";
 import { resetStateToolDefinition } from "./debug/reset-state.ts";
 import { lookupToolDefinition } from "./lookup/lookup.ts";
+import { renderDomainToolResult } from "./runtime/tool-render.ts";
 import { commitTurnToolDefinition } from "./state/commit-turn.ts";
 import { configureCampaignToolDefinition } from "./state/configure-campaign.ts";
 import { getStatusToolDefinition } from "./state/get-status.ts";
@@ -71,6 +72,6 @@ const TOOL_DEFINITIONS: readonly FateToolDefinition[] = [
 
 export function registerAllTools(pi: ExtensionAPI): void {
   for (const definition of TOOL_DEFINITIONS) {
-    pi.registerTool({ label: "FSN 叙事", ...definition });
+    pi.registerTool({ label: "FSN 叙事", renderResult: renderDomainToolResult, ...definition });
   }
 }
