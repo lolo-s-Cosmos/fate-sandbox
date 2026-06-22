@@ -24,7 +24,7 @@ void test("runParallelLineTool emits async spawn instructions + full director pr
   assert.match(text, /异步 spawn/);
   assert.match(text, /recipe=parallel_line/);
   assert.match(text, /model=deepseek-v4-pro/);
-  assert.match(text, /session_dir=~\/\.pi\/agent\/backstage-sessions/);
+  assert.match(text, /session_dir=\.pi\/agent\/backstage-sessions/);
   assert.match(text, /harvest_backstage_candidate/);
   assert.doesNotMatch(text, /agentScope/);
   // the full director prompt is embedded for the GM to pass to spawn

@@ -19,8 +19,12 @@ export const BACKSTAGE_RECIPE = "parallel_line";
 export const BACKSTAGE_MODEL = "deepseek-v4-pro";
 
 /**
- * Durable session dir for director runs. Lives OUTSIDE the repo: the director is
- * fed privateFacts (hidden knowledge), so its session holds secrets at rest.
- * Never under the project tree, never committed.
+ * Durable session dir for director runs. The game runs under project isolation
+ * (start.sh sets PI_CODING_AGENT_DIR=.pi/agent), and `.pi/agent/` is fully
+ * gitignored (it already holds auth.json). The director is fed privateFacts
+ * (hidden knowledge), so its session holds secrets at rest — keeping it under the
+ * gitignored `.pi/agent/` tree means secrets-at-rest never enter the git-tracked
+ * source, consistent with where auth.json lives. Resolved relative to the
+ * project cwd by the spawned child.
  */
-export const BACKSTAGE_SESSION_DIR = "~/.pi/agent/backstage-sessions";
+export const BACKSTAGE_SESSION_DIR = ".pi/agent/backstage-sessions";

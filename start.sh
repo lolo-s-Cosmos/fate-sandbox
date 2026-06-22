@@ -75,6 +75,17 @@ else
   echo "✓ 玩家模式：已禁用 pi-subagents 内置 coding agents（开发模式: TAVERN2AGENT_DEV=1 ./start.sh）"
 fi
 
+# ---- 后台 director recipe（pi-actors 异步后台生成底座）----
+# run_parallel_line 装配 hermetic director prompt 并【异步 spawn】faction-director（pi-actors recipe，
+# 替代已废弃的同步 parallel-line 子代理）。PI_CODING_AGENT_DIR=.pi/agent 下，pi-actors 从
+# .pi/agent/recipes/ 发现 recipe；把项目内 agents/recipes/ 的版本同步过去。
+# backstage-sessions 持久存导演 session（含隐藏事实），落在 gitignored 的 .pi/agent/ 下。
+mkdir -p .pi/agent/recipes .pi/agent/backstage-sessions
+if compgen -G "./agents/recipes/*.json" >/dev/null 2>&1; then
+  cp -f ./agents/recipes/*.json .pi/agent/recipes/
+  echo "✓ 已同步后台 director recipe → .pi/agent/recipes/"
+fi
+
 # 双模型：渲染轮（玩家可见正文）可与结算轮用不同模型，详见 README “Model Notes”。
 if [ -n "${FATE_RENDER_MODEL:-}" ]; then
   echo "✓ 渲染轮模型覆盖：FATE_RENDER_MODEL=$FATE_RENDER_MODEL（未命中会回退结算模型）"
