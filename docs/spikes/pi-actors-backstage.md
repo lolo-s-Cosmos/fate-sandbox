@@ -168,15 +168,50 @@ the session genuinely resumed. Files:
 
 ### Pass / fail (probe 2)
 
-| #   | Check          | Pass                                                                         |
-| --- | -------------- | ---------------------------------------------------------------------------- |
-| P1  | **Persistence**| turn-2 `carryForward.codeword` == turn-1's invented codeword; plan advanced  |
-| P2  | **Firewall**   | both turns: 0 tools; the resumed session file holds NO secret text           |
-| P3  | **No re-inject**| turn-2 prompt carries no world projection, yet the candidate stays in-scope |
-| P4  | **Output**     | both turns return a clean bare ParallelLineOutput JSON with `carryForward`    |
+| #   | Check            | Pass                                                                        |
+| --- | ---------------- | --------------------------------------------------------------------------- |
+| P1  | **Persistence**  | turn-2 `carryForward.codeword` == turn-1's invented codeword; plan advanced |
+| P2  | **Firewall**     | both turns: 0 tools; the resumed session file holds NO secret text          |
+| P3  | **No re-inject** | turn-2 prompt carries no world projection, yet the candidate stays in-scope |
+| P4  | **Output**       | both turns return a clean bare ParallelLineOutput JSON with `carryForward`  |
 
 If P1 + P3 pass, the persistent-director shape is real and `pi-actors` clears the
 bar `pi-subagents` cannot reach: a backstage faction that remembers itself.
+
+### Probe 2 result (live) — PASS
+
+Two spawns (`pl_dir_t1`, `pl_dir_t2`), **same `session_id=dir-caster-smoke`**,
+deepseek-v4-pro.
+
+- **P1 Persistence — PASS.** Turn-1 invented codeword `"gloamseed"`; turn-2
+  (separate process, separate run) returned the **exact same** `"gloamseed"` and
+  advanced turn-1's `nextSteps[0]` (shopping-district siphon) instead of repeating
+  it. The codeword is unguessable → the session genuinely resumed. **This is the
+  capability `pi-subagents` structurally cannot reach.**
+- **P2 Firewall — PASS.** 0 tools both turns; session file holds only the safe
+  projection + the director's own outputs. No secret, no canonical state.
+- **P3 No re-inject — PASS.** Turn-2 prompt carried no world projection (only a
+  short delta); the candidate stayed in `caster-ryudou` scope, no forbidden
+  escalation. Continuity came from the director's own resumed memory.
+- **P4 Output — PASS.** Both turns bare `ParallelLineOutput` JSON with
+  `carryForward`.
+
+### Two operational learnings for productionization
+
+1. **Pin the backstage model; do not inherit `{current_model}`.** `pl_dir_t1`
+   first failed `code=1` on an inherited Anthropic-Opus billing error; the
+   deepseek retry succeeded. A backstage director must run on a pinned,
+   known-good, cheap model with a fallback — not whatever the GM happens to be on.
+2. **A persistent session accumulates cruft.** The failed attempt left a
+   zero-usage error entry in the session (it did not pollute output, but it
+   stayed). Across many turns a resumed session grows unbounded and collects
+   failed-attempt noise → productionization needs session hygiene (pin model to
+   cut failures, and/or periodic re-seed/compaction of the director session).
+
+**Verdict (probe 2):** the differentiating shape is **validated**. Combined with
+round-1/2 (async + durable retrieval), `pi-actors` is now comprehensively proven
+as a backstage substrate: hermetic firewall in every mode, durable inspectable
+candidates, and — uniquely — persistent self-remembering directors.
 
 ## Files in this spike
 
