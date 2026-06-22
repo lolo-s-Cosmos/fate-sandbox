@@ -1,7 +1,7 @@
 /**
- * Backstage director prompt builder (pi-actors productionization, slice A).
+ * Backstage director prompt builder (engine-direct async director, slice A).
  *
- * The pi-actors faction-director child runs `pi -p --no-tools --no-approve
+ * The faction-director child runs `pi -p --no-tools --no-approve
  * --no-context-files`: zero tools, no project extension, its own empty session.
  * It therefore loads NO agent definition and NO canonical state — its entire
  * world is the single prompt we hand it. This builder assembles that prompt:

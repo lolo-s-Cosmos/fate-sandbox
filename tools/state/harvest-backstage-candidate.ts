@@ -1,5 +1,5 @@
 /**
- * harvest_backstage_candidate 领域工具（pi-actors 生产化 slice A，回程防火墙）。
+ * harvest_backstage_candidate 领域工具（引擎直接异步导演 slice A，回程防火墙）。
  *
  * 异步 faction-director 跑完后，GM 从该 director 的持久 session 取回最后一条
  * assistant 文本（裸候选）。本工具把这段原始文本过 engine 的 TypeBox 验收
@@ -51,7 +51,7 @@ function buildGuidance(candidate: ParallelLineOutput): string {
 export const harvestBackstageCandidateToolDefinition: FateToolDefinition = {
   name: "harvest_backstage_candidate",
   description:
-    "把异步 faction-director（pi-actors）返回的裸候选文本过 engine 验收，返回结构合法的 ParallelLineOutput 供审查后落地。\n\n" +
+    "把异步 faction-director 返回的裸候选文本过 engine 验收，返回结构合法的 ParallelLineOutput 供审查后落地。\n\n" +
     "【使用边界】\n" +
     "- faction-director 异步跑完，从其持久 session 取回最后一条 assistant 文本后，先过本工具验收\n" +
     "- 验收失败（非法 JSON / 缺字段）会报错：重开 director 或修正后重试\n" +

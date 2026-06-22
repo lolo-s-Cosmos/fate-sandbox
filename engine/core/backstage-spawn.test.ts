@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { BACKSTAGE_MODEL, BACKSTAGE_SESSION_DIR } from "./backstage-substrate-config.ts";
 import { buildDirectorSpawnArgs } from "./backstage-spawn.ts";
+import { BACKSTAGE_MODEL, BACKSTAGE_SESSION_DIR } from "./backstage-substrate-config.ts";
 
 void test("buildDirectorSpawnArgs composes the hermetic pi -p argv", () => {
   const args = buildDirectorSpawnArgs("DIRECTOR PROMPT BODY", "bl-caster-ryudou");

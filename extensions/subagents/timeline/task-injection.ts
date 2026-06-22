@@ -13,7 +13,7 @@ import { isRecord } from "../../../engine/core/typebox-validation.ts";
 
 /**
  * 需要注入 <timeline_state_context> 的 project-scope 子代理名（不含 package 前缀）。
- * parallel-line 已迁到 pi-actors 异步后台底座（不再走同步子代理，上下文由
+ * parallel-line 已迁到引擎直接异步后台底座（不再走同步子代理，上下文由
  * engine 的 buildBackstageDirectorPrompt 直接拼进 prompt）；仅 timeline-showrunner
  * 仍用同步子代理 + 这里的就地注入。
  */

@@ -75,19 +75,11 @@ else
   echo "✓ 玩家模式：已禁用 pi-subagents 内置 coding agents（开发模式: TAVERN2AGENT_DEV=1 ./start.sh）"
 fi
 
-# ---- 后台 director recipe（pi-actors 异步后台生成底座）----
-# run_parallel_line 装配 hermetic director prompt 并【异步 spawn】faction-director（pi-actors recipe，
-# 替代已废弃的同步 parallel-line 子代理）。PI_CODING_AGENT_DIR=.pi/agent 下，pi-actors 从
-# .pi/agent/recipes/ 发现 recipe；把项目内 agents/recipes/ 的版本同步过去。
-# backstage-sessions 持久存导演 session（含隐藏事实），落在 gitignored 的 .pi/agent/ 下。
-mkdir -p .pi/agent/recipes .pi/agent/backstage-sessions
-if compgen -G "./agents/recipes/*.json" >/dev/null 2>&1; then
-  cp -f ./agents/recipes/*.json .pi/agent/recipes/
-  # recipe 是可执行资产；pi-actors 拒绝/告警 group-writable 的 recipe 根（组内可注入恶意 recipe）。
-  # 默认 umask 0002 会让 cp 出的文件/目录带 g+w，每次启动都去掉组写。
-  chmod -R g-w .pi/agent/recipes
-  echo "✓ 已同步后台 director recipe → .pi/agent/recipes/（已去组写）"
-fi
+# ---- 后台 director sessions ----
+# run_parallel_line 由引擎直接 fork 后台导演（detached `pi -p`，见 ADR 0005），
+# 导演 session（含隐藏事实）持久落在 gitignored 的 .pi/agent/backstage-sessions/。
+# 引擎首次 spawn 会自建该目录；此处预建只为显式留痕。
+mkdir -p .pi/agent/backstage-sessions
 
 # 双模型：渲染轮（玩家可见正文）可与结算轮用不同模型，详见 README “Model Notes”。
 if [ -n "${FATE_RENDER_MODEL:-}" ]; then

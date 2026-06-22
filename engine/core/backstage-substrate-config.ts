@@ -1,14 +1,11 @@
 /**
- * Backstage substrate config (pi-actors productionization).
+ * Backstage substrate config (engine-direct async director — see ADR 0005).
  *
- * Single source for the async faction-director run parameters. The GM-facing
- * spawn instructions (run_parallel_line) read these; the recipe file, start
- * scripts, and docs must match (they cannot import TS, so they hardcode the same
- * values with a pointer back here).
+ * Single source for the async faction-director run parameters. `run_parallel_line`
+ * forks `pi -p` directly with these (backstage-spawn.ts); the start scripts and
+ * docs must match (they cannot import TS, so they hardcode the same values with a
+ * pointer back here).
  */
-
-/** pi-actors recipe name (installed to ~/.pi/agent/recipes/). Slice A: stateless single-line. */
-export const BACKSTAGE_RECIPE = "parallel_line";
 
 /**
  * Pinned backstage model. Do NOT inherit {current_model}: a backstage director

@@ -1,13 +1,12 @@
 /**
- * Backstage director spawn (pi-actors-free, engine-direct async substrate).
+ * Backstage director spawn (engine-direct async substrate — see ADR 0005).
  *
  * `run_parallel_line` fires the hermetic backstage director ITSELF — a detached
  * `pi -p` child — instead of handing the GM a spawn instruction. One GM tool call
- * launches the async line; the main agent loop is not in the middle. This is the
- * same command a pi-actors recipe would run (`pi -p --no-tools --no-approve
- * --no-context-files ...`), just forked directly by the engine, so slice A needs
- * no pi-actors dependency. (pi-actors stays reserved for the later persistent /
- * swarm / coordination slices, where its inspect/registry earn their keep.)
+ * launches the async line; the main agent loop is not in the middle. No subagent
+ * framework is involved: the engine forks `pi -p` via node:child_process, which is
+ * all slice A needs (the surveyed frameworks were ruled out in ADR 0005). The
+ * persistent / swarm / coordination growth path is a few lines on this same seam.
  *
  * Firewall: --no-tools (zero tools) + --no-approve (no project extension loaded)
  * + its own session under the gitignored .pi/agent/backstage-sessions. The child

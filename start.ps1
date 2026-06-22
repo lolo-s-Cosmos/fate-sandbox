@@ -164,21 +164,12 @@ if ($DevMode) {
   Write-Host "Dev mode: set `$env:TAVERN2AGENT_DEV='1'; then run .\start.ps1"
 }
 
-# Backstage director recipe (pi-actors async backstage substrate). run_parallel_line
-# assembles a hermetic director prompt and async-spawns a faction-director (pi-actors
-# recipe), replacing the retired synchronous parallel-line subagent. Under
-# PI_CODING_AGENT_DIR=.pi/agent, pi-actors discovers recipes in .pi/agent/recipes/;
-# sync the project-tracked copies from agents/recipes/. backstage-sessions holds the
-# durable director sessions (with hidden facts) under the gitignored .pi/agent/ tree.
-$RecipesDir = Join-Path $ProjectAgentDir 'recipes'
+# Backstage director sessions. run_parallel_line forks the backstage director
+# directly from the engine (detached `pi -p`, see ADR 0005); its session (with
+# hidden facts) persists under the gitignored .pi/agent/backstage-sessions/. The
+# engine self-creates the dir on first spawn; pre-create it here only for clarity.
 $BackstageSessionsDir = Join-Path $ProjectAgentDir 'backstage-sessions'
-New-Item -ItemType Directory -Force -Path $RecipesDir | Out-Null
 New-Item -ItemType Directory -Force -Path $BackstageSessionsDir | Out-Null
-$RecipeSrc = Join-Path (Get-Location) 'agents/recipes'
-if (Test-Path $RecipeSrc) {
-  Copy-Item -Force -Path (Join-Path $RecipeSrc '*.json') -Destination $RecipesDir -ErrorAction SilentlyContinue
-  Write-Host "Synced backstage director recipe -> .pi/agent/recipes/"
-}
 
 if ($env:FATE_RENDER_MODEL) {
   Write-Host "Render pass model override: FATE_RENDER_MODEL=$env:FATE_RENDER_MODEL"
