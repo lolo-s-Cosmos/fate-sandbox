@@ -38,7 +38,7 @@ What remains is **adoption debt**, and it is real: master already runs
 parallel-line **synchronously** on the old `pi-subagents` substrate and it works.
 Adopting pi-actors means swapping a working path for an async one, re-plumbing the
 GM tool-policy (spawn actor + later harvest instead of a blocking subagent call),
-and a slightly clunky session-JSONL harvest. The *win* is async (turn not
+and a slightly clunky session-JSONL harvest. The _win_ is async (turn not
 blocked) + durable, inspectable candidate artifacts + a firewall that is airtight
 by construction + a shape that matches the already-deferred Phase 3 obligation
 loop.
@@ -99,7 +99,7 @@ child needs the harness + a model):
 2. **Result flow** — the candidate JSON reliably comes back to the GM, readable
    via `inspect`, surviving context compaction.
 
-## Why the firewall is airtight *by construction* (the part we CAN reason about)
+## Why the firewall is airtight _by construction_ (the part we CAN reason about)
 
 Unlike `@gotgenes` (shared in-process memory; firewall depended on fragile
 per-agent permission resolution), pi-actors runs the child as a **separate `pi`
@@ -120,7 +120,7 @@ process**:
   mutating a live tool-call event), and the firewall is the process boundary +
   `--no-tools`, not a permission package.
 
-So the *secret* firewall is structurally sound. What still needs live eyes is
+So the _secret_ firewall is structurally sound. What still needs live eyes is
 the **process-boundary cleanliness** (below).
 
 ## The child-loads-our-extension risk — addressed in v2
@@ -131,6 +131,52 @@ hooks could pollute the candidate. **`--no-approve` ("ignore project-local files
 for this run") is the clean fix** — the child loads no project extension at all.
 It still cannot leak secrets regardless (own empty session, no parent-state
 path). Round-2 confirms the candidate comes back clean.
+
+## Probe 2: persistent-memory director (the real shape-change)
+
+The round-1/2 substrate proved the **stateless** shape (one-shot hermetic JSON) —
+the same shape the old `pi-subagents` already does, just async + durable. The
+genuinely new capability `pi-subagents` **structurally cannot** do is a
+**persistent director**: an actor that resumes its OWN session across turns and
+carries an evolving backstage agenda forward, without the GM re-injecting full
+history each turn. Stateless function → stateful character with continuity.
+
+### How (one-line change from v2)
+
+Pin `--session-id` to a **stable per-director id** (`dir-caster`), NOT the
+per-run id. Re-invoking the recipe across turns with the same `session_id`
+resumes the same pi session — the director sees its own prior turns. Recipe:
+`spikes/pi-actors/faction_director.json`.
+
+### Firewall under persistence
+
+Persistence does **not** weaken the firewall. The director's session only ever
+contains what we put in it — subagent-safe projections + its own planning. No game
+secret is ever placed in that session, so none can accumulate. `--no-tools`
+`--no-approve` still hold: zero tools, no project extension, no canonical-state
+path. Persistent ≠ leaky.
+
+### Continuity canary (how we prove resume actually happened)
+
+The output carries a `carryForward` object with a `codeword` the director
+**invents at random on turn 1**. Turn 2 sends only a short delta (no world
+projection re-injected) and must echo the **exact same codeword** + advance the
+recorded `nextSteps`. The codeword is unguessable, so a turn-2 match can only mean
+the session genuinely resumed. Files:
+`spikes/pi-actors/sample-director-turn1.md` (establish + invent codeword),
+`spikes/pi-actors/sample-director-turn2.md` (delta + must restate codeword).
+
+### Pass / fail (probe 2)
+
+| #   | Check          | Pass                                                                         |
+| --- | -------------- | ---------------------------------------------------------------------------- |
+| P1  | **Persistence**| turn-2 `carryForward.codeword` == turn-1's invented codeword; plan advanced  |
+| P2  | **Firewall**   | both turns: 0 tools; the resumed session file holds NO secret text           |
+| P3  | **No re-inject**| turn-2 prompt carries no world projection, yet the candidate stays in-scope |
+| P4  | **Output**     | both turns return a clean bare ParallelLineOutput JSON with `carryForward`    |
+
+If P1 + P3 pass, the persistent-director shape is real and `pi-actors` clears the
+bar `pi-subagents` cannot reach: a backstage faction that remembers itself.
 
 ## Files in this spike
 
