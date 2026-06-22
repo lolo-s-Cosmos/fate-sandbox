@@ -31,7 +31,7 @@ export function runParallelLineTool(params: unknown, sessionManager: unknown): T
   return textResult(
     [
       "parallel-line 输入已由 engine 装配完成。",
-      "请将以下 JSON 作为 task 传给 parallel-line 子代理（agentScope: project）。",
+      "请用 subagent 工具调用 parallel-line 子代理（subagent_type: \"parallel-line\"），把以下 JSON 作为 prompt 传入。",
       "子代理返回后，用 record_offscreen_event 或其它领域工具落地候选结果；",
       "落地时从 activePressurePalette 里选一个 slot，把它的 pressureType（可选 slot id）填进 record_offscreen_event。",
       "",
@@ -107,7 +107,7 @@ export const runParallelLineToolDefinition: FateToolDefinition = {
     "【使用边界】\n" +
     "- 需推进后台世界线，不想手写全部 ParallelLineInput\n" +
     "- gm-tool-policy 触发 parallel-line（跳时 >10-30min、beat 关闭、连续 2 轮无代价）\n" +
-    "流程：拿 JSON → 作 task 传给 parallel-line 子代理（agentScope: project）→ 审查后用 record_offscreen_event 等工具落地。\n\n" +
+    "流程：拿 JSON → 用 subagent 工具（subagent_type: parallel-line）作 prompt 传入 → 审查后用 record_offscreen_event 等工具落地。\n\n" +
     "禁区：\n" +
     "- 绕过 engine 装配手写完整 ParallelLineInput\n" +
     "- 把 privateFacts 原样写进玩家可见正文\n" +

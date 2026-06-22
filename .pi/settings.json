@@ -1,4 +1,9 @@
 {
-  "packages": ["npm:pi-web-access", "npm:pi-claude-oauth-adapter"],
+  "packages": [
+    "npm:@gotgenes/pi-subagents",
+    "npm:@gotgenes/pi-permission-system",
+    "npm:pi-web-access",
+    "npm:pi-claude-oauth-adapter"
+  ],
   "npmCommand": ["pnpm"]
 }

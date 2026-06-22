@@ -1,6 +1,6 @@
 # Spike: in-process subagents for a synchronous `advance_parallel_line`
 
-**Branch:** `spike/in-process-subagents` · **Status:** feasibility validated, NOT merged
+**Branch:** `spike/in-process-subagents` · **Status:** migration EXECUTED on branch (round 3), pending online runtime validation. NOT merged.
 **Candidate substrate:** [`@gotgenes/pi-subagents@17.2.0`](https://pi.dev/packages/@gotgenes/pi-subagents) (in-process hard fork of tintinweb's)
 
 ## Question
@@ -208,5 +208,57 @@ bypassQueue)`, `await waitForAll()`, reads `getRecord(id).result`, then
 ## Artifacts on this branch
 
 - `spikes/in-process-subagents.spike.test.ts` — runnable control-flow proof.
-- `package.json` / lockfile — `@gotgenes/pi-subagents@17.2.0` added (spike only;
-  revert before any merge that doesn't adopt the migration).
+- `package.json` / lockfile — `@gotgenes/pi-subagents@17.2.0` +
+  `@gotgenes/pi-permission-system@16.0.1` added.
+
+## Round 3: migration executed — runtime validation checklist
+
+Steps 1–3 + 5 of the migration path are now done on the branch (the
+`advance_parallel_line` one-shot, step 4, is intentionally deferred until the
+substrate is confirmed). Changes:
+
+- `.pi/settings.json` packages: removed `npm:pi-subagents`, added
+  `npm:@gotgenes/pi-subagents` + `npm:@gotgenes/pi-permission-system`.
+- `start.sh` / `start.ps1`: removed the old pi-subagents `disableBuiltins` block.
+- `.pi/agents/parallel-line.md` + `timeline-showrunner.md`: frontmatter →
+  `prompt_mode: replace`, `tools: none`, `permission: { "*": deny, lookup: allow }`;
+  dropped `name`/`extensions`/`inheritProjectContext`/`inheritSkills`/`systemPromptMode`.
+- `extensions/subagents/timeline/task-injection.ts`: keyed on
+  `subagent_type` + `prompt` (was `agent`/`task`/`tasks`/`chain`); test updated.
+- `tools/state/run-parallel-line.ts`, `agents/gm-tool-policy.md`, `AGENTS.md`:
+  calling convention → `subagent({ subagent_type, prompt })`, no `agentScope`.
+
+**Headless status:** 527 tests pass, tsc + oxlint clean. The substrate behavior
+itself is NOT exercisable headless (needs the harness + a model).
+
+**Online validation (run `./start.sh`, watch for):**
+
+1. **Install** — pi installs both @gotgenes packages into `.pi/npm` from
+   `.pi/settings.json`. `@gotgenes/pi-permission-system` pulls `tree-sitter-bash`
+   (a native build); if pnpm prints `Ignored build scripts`, run
+   `pnpm -C .pi/npm approve-builds` (or the prompted command) so the permission
+   gate's bash parser initializes.
+2. **No `subagent` tool collision** — only one `subagent` tool exists (old
+   removed). `/agents` should list `parallel-line` + `timeline-showrunner`.
+3. **Firewall** — spawn `parallel-line`; its active tool set must be **only
+   `lookup`** (every domain/secret tool denied). This is the critical secret
+   check. If domain tools leak in, the permission policy did not resolve the
+   child agent name — verify `.pi/agents/parallel-line.md` `permission:` parsed.
+4. **Context injection** — the child's `prompt` must contain
+   `<timeline_state_context>` (injected by `task-injection.ts`).
+5. **Child-context hooks (the main unknown)** — the child inherits ALL `-e`
+   extensions (our `extension.ts`, player-panel, two-pass-render,
+   compaction-policy, rewind, player-choices). Their `session_start`/`tool_call`
+   hooks bind in the child. Watch for: a player panel rendering inside the child,
+   two-pass render firing on the child, `syncStateFromSessionManager` running
+   against the child session, or errors at child spawn. If any misbehaves, guard
+   our hooks to no-op in child sessions (subscribe to
+   `subagents:child:session-created` to learn child session ids).
+6. **Version compatibility** — pi-subagents 17.2.0 + permission-system 16.0.1
+   are monorepo siblings; confirm the permission companion actually receives the
+   child lifecycle event (firewall depends on it). If the child is not detected,
+   the per-agent permission never applies → firewall silently off (check #3
+   catches this).
+
+If #3 and #5 pass, the substrate is sound and `advance_parallel_line` (step 4)
+becomes a low-risk follow-up.

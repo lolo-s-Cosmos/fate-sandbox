@@ -1,23 +1,18 @@
 /**
  * 主 GM 进程侧的 timeline 子代理上下文注入。
  *
- * canonical state 只活在主进程内存 + session entries 里；子代理是独立 pi 进程，
- * 看不到这两者。旧方案让子代理 extension 去读 state/state.json 侧通道，
- * 会拿到陈旧/被测试砸坏/属于别的 session 的快照。新方案：主进程在 subagent
- * 工具调用发出前（tool_call 事件的 event.input 官方可变），把调用瞬间的
- * 子代理安全投影直接改写进 task 参数，零文件、零 env、secrets 过滤留在父侧。
+ * canonical state 只活在主进程内存 + session entries 里。@gotgenes/pi-subagents
+ * 的子代理与主进程同 runtime，但跑在独立 session，看不到主 session 的 state。
+ * 这里在 subagent 工具调用发出前（tool_call 事件的 event.input 官方可变），把调用
+ * 瞬间的子代理安全投影直接改写进 prompt 参数，零文件、零 env、secrets 过滤留在父侧。
  */
 
 import { buildTimelineStateContextFromRaw } from "../../../engine/core/state-file-projection.ts";
-import { isRecord } from "../../../engine/core/typebox-validation.ts";
 
 /** 需要注入 <timeline_state_context> 的 project-scope 子代理名（不含 package 前缀）。 */
 const TIMELINE_CONTEXT_AGENTS = new Set(["parallel-line", "timeline-showrunner"]);
 
 const CONTEXT_OPEN_TAG = "<timeline_state_context>";
-
-/** chain 步骤省略 task 时 pi-subagents 默认用 {previous}，注入时必须保住该语义。 */
-const CHAIN_DEFAULT_TASK = "{previous}";
 
 export function buildTimelineStateContextBlock(rawState: unknown): string {
   const context = buildTimelineStateContextFromRaw(rawState);
@@ -33,68 +28,24 @@ export function buildTimelineStateContextBlock(rawState: unknown): string {
 }
 
 /**
- * 就地改写 subagent 工具调用参数，给所有 timeline 子代理的 task 追加上下文块。
- * 覆盖三种执行形态：SINGLE（agent/task）、PARALLEL（tasks[]）、CHAIN
- * （chain[] 的顺序步骤、静态 parallel 数组、expand/collect 的动态 parallel 模板）。
- * 返回注入条数；已含上下文块的 task 跳过，保证幂等。
+ * 就地改写 subagent 工具调用参数，给 timeline 子代理的 prompt 追加上下文块。
+ * @gotgenes/pi-subagents 的 subagent 工具是单发形态：
+ * `{ subagent_type, prompt, description }`（无 unscoped 的 tasks[]/chain[] DSL）。
+ * 返回注入条数（0/1）；已含上下文块的 prompt 幂等跳过。
  */
 export function injectTimelineContextIntoSubagentInput(
   input: Record<string, unknown>,
   contextBlock: string,
 ): number {
-  let injected = 0;
-  if (isTimelineAgent(input["agent"])) {
-    injected += injectIntoTaskHolder(input, contextBlock, "");
-  }
-  injected += injectIntoTaskEntries(input["tasks"], contextBlock, "");
-  const chain = input["chain"];
-  if (Array.isArray(chain)) {
-    for (const step of chain) {
-      if (!isRecord(step)) {
-        continue;
-      }
-      if (isTimelineAgent(step["agent"])) {
-        injected += injectIntoTaskHolder(step, contextBlock, CHAIN_DEFAULT_TASK);
-      }
-      const parallel = step["parallel"];
-      if (Array.isArray(parallel)) {
-        injected += injectIntoTaskEntries(parallel, contextBlock, CHAIN_DEFAULT_TASK);
-      } else if (isRecord(parallel) && isTimelineAgent(parallel["agent"])) {
-        injected += injectIntoTaskHolder(parallel, contextBlock, CHAIN_DEFAULT_TASK);
-      }
-    }
-  }
-  return injected;
-}
-
-function injectIntoTaskEntries(
-  value: unknown,
-  contextBlock: string,
-  missingTaskBase: string,
-): number {
-  if (!Array.isArray(value)) {
+  if (!isTimelineAgent(input["subagent_type"])) {
     return 0;
   }
-  let injected = 0;
-  for (const entry of value) {
-    if (isRecord(entry) && isTimelineAgent(entry["agent"])) {
-      injected += injectIntoTaskHolder(entry, contextBlock, missingTaskBase);
-    }
-  }
-  return injected;
-}
-
-function injectIntoTaskHolder(
-  holder: Record<string, unknown>,
-  contextBlock: string,
-  missingTaskBase: string,
-): number {
-  const task = holder["task"];
-  if (typeof task === "string" && task.includes(CONTEXT_OPEN_TAG)) {
+  const prompt = input["prompt"];
+  if (typeof prompt === "string" && prompt.includes(CONTEXT_OPEN_TAG)) {
     return 0;
   }
-  const base = typeof task === "string" && task.trim() !== "" ? task : missingTaskBase;
-  holder["task"] = base === "" ? contextBlock : `${base}\n\n${contextBlock}`;
+  const base = typeof prompt === "string" && prompt.trim() !== "" ? prompt : "";
+  input["prompt"] = base === "" ? contextBlock : `${base}\n\n${contextBlock}`;
   return 1;
 }
 

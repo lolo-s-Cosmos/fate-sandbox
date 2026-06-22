@@ -209,12 +209,14 @@ type SceneResult =
 - `.pi/agents/parallel-line.md`：后台平行线候选，只输出结构化 offscreen 候选，不直接改 state，不面向玩家写正文。
 - `.pi/agents/timeline-showrunner.md`：世界线/题材审计，检查 drift、hook 滥用、NPC autonomy、world motion、beat closure。
 
+运行底座：`@gotgenes/pi-subagents`（同进程子代理）+ `@gotgenes/pi-permission-system`（按 agent 拒工具），都在 `.pi/settings.json` 的 packages 里声明。
+
 硬规则：
 
-- 主 GM 必须以 project scope 调用项目子代理；不要依赖 user-scope agent。
-- 子代理不得继承大块主项目上下文或技能目录：`inheritProjectContext: false`、`inheritSkills: false`。
-- 子代理必须显式配置 `tools` 和 `extensions`。不要 omitted `extensions`，否则可能加载普通扩展。
-- timeline 子代理只应加载 `extensions/subagents/timeline/index.ts`（提供 `lookup`）。`<timeline_state_context>` 由主 GM 进程在 subagent 工具调用发出前注入 task（`extensions/subagents/timeline/task-injection.ts`），不再读 state/state.json 侧通道。
+- 用 `subagent` 工具调用：`subagent({ subagent_type: "parallel-line", prompt, description })`；agent 由 `.pi/agents/<name>.md` 文件名识别，无需 agentScope。
+- 子代理 prompt 用 `prompt_mode: replace`（不继承 AGENTS.md / 主项目上下文）。
+- 防火墙靠 per-agent permission：frontmatter 写 `permission: { "*": deny, lookup: allow }` + `tools: none`。子代理虽继承主 GM 全部扩展，但除 `lookup` 外的每个工具（含全部 state-writing / secret 域工具）都被 deny，子代理拿不到、也看不到它们。改这条等于拆防火墙。
+- `<timeline_state_context>` 由主 GM 进程在 subagent 工具调用发出前注入 `prompt`（`extensions/subagents/timeline/task-injection.ts`，键于 `subagent_type` + `prompt`），不读 state/state.json 侧通道。
 - `parallel-line` 输出必须是 bare JSON；不要 Markdown、解释、长 prose。
 - 后台事件必须归属到 actor / faction / location / consequence，并给前台一个可行动痕迹；新闻、巡逻、门响、信件不能替代事件本体。
 
