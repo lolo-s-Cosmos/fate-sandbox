@@ -33,7 +33,7 @@ parent extensions into the child, so a `parallel-line` child would inherit every
 domain tool. `@gotgenes/pi-permission-system@16.0.1` resolves this:
 
 - **It is a pure companion — registers ZERO tools** (`grep registerTool
-  permsys/src/index.ts` → none). It only adds a `before_agent_start` handler,
+permsys/src/index.ts` → none). It only adds a `before_agent_start` handler,
   input/tool gates, subscribes to `@gotgenes/pi-subagents`' child lifecycle
   events, and publishes a permissions service. **No `subagent` tool collision**
   with `@gotgenes/pi-subagents`, which keeps the spawn tools + `getSubagentsService()`.
@@ -47,27 +47,35 @@ domain tool. `@gotgenes/pi-permission-system@16.0.1` resolves this:
 - **`{ "*": deny, lookup: allow }` reconstructs the hermetic agent.** Tool
   surfaces resolve via `evaluate(toolName, "*", composedRules)` (`rule.ts`):
   last-match-wins over `wildcardMatch(rule.surface, surface) &&
-  wildcardMatch(rule.pattern, value)`. A universal `"*"` default denies all
+wildcardMatch(rule.pattern, value)`. A universal `"*"` default denies all
   surfaces; a later `lookup` rule overrides for that one tool. So the
   `parallel-line` child ends up with **only `lookup`** active — exactly today's
   `tools: lookup` firewall, expressed as a denylist instead of an allowlist.
+- **`lookup` survives the inheritance, no extra wiring.** The main GM already
+  registers `lookup` itself (`registerAllTools` → `lookupToolDefinition`,
+  `tools/registry.ts`), so a child inheriting the parent's extensions inherits
+  `lookup` for free; the deny-all rule then leaves exactly that one tool. The
+  subagent-only `extensions/subagents/timeline/index.ts` registration (the
+  current per-subagent path) is just a re-wrap of the same `lookupTool` and is
+  not needed under the inherit-then-denylist model. (Correction to an earlier
+  spike note that claimed `lookup` was subagent-only — it is not.)
 
 ### Debt ledger (what migrating actually costs)
 
-| Item | Cost | Note |
-| --- | --- | --- |
-| Add `@gotgenes/pi-subagents` + `@gotgenes/pi-permission-system`; stop loading the unscoped harness `pi-subagents` | **unverified runtime risk** | both must not register `subagent` simultaneously — needs a live coexistence test |
-| Rewrite `extension.ts:73` `subagent` interception | medium | tool name stays `subagent`, but args `{agent,task,agentScope}` → `{subagent_type,prompt,description}`; port `task-injection.ts` to inject into `prompt` |
-| Rewrite both `.pi/agents/*.md` frontmatter | low-medium | `systemPromptMode→prompt_mode`; drop `inheritProjectContext/inheritSkills/extensions/agentScope`; add `permission: { "*": deny, lookup: allow }` |
-| Audit child-context hook binding | **medium-unverified** | child inherits ALL of our `extension.ts` — domain tools are denied, but our `session_start`/`tool_call`/UI-panel/compaction hooks still bind in the child and need guarding |
-| Rewrite AGENTS.md subagent discipline | low | the hard rules reference the now-removed frontmatter keys |
-| Build `advance_parallel_line` (the payoff) | low | `getSubagentsService()` → `spawn(foreground)` → `await waitForAll()` → `getRecord().result` → validate+land via existing firewall, outside any draft |
-| Lose the unscoped chain/parallel/intercom/acceptance DSL | low | unused in gameplay |
+| Item                                                                                                              | Cost                        | Note                                                                                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Add `@gotgenes/pi-subagents` + `@gotgenes/pi-permission-system`; stop loading the unscoped harness `pi-subagents` | **unverified runtime risk** | both must not register `subagent` simultaneously — needs a live coexistence test                                                                                            |
+| Rewrite `extension.ts:73` `subagent` interception                                                                 | medium                      | tool name stays `subagent`, but args `{agent,task,agentScope}` → `{subagent_type,prompt,description}`; port `task-injection.ts` to inject into `prompt`                     |
+| Rewrite both `.pi/agents/*.md` frontmatter                                                                        | low-medium                  | `systemPromptMode→prompt_mode`; drop `inheritProjectContext/inheritSkills/extensions/agentScope`; add `permission: { "*": deny, lookup: allow }`                            |
+| Audit child-context hook binding                                                                                  | **medium-unverified**       | child inherits ALL of our `extension.ts` — domain tools are denied, but our `session_start`/`tool_call`/UI-panel/compaction hooks still bind in the child and need guarding |
+| Rewrite AGENTS.md subagent discipline                                                                             | low                         | the hard rules reference the now-removed frontmatter keys                                                                                                                   |
+| Build `advance_parallel_line` (the payoff)                                                                        | low                         | `getSubagentsService()` → `spawn(foreground)` → `await waitForAll()` → `getRecord().result` → validate+land via existing firewall, outside any draft                        |
+| Lose the unscoped chain/parallel/intercom/acceptance DSL                                                          | low                         | unused in gameplay                                                                                                                                                          |
 
 **Lightest part:** the firewall itself (one `permission:` block) and the payoff
 tool. **Heaviest/riskiest:** the substrate swap's runtime coexistence and the
 child-context hook-binding audit — neither is verifiable headless. So the
-*firewall* debt is light, but the *total* migration debt is not clearly below
+_firewall_ debt is light, but the _total_ migration debt is not clearly below
 the value of an ergonomic-only win. Next gate before any decision: a live
 runtime spike loading both @gotgenes packages in the card, confirming no
 `subagent` collision and that our extension's hooks behave in child sessions.
@@ -133,8 +141,8 @@ that the parent validates + lands.
 - Creates the child with `tools: cfg.toolNames` where `toolNames =
 registry.getToolNamesForType(type)` — and the `tools:` frontmatter only covers
   **built-ins** (read/bash/edit/write/grep/find/ls).
-- Then **`await session.bindExtensions({})`** — *"Children always load the
-  parent's extensions and skills."* All parent extensions bind into the child.
+- Then **`await session.bindExtensions({})`** — _"Children always load the
+  parent's extensions and skills."_ All parent extensions bind into the child.
 - `applyRecursionGuard()` strips only `["subagent", "get_subagent_result",
 "steer_subagent"]` from the active set.
 
@@ -152,11 +160,11 @@ rewrite from "allowlist one extension tool" to "denylist all domain tools."
 
 ## State-sync reframing
 
-The user's intuition — *in-process fundamentally solves state sync* — is true in
+The user's intuition — _in-process fundamentally solves state sync_ — is true in
 one mode: in-process means the child's tools resolve the **same `state-store`
 singleton** as the parent, so a child could mutate live state directly. But that
-**inverts our architecture**: our discipline is *child emits JSON → parent
-validates + lands behind the secret firewall*. Letting the child write live
+**inverts our architecture**: our discipline is _child emits JSON → parent
+validates + lands behind the secret firewall_. Letting the child write live
 state trades the firewall for convenience. So the real, safe win here is the
 **synchronous one-shot ergonomics**, not shared-state writes.
 
