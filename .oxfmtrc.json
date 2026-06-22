@@ -18,6 +18,7 @@
     "state",
     ".pi/agent",
     ".pi/npm",
-    ".pi-lens"
+    ".pi-lens",
+    "spikes/pi-actors/*.md"
   ]
 }

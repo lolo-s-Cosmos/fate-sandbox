@@ -1,0 +1,14 @@
+{
+  "description": "SPIKE: PERSISTENT-MEMORY backstage faction director. Same hermetic firewall as parallel_line (pi -p --no-tools --no-approve --no-context-files: zero tools, no project extension, own session — cannot read/write GM canonical state or secrets), but the session is pinned to a STABLE per-director `session_id` (e.g. `dir-caster`), NOT the per-run id. Re-invoking the recipe across turns with the same session_id RESUMES the same session, so the director carries its own evolving backstage agenda/memory forward without the GM re-injecting full history each turn. Firewall holds under persistence: the session only ever contains safe projections + the director's own planning — no game secret is ever put in, so none can accumulate. Turn 1 establishes persona + full context + a `carryForward` plan; later turns send only a short delta and the director advances from its resumed memory. Returns a ParallelLineOutput JSON candidate (with carryForward) for the main GM to validate and land. Spike artifact — not active GM policy.",
+  "async": true,
+  "args": ["prompt:string", "session_id:string", "model:string", "session_dir:path"],
+  "defaults": {
+    "model": "{current_model}",
+    "session_dir": "spikes/pi-actors/.sessions"
+  },
+  "mailbox": {
+    "accepts": ["control.kill"],
+    "emits": ["candidate.ready", "run.failed"]
+  },
+  "template": "pi -p --no-tools --no-approve --no-context-files --model {model} --session-dir {session_dir} --session-id {session_id} {prompt}"
+}

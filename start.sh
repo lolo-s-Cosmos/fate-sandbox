@@ -75,6 +75,12 @@ else
   echo "✓ 玩家模式：已禁用 pi-subagents 内置 coding agents（开发模式: TAVERN2AGENT_DEV=1 ./start.sh）"
 fi
 
+# ---- 后台 director sessions ----
+# run_parallel_line 由引擎直接 fork 后台导演（detached `pi -p`，见 ADR 0005），
+# 导演 session（含隐藏事实）持久落在 gitignored 的 .pi/agent/backstage-sessions/。
+# 引擎首次 spawn 会自建该目录；此处预建只为显式留痕。
+mkdir -p .pi/agent/backstage-sessions
+
 # 双模型：渲染轮（玩家可见正文）可与结算轮用不同模型，详见 README “Model Notes”。
 if [ -n "${FATE_RENDER_MODEL:-}" ]; then
   echo "✓ 渲染轮模型覆盖：FATE_RENDER_MODEL=$FATE_RENDER_MODEL（未命中会回退结算模型）"

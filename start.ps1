@@ -164,6 +164,13 @@ if ($DevMode) {
   Write-Host "Dev mode: set `$env:TAVERN2AGENT_DEV='1'; then run .\start.ps1"
 }
 
+# Backstage director sessions. run_parallel_line forks the backstage director
+# directly from the engine (detached `pi -p`, see ADR 0005); its session (with
+# hidden facts) persists under the gitignored .pi/agent/backstage-sessions/. The
+# engine self-creates the dir on first spawn; pre-create it here only for clarity.
+$BackstageSessionsDir = Join-Path $ProjectAgentDir 'backstage-sessions'
+New-Item -ItemType Directory -Force -Path $BackstageSessionsDir | Out-Null
+
 if ($env:FATE_RENDER_MODEL) {
   Write-Host "Render pass model override: FATE_RENDER_MODEL=$env:FATE_RENDER_MODEL"
 } else {

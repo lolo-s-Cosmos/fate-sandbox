@@ -451,6 +451,9 @@ export interface ParallelLineReport {
 }
 
 function isParallelLineCall(call: AuditToolCall): boolean {
+  // 现行：引擎直接 fork 后台导演的 GM 工具 run_parallel_line（见 ADR 0005）。
+  if (call.name === "run_parallel_line") return true;
+  // 旧同步子代理（已废弃，仅为审计历史 session 保留）。
   return call.name === "subagent" && isRecord(call.args) && call.args["agent"] === "parallel-line";
 }
 
