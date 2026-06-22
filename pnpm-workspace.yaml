@@ -1,5 +1,6 @@
 allowBuilds:
   "@google/genai": true
   protobufjs: true
+  tree-sitter-bash: set this to true or false
 
 minimumReleaseAge: 0

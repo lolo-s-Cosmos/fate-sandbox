@@ -18,9 +18,59 @@ synchronous one-shot feasible, and is it worth adopting?
 ## Verdict
 
 **Technically feasible — confirmed at the source level and with a runnable spike.**
-**Not worth migrating now.** The Phase 3 ledger already closes correctness; the
-one-shot is an ergonomics win that costs a substrate swap + a permission
-companion + a firewall rewrite. Keep this as a documented future option.
+**The firewall IS cleanly reconstructable** via `@gotgenes/pi-permission-system`
+(round 2 finding below), and the dual-package setup is collision-free. The
+remaining gate is a **live-runtime coexistence spike** (needs the harness + a
+model), which cannot be completed headless here. Recommendation unchanged for
+now: the payoff is ergonomic-only (Phase 3 already guarantees correctness), so
+migrate only if the manual three-step proves to be a real GM-failure source in
+practice — and gate it behind the runtime spike.
+
+## Round 2: can the secret firewall be reconstructed? (yes)
+
+The blocker from round 1 was that `@gotgenes/pi-subagents` core always binds all
+parent extensions into the child, so a `parallel-line` child would inherit every
+domain tool. `@gotgenes/pi-permission-system@16.0.1` resolves this:
+
+- **It is a pure companion — registers ZERO tools** (`grep registerTool
+  permsys/src/index.ts` → none). It only adds a `before_agent_start` handler,
+  input/tool gates, subscribes to `@gotgenes/pi-subagents`' child lifecycle
+  events, and publishes a permissions service. **No `subagent` tool collision**
+  with `@gotgenes/pi-subagents`, which keeps the spawn tools + `getSubagentsService()`.
+  So the dual-package setup gives BOTH the one-shot spawn service AND per-agent
+  tool denial.
+- **Tool denial works on extension tools** (`handlers/before-agent-start.ts`):
+  `AgentPrepHandler.handle` resolves the child agent name, iterates the active
+  tool set, drops every tool whose `getToolPermission(name, agent) === "deny"`
+  via `toolRegistry.setActive(allowed)`, and sanitizes the prompt's
+  available-tools section. Runs before the child's first turn.
+- **`{ "*": deny, lookup: allow }` reconstructs the hermetic agent.** Tool
+  surfaces resolve via `evaluate(toolName, "*", composedRules)` (`rule.ts`):
+  last-match-wins over `wildcardMatch(rule.surface, surface) &&
+  wildcardMatch(rule.pattern, value)`. A universal `"*"` default denies all
+  surfaces; a later `lookup` rule overrides for that one tool. So the
+  `parallel-line` child ends up with **only `lookup`** active — exactly today's
+  `tools: lookup` firewall, expressed as a denylist instead of an allowlist.
+
+### Debt ledger (what migrating actually costs)
+
+| Item | Cost | Note |
+| --- | --- | --- |
+| Add `@gotgenes/pi-subagents` + `@gotgenes/pi-permission-system`; stop loading the unscoped harness `pi-subagents` | **unverified runtime risk** | both must not register `subagent` simultaneously — needs a live coexistence test |
+| Rewrite `extension.ts:73` `subagent` interception | medium | tool name stays `subagent`, but args `{agent,task,agentScope}` → `{subagent_type,prompt,description}`; port `task-injection.ts` to inject into `prompt` |
+| Rewrite both `.pi/agents/*.md` frontmatter | low-medium | `systemPromptMode→prompt_mode`; drop `inheritProjectContext/inheritSkills/extensions/agentScope`; add `permission: { "*": deny, lookup: allow }` |
+| Audit child-context hook binding | **medium-unverified** | child inherits ALL of our `extension.ts` — domain tools are denied, but our `session_start`/`tool_call`/UI-panel/compaction hooks still bind in the child and need guarding |
+| Rewrite AGENTS.md subagent discipline | low | the hard rules reference the now-removed frontmatter keys |
+| Build `advance_parallel_line` (the payoff) | low | `getSubagentsService()` → `spawn(foreground)` → `await waitForAll()` → `getRecord().result` → validate+land via existing firewall, outside any draft |
+| Lose the unscoped chain/parallel/intercom/acceptance DSL | low | unused in gameplay |
+
+**Lightest part:** the firewall itself (one `permission:` block) and the payoff
+tool. **Heaviest/riskiest:** the substrate swap's runtime coexistence and the
+child-context hook-binding audit — neither is verifiable headless. So the
+*firewall* debt is light, but the *total* migration debt is not clearly below
+the value of an ergonomic-only win. Next gate before any decision: a live
+runtime spike loading both @gotgenes packages in the card, confirming no
+`subagent` collision and that our extension's hooks behave in child sessions.
 
 ## What was validated
 
@@ -32,10 +82,10 @@ companion + a firewall rewrite. Keep this as a documented future option.
 
 ```ts
 const { getSubagentsService } = await import("@gotgenes/pi-subagents");
-const svc = getSubagentsService();                       // reachable from globalThis inside a tool
+const svc = getSubagentsService(); // reachable from globalThis inside a tool
 const id = svc.spawn("parallel-line", prompt, { foreground: true, bypassQueue: true });
-await svc.waitForAll();                                  // in-process: drives the agent loop to completion
-const json = svc.getRecord(id)?.result;                 // completed record carries .result
+await svc.waitForAll(); // in-process: drives the agent loop to completion
+const json = svc.getRecord(id)?.result; // completed record carries .result
 // -> validate + land via the existing secret firewall (record_offscreen_event path)
 ```
 
@@ -81,12 +131,12 @@ that the parent validates + lands.
 `createSubagentSession()` (`src/lifecycle/create-subagent-session.ts`):
 
 - Creates the child with `tools: cfg.toolNames` where `toolNames =
-  registry.getToolNamesForType(type)` — and the `tools:` frontmatter only covers
+registry.getToolNamesForType(type)` — and the `tools:` frontmatter only covers
   **built-ins** (read/bash/edit/write/grep/find/ls).
 - Then **`await session.bindExtensions({})`** — *"Children always load the
   parent's extensions and skills."* All parent extensions bind into the child.
 - `applyRecursionGuard()` strips only `["subagent", "get_subagent_result",
-  "steer_subagent"]` from the active set.
+"steer_subagent"]` from the active set.
 
 **Consequence:** a `parallel-line` child in @gotgenes **core** would have every
 one of our domain tools active — `commit_turn`, `record_offscreen_event`,
@@ -125,7 +175,7 @@ state trades the firewall for convenience. So the real, safe win here is the
 4. **Child binds our `extension.ts`.** All domain tools + GM hooks initialize in
    the child context; needs auditing beyond the built-in recursion guard.
 5. **Frontmatter rewrite** for both `.pi/agents/*.md` (`systemPromptMode →
-   prompt_mode`, drop `extensions`/`inheritSkills`/`agentScope`).
+prompt_mode`, drop `extensions`/`inheritSkills`/`agentScope`).
 6. **Correctness is already done.** The Phase 3 ledger + hard block ships and is
    tested (528 tests). The one-shot removes GM manual steps; it does not fix a
    bug.
@@ -140,7 +190,7 @@ state trades the firewall for convenience. So the real, safe win here is the
 3. Rewrite the `subagent` interception in `extension.ts` for the new arg shape;
    port `task-injection.ts`.
 4. Add `advance_parallel_line`: grabs `getSubagentsService()`, `spawn(foreground,
-   bypassQueue)`, `await waitForAll()`, reads `getRecord(id).result`, then
+bypassQueue)`, `await waitForAll()`, reads `getRecord(id).result`, then
    validates + lands through the **existing** `record_offscreen_event` firewall —
    strictly **outside** any `runDomainEventTool` draft (no concurrent mutation of
    the state singleton). On no-result/failure, leave the backstage obligation

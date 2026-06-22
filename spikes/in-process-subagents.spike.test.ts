@@ -12,9 +12,6 @@
  *   node --test spikes/in-process-subagents.spike.test.ts
  */
 
-import assert from "node:assert/strict";
-import test from "node:test";
-
 import {
   getSubagentsService,
   publishSubagentsService,
@@ -24,6 +21,8 @@ import {
   type SubagentRecord,
   type SubagentsService,
 } from "@gotgenes/pi-subagents";
+import assert from "node:assert/strict";
+import test from "node:test";
 
 /**
  * Minimal in-process stub mirroring the real adapter contract:
