@@ -13,7 +13,7 @@ export interface TraceMessage {
 
 /**
  * 调试开关（回流自 lonestar api-trace）：设置 FATE_DEBUG_API（非空）时，把当前轮次
- * 每次 LLM API 输入导出到 state/debug/passA-N.md（结算的每次调用）+ passB-N.md
+ * 每次 LLM API 输入导出到 runtime/debug/passA-N.md（结算的每次调用）+ passB-N.md
  * （渲染调用：首写 / lint 重写 / reroll / digest 各一份）。测试环境下禁用。
  */
 export function isApiTraceEnabled(): boolean {
