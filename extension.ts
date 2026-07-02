@@ -13,6 +13,7 @@ import { syncStateFromSessionManager } from "./engine/core/state/session-hydrati
 import { exportState } from "./engine/core/state/state-store.ts";
 import { isRecord } from "./engine/core/utils/typebox-validation.ts";
 import { beginTurnTrace, dumpPassA } from "./engine/debug/api-trace.ts";
+import { maybeForceCompact } from "./engine/debug/force-compact.ts";
 import { PROSE_CUSTOM_TYPE } from "./engine/direction/render-turn.ts";
 import { stripLeakedSettlementProse } from "./engine/direction/settlement-prose-firewall.ts";
 import { buildSystemPrompt, injectGmPromptMessages } from "./engine/gm-prompt/injection.ts";
@@ -29,8 +30,10 @@ export default function extension(pi: ExtensionAPI): void {
     return { skillPaths: [join(__dirname, "skills")] };
   });
 
-  pi.on("before_agent_start", async (event) => {
+  pi.on("before_agent_start", async (event, ctx) => {
     beginTurnTrace(new Date().toISOString());
+    // Dev 开关：回合开始前强制触发一次压缩，演练 compaction-policy 的确定性接管路径。
+    maybeForceCompact(ctx);
     return { systemPrompt: buildSystemPrompt(event.systemPrompt) };
   });
 
