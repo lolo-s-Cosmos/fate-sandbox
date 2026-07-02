@@ -22,7 +22,7 @@ import { FATE_RANK_OR_NONE_SCHEMA, OUTFIT_STATE_SCHEMA } from "./actor-schema.ts
  * （actor-condition.ts re-export 原名）。
  *
  * outfit 别名重路由、fallback reason、nullable 缺省归一等领域归一化
- * 留在 tools/state/actor-condition-normalizer.ts。
+ * 留在 tools/settlement/actor-condition-normalizer.ts。
  */
 export const ACTOR_CONDITION_EVENT_KINDS = [
   "add-wound",

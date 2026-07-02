@@ -8,7 +8,7 @@
 4. `engine/core/memory.ts` (lines 28-132) - public memory write path and secret-claim guardrails.
 5. `engine/core/secrets.ts` (lines 88-170) - actor/servant secret configuration and reveal path that records public memory after successful reveal.
 6. `tools/registry.ts` (lines 40-77) - tool registration order and full public/domain/debug tool surface.
-7. `tools/state/run-parallel-line.ts` (lines 1-141) - engine-assembled parallel-line input; subagent call remains a manual two-step workflow.
+7. `tools/settlement/run-parallel-line.ts` (lines 1-141) - engine-assembled parallel-line input; subagent call remains a manual two-step workflow.
 8. `engine/core/parallel-line-assembler.ts` (lines 1-190) - builds parallel-line input from state, including heuristic recent pressure classification.
 9. `extensions/subagents/timeline/task-injection.ts` (lines 15-108) - injects safe state context into timeline subagent tasks.
 10. `prompts/settlement/tool-policy.md` (lines 23-58) - prompt-level routing for turns, state landing, offscreen orchestration, combat boundary.
@@ -72,13 +72,13 @@ export function buildTimelineStateContextBlock(rawState: unknown): string {
 The runtime is built around deterministic engine mutations plus prompt/tool routing:
 
 - GM prompt modules (`prompts/*.md`) define turn policy, information safety, pressure discipline, and when to call tools/subagents. Critical routing is in `prompts/settlement/tool-policy.md:23-58`.
-- Tools in `tools/state/*` are public domain-event boundaries. `tools/registry.ts:40-77` registers normal play tools, lookup, and debug tools in one list.
+- Tools in `tools/settlement/*` are public domain-event boundaries. `tools/registry.ts:40-77` registers normal play tools, lookup, and debug tools in one list.
 - `commit_turn` is the canonical non-Scene-Beat turn envelope: time is applied first, then domain events are dispatched, obligations are checked, and `turnLog` is appended (`engine/core/turn-commit.ts`). It no longer embeds scene-beat events nor auto-closes story windows; objectives/threats are beat-scoped and `resolve-objective` refuses to clear a beat's last objective (that requires `progress_scene_beat complete`).
 - `progress_scene_beat` is a stricter lifecycle API for begin/complete of foreground action windows. It also applies top-level time and appends turn log (`engine/core/scene-beat-lifecycle.ts:67-129`).
 - Public memory is guarded by structured claims. Non-mundane confirmed/observed/inferred claims must either refer only to revealed secret slots or carry auditable evidence (`engine/core/memory.ts:90-129`).
 - Secrets are configured in secret slots and only become public through `revealSecret`, which updates public servant identity/NP state and records a public memory event on successful reveal (`engine/core/secrets.ts:125-151`).
 - Offscreen events are hidden canonical state in `draft.secrets.offscreenEventLog`; they cannot be `player-known` and cannot end after current time (`engine/core/offscreen-event.ts:23-73`).
-- Timeline subagents are candidate/audit workers, not state writers. `run_parallel_line` assembles safe input (`tools/state/run-parallel-line.ts:1-141`); main GM then calls project subagent and lands accepted candidates via `record_offscreen_event`. Context injection appends safe state projections to `parallel-line` and `timeline-showrunner` tasks (`extensions/subagents/timeline/task-injection.ts:15-108`).
+- Timeline subagents are candidate/audit workers, not state writers. `run_parallel_line` assembles safe input (`tools/settlement/run-parallel-line.ts:1-141`); main GM then calls project subagent and lands accepted candidates via `record_offscreen_event`. Context injection appends safe state projections to `parallel-line` and `timeline-showrunner` tasks (`extensions/subagents/timeline/task-injection.ts:15-108`).
 
 ## Review Findings
 
@@ -94,7 +94,7 @@ The runtime is built around deterministic engine mutations plus prompt/tool rout
 
 ## Start Here
 
-The three highest-value runtime-closure improvements are now implemented (Scene Beat single-path, direction-packet semantic validation, and the parallel-line backstage obligation loop). Polish item (a) is DONE: `engine/audit/session-audit.ts` now reads the engine's ground-truth ledger via `measureBackstageLedger` / `extractLatestSecrets` (`secrets.backstageReviewLog` + `backstageObligations` from the latest fsn-state snapshot), reporting reviewed/open counts, outcome + reasonCode breakdown, and a `nonLandedRatio` "rubber-stamp" tell; the `measureParallelLine` heuristic stays as a tool-call cross-check. Remaining optional polish (awaiting user observation before acting): (b) tighten the `turnHasCost` core set in `tools/state/commit-turn.ts` if no-cost detection proves too coarse; (c) finding #4 (memory free-text evidence escape hatch) and #5 (debug tools in the main registry) remain open as originally scoped.
+The three highest-value runtime-closure improvements are now implemented (Scene Beat single-path, direction-packet semantic validation, and the parallel-line backstage obligation loop). Polish item (a) is DONE: `engine/audit/session-audit.ts` now reads the engine's ground-truth ledger via `measureBackstageLedger` / `extractLatestSecrets` (`secrets.backstageReviewLog` + `backstageObligations` from the latest fsn-state snapshot), reporting reviewed/open counts, outcome + reasonCode breakdown, and a `nonLandedRatio` "rubber-stamp" tell; the `measureParallelLine` heuristic stays as a tool-call cross-check. Remaining optional polish (awaiting user observation before acting): (b) tighten the `turnHasCost` core set in `tools/settlement/commit-turn.ts` if no-cost detection proves too coarse; (c) finding #4 (memory free-text evidence escape hatch) and #5 (debug tools in the main registry) remain open as originally scoped.
 
 ## Residual Risks
 

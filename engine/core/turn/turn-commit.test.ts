@@ -83,7 +83,7 @@ void test("commitTurn accepts elapsed time without domain events", () => {
 
 void test("commitTurn throws when a later domain event fails", () => {
   // 原子性契约：draft 是一次性工作副本，失败时 Domain Event Tool Runner 不提交，
-  // Game State Store 保持不变。store 级原子性由 tools/state/commit-turn.test.ts 验证。
+  // Game State Store 保持不变。store 级原子性由 tools/settlement/commit-turn.test.ts 验证。
   const draft = createInitialState();
 
   assert.throws(

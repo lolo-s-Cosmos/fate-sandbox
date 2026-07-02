@@ -491,7 +491,7 @@ pnpm typecheck && pnpm lint && pnpm format:check && pnpm test
 
 ## 修改提示词 / 数据 / 引擎时的规则
 
-- **改 GM prompt** → 保持模块分工：`gm-system.md` 只放身份与最高契约；世界边界在 `world-context.md`；硬规则在 `hard-rules.md`；工具路由在 `tool-policy.md`；剧情推进纪律在 `story-driver.md`；渲染在 `render/protocol.md`；输入解释在 `input-guide.md`；输出格式在 `output-contract.md`。不要把所有规则塞进 system 层。
+- **改 GM prompt** → 保持模块分工：`settlement/system.md` 与 `render/system.md` 只放身份与最高契约；世界边界在 `world-context.md`；硬规则在 `hard-rules.md`；工具路由在 `tool-policy.md`；剧情推进纪律在 `story-driver.md`；渲染在 `render/protocol.md`；输入解释在 `input-guide.md`；输出格式在 `output-contract.md`。不要把所有规则塞进 system 层。
 - **改 `/skill:start-game`** → 它只处理新游戏/重新开始/创建角色。必须保持流程机、public/secrets/player knowledge 分层、protagonist 从者真名防泄露、新手模式。
 - **新增工具** → 在 `tools/registry.ts` 注册；description 写成紧凑的「一行用途 + 使用边界 bullet + 禁区 bullet」，避免「必须调用场景/严禁行为」长清单这种 reasoning-bait。工具应是领域事件，不是状态栏 setter。不要在当前工具契约里提旧字段、旧 kind 或旧入口。
 - **模型常犯错** → 先写回归测试或 JSONL 统计复现，再加工具拒绝/领域 invariant/schema 约束/迁移。不要只补 prompt。
