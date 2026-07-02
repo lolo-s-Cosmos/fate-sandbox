@@ -2,7 +2,7 @@
  * recall_memory 查询工具（backlog #6b）。
  *
  * 关键词/actor/地点/scope 过滤 campaign memory，返回匹配的
- * pinnedFacts + eventLog + dailySummaries。不上向量、不改状态。
+ * pinnedFacts + eventLog + dailyEvents + dailySummaries。不上向量、不改状态。
  */
 
 import type { FateToolDefinition } from "../runtime/tool-definition.ts";
@@ -87,6 +87,14 @@ function formatRecallResult(result: RecallMemoryResult, query: RecallMemoryQuery
     lines.push("");
   }
 
+  if (result.dailyEvents.length > 0) {
+    lines.push("【日常事件】");
+    for (const event of result.dailyEvents) {
+      lines.push(`  [${event.eventKind}] ${event.title}：${event.summary}（${event.time}）`);
+    }
+    lines.push("");
+  }
+
   if (result.dailySummaries.length > 0) {
     lines.push("【每日总结】");
     for (const summary of result.dailySummaries) {
@@ -122,7 +130,7 @@ function formatQueryDescription(query: RecallMemoryQuery): string {
 export const recallMemoryToolDefinition: FateToolDefinition = {
   name: "recall_memory",
   description:
-    "检索 campaign memory（pinnedFacts + eventLog + dailySummaries）。按关键词/actor/地点/scope 过滤，返回匹配条目。不改状态。\n\n" +
+    "检索 campaign memory（pinnedFacts + eventLog + dailyEvents + dailySummaries）。按关键词/actor/地点/scope 过滤，返回匹配条目。不改状态。\n\n" +
     "【使用边界】\n" +
     "- 需回忆旧事实但 GM brief 只有最近 3 条 eventLog\n" +
     "- 玩家提到过去事件/人/地，需确认记忆一致性\n" +

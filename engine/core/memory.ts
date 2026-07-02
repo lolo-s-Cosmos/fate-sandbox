@@ -1,5 +1,6 @@
 import type { MemoryClaim, MemoryEvent } from "./memory-schema.ts";
 import type {
+  DailyEventMemoryId,
   DailySummaryMemoryId,
   MajorEventMemoryId,
   MemoryFactId,
@@ -22,6 +23,7 @@ export type {
 export interface MemoryEventResult {
   factId?: MemoryFactId;
   eventId?: MajorEventMemoryId;
+  dailyEventId?: DailyEventMemoryId;
   dailySummaryId?: DailySummaryMemoryId;
 }
 
@@ -39,6 +41,8 @@ function applyMemoryEvent(draft: State, event: MemoryEvent): MemoryEventResult {
       return recordMajorEvent(draft, event);
     case "record-daily-summary":
       return recordDailySummary(draft, event);
+    case "record-daily-event":
+      return recordDailyEvent(draft, event);
     default:
       throw new Error("unreachable memory event kind");
   }
@@ -48,7 +52,7 @@ function recordPinnedFact(
   draft: State,
   event: Extract<MemoryEvent, { kind: "pin-fact" }>,
 ): MemoryEventResult {
-  validateClaims(draft, event.claims);
+  validateClaims(draft, event.claims, event.kind);
   const id = createId(draft, "fact");
   draft.public.memory.pinnedFacts.push({
     id,
@@ -68,7 +72,7 @@ function recordMajorEvent(
   draft: State,
   event: Extract<MemoryEvent, { kind: "record-major-event" }>,
 ): MemoryEventResult {
-  validateClaims(draft, event.claims);
+  validateClaims(draft, event.claims, event.kind);
   const id = createId(draft, "event");
   draft.public.memory.eventLog.push({
     id,
@@ -76,8 +80,24 @@ function recordMajorEvent(
     title: assertNonEmptyString(event.title, "title"),
     summary: assertNonEmptyString(event.summary, "summary"),
     consequences: normalizeConsequences(event.consequences),
+    claims: event.claims ? [...event.claims] : undefined,
   });
   return { eventId: id };
+}
+
+function recordDailyEvent(
+  draft: State,
+  event: Extract<MemoryEvent, { kind: "record-daily-event" }>,
+): MemoryEventResult {
+  const id = createId(draft, "daily-event");
+  draft.public.memory.dailyEvents.push({
+    id,
+    time: draft.public.clock.currentAt,
+    eventKind: event.eventKind,
+    title: assertNonEmptyString(event.title, "title"),
+    summary: assertNonEmptyString(event.summary, "summary"),
+  });
+  return { dailyEventId: id };
 }
 
 function normalizeConsequences(consequences: readonly string[] | undefined): string[] {
@@ -87,10 +107,19 @@ function normalizeConsequences(consequences: readonly string[] | undefined): str
   return consequences.map((consequence) => assertNonEmptyString(consequence, "consequences[]"));
 }
 
-function validateClaims(draft: State, claims: readonly MemoryClaim[] | undefined): void {
+function validateClaims(
+  draft: State,
+  claims: readonly MemoryClaim[] | undefined,
+  eventKind: string,
+): void {
+  // pin-fact 允许不传 claims（日常琐事请用 record-daily-event，不走 claims 审计）
+  if (eventKind !== "record-major-event" && (claims === undefined || claims.length === 0)) {
+    return;
+  }
+  // record-major-event 必须带 claims
   if (claims === undefined || claims.length === 0) {
     throw new Error(
-      "record_memory 必须提供 claims；用结构化 claim 表达 public memory 的事实类型、确定性和证据。普通事实用 kind=mundane。",
+      "record-major-event 必须提供 claims；用结构化 claim 表达 public memory 的事实类型、确定性和证据。单项日常记录请改用 record-daily-event。",
     );
   }
   const secretSlots = allActorSecretSlots(draft.secrets);
@@ -109,6 +138,7 @@ type ClaimSecretSlots = Readonly<{
 function validateClaim(claim: MemoryClaim, actorSecrets: readonly ClaimSecretSlots[]): void {
   assertNonEmptyString(claim.statement, "claim.statement");
   if (claim.kind === "mundane") {
+    // 日常琐事建议改用 record-daily-event；遗留 mundane claim 放行不拦截
     return;
   }
 
@@ -168,7 +198,6 @@ function recordDailySummary(
   draft: State,
   event: Extract<MemoryEvent, { kind: "record-daily-summary" }>,
 ): MemoryEventResult {
-  assertDailySummaryScope(event.summary);
   const id = createId(draft, "daily");
   draft.public.memory.dailySummaries.push({
     id,
@@ -177,18 +206,4 @@ function recordDailySummary(
     summary: assertNonEmptyString(event.summary, "summary"),
   });
   return { dailySummaryId: id };
-}
-
-function assertDailySummaryScope(summary: string): void {
-  const text = assertNonEmptyString(summary, "summary");
-  const singleEventMarkers = ["购入", "购买", "采购", "花费", "战斗结论", "调查发现"];
-  const summaryMarkers = ["半天", "上午", "下午", "夜间", "当天", "今日", "日终", "整天", "章节"];
-  if (
-    singleEventMarkers.some((marker) => text.includes(marker)) &&
-    !summaryMarkers.some((marker) => text.includes(marker))
-  ) {
-    throw new Error(
-      "record-daily-summary 只用于半天以上、日终或章节摘要；单次采购/调查/战斗结论请用 record-major-event 并提供 claims。",
-    );
-  }
 }

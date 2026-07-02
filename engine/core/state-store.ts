@@ -203,6 +203,7 @@ export function createInitialState(): State {
           },
         ],
         eventLog: [],
+        dailyEvents: [],
         dailySummaries: [],
       },
       turnLog: [],

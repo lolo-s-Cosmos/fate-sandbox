@@ -58,6 +58,8 @@ function migrateOneSchemaVersion(
       return migrateGameStateV16ToV17(raw);
     case 17:
       return migrateGameStateV17ToV18(raw);
+    case 18:
+      return migrateGameStateV18ToV19(raw);
     default:
       throw new Error(
         `不支持的 state schemaVersion: ${version}。当前支持逐步迁移到 ${CURRENT_STATE_SCHEMA_VERSION}。`,
@@ -350,6 +352,19 @@ function migrateGameStateV17ToV18(raw: Record<string, unknown>): Record<string, 
   const secrets = assertRecordForMigration(next["secrets"], "secrets");
   if (!Array.isArray(secrets["backstagePendingHarvests"])) {
     secrets["backstagePendingHarvests"] = [];
+  }
+  return next;
+}
+
+/** v18 -> v19: memory 三层化（backport lotm）——新增 dailyEvents 平级日常事件日志。 */
+function migrateGameStateV18ToV19(raw: Record<string, unknown>): Record<string, unknown> {
+  const next = structuredClone(raw);
+  const meta = assertRecordForMigration(next["meta"], "meta");
+  meta["schemaVersion"] = 19;
+  const publicState = assertRecordForMigration(next["public"], "public");
+  const memory = assertRecordForMigration(publicState["memory"], "public.memory");
+  if (!Array.isArray(memory["dailyEvents"])) {
+    memory["dailyEvents"] = [];
   }
   return next;
 }

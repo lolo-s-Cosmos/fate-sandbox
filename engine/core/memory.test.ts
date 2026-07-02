@@ -149,19 +149,48 @@ void test("recordMemory rejects hypothesis worded as confirmed fact", () => {
   );
 });
 
-void test("recordMemory rejects daily summaries for single events", () => {
+void test("recordMemory stores daily events without claims", () => {
   const draft = createInitialState();
 
-  assert.throws(
-    () =>
-      recordMemory(draft, {
-        kind: "record-daily-summary",
-        startDate: "2004-01-30T00:00:00.000Z",
-        endDate: "2004-01-30T23:59:00.000Z",
-        summary: "在新都商业街购入两件雨衣，花费2400円。",
-      }),
-    /单次采购\/调查\/战斗结论请用 record-major-event/,
-  );
+  const result = recordMemory(draft, {
+    kind: "record-daily-event",
+    eventKind: "shopping",
+    title: "新都采购",
+    summary: "在新都商业街购入两件雨衣，花费2400円。",
+  });
+
+  const event = draft.public.memory.dailyEvents.find((entry) => entry.id === result.dailyEventId);
+  assert.equal(event?.eventKind, "shopping");
+  assert.equal(event?.title, "新都采购");
+});
+
+void test("recordMemory allows pin-fact without claims", () => {
+  const draft = createInitialState();
+
+  const result = recordMemory(draft, {
+    kind: "pin-fact",
+    scope: "protagonist",
+    subject: "protagonist",
+    text: "玩家住在卫宫宅。",
+    sourceEventId: null,
+  });
+
+  const fact = draft.public.memory.pinnedFacts.find((entry) => entry.id === result.factId);
+  assert.equal(fact?.text, "玩家住在卫宫宅。");
+});
+
+void test("recordMemory persists major event claims for recall", () => {
+  const draft = createInitialState();
+
+  const result = recordMemory(draft, {
+    kind: "record-major-event",
+    title: "契约成立",
+    summary: "玩家与 Saber 缔结契约。",
+    claims: [{ kind: "mundane", statement: "玩家与 Saber 缔结契约。", certainty: "confirmed" }],
+  });
+
+  const event = draft.public.memory.eventLog.find((entry) => entry.id === result.eventId);
+  assert.equal(event?.claims?.[0]?.statement, "玩家与 Saber 缔结契约。");
 });
 
 void test("recordMemory accepts actual daily summaries", () => {

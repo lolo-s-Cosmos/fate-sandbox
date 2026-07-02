@@ -15,13 +15,18 @@ import { resultDetails, runDomainEventTool } from "./domain-tool-runner.ts";
 import { normalizeTurnCommitInput } from "./commit-turn-normalizer.ts";
 
 // 本轮是否产生机械代价：用于打断后台 no-cost 连击。可检测核心集。
-const COST_EVENT_KINDS = new Set(["actor-condition", "economy", "servant-form", "memory"]);
+const COST_EVENT_KINDS = new Set(["actor-condition", "economy", "servant-form"]);
 function turnHasCost(events: readonly TurnCommitEvent[]): boolean {
   return events.some((event) => {
     if (COST_EVENT_KINDS.has(event.kind)) {
       return true;
     }
-    return event.kind === "scene" && event.event.kind === "add-threat";
+    if (event.kind === "scene" && event.event.kind === "add-threat") {
+      return true;
+    }
+    // memory 中只有 record-major-event 才计入 cost（重大事件=有代价）；
+    // record-daily-event 等轻量笔记不算机械动作。
+    return event.kind === "memory" && event.event.kind === "record-major-event";
   });
 }
 

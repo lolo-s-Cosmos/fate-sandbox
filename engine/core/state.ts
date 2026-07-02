@@ -1,4 +1,5 @@
 import type { NoblePhantasm } from "./actor-schema.ts";
+import type { DailyEventKind, MemoryClaim } from "./memory-schema.ts";
 import type { OffscreenEvent } from "./parallel-line.ts";
 import type {
   ActorKind,
@@ -71,6 +72,7 @@ export type StoryArcId = string;
 export type StoryBeatId = string;
 export type MemoryFactId = string;
 export type MajorEventMemoryId = string;
+export type DailyEventMemoryId = string;
 export type DailySummaryMemoryId = string;
 export type SceneObjectiveStatus = "active" | "blocked" | "resolved";
 export type FateRankBase = "E" | "D" | "C" | "B" | "A" | "EX";
@@ -93,7 +95,7 @@ export interface GameState {
 }
 
 export interface StateMeta {
-  schemaVersion: 18;
+  schemaVersion: 19;
   createdAt: string;
   updatedAt: string;
   /** Seeded RNG seed（backlog #9）：确定性随机源，初始化时生成 */
@@ -617,6 +619,7 @@ export interface DebtState {
 export interface CampaignMemory {
   pinnedFacts: MemoryFact[];
   eventLog: MajorEventMemory[];
+  dailyEvents: DailyEventMemory[];
   dailySummaries: DailySummaryMemory[];
 }
 
@@ -635,6 +638,15 @@ export interface MajorEventMemory {
   title: string;
   summary: string;
   consequences: string[];
+  claims?: MemoryClaim[];
+}
+
+export interface DailyEventMemory {
+  id: DailyEventMemoryId;
+  time: string;
+  eventKind: DailyEventKind;
+  title: string;
+  summary: string;
 }
 
 export interface DailySummaryMemory {
@@ -705,4 +717,4 @@ export interface StateExport extends Omit<GameState, "public"> {
 
 export type State = GameState;
 
-export const CURRENT_STATE_SCHEMA_VERSION = 18;
+export const CURRENT_STATE_SCHEMA_VERSION = 19;

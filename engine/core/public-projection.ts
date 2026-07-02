@@ -207,9 +207,12 @@ function formatCondition(
 
 function formatRecentEvents(publicState: PublicGameState): string {
   const recent = publicState.memory.eventLog.slice(-3);
-  return recent.length === 0
-    ? "无"
-    : recent.map((event) => `${event.title}：${event.summary}`).join("；");
+  const recentDaily = publicState.memory.dailyEvents.slice(-3);
+  const parts = [
+    ...recent.map((event) => `${event.title}：${event.summary}`),
+    ...recentDaily.map((event) => `[${event.eventKind}] ${event.title}：${event.summary}`),
+  ];
+  return parts.length === 0 ? "无" : parts.join("；");
 }
 
 function formatRecentRelationshipSignals(publicState: PublicGameState): string {

@@ -366,3 +366,18 @@ void test("migrateState upgrades v13 to v14 by folding per-actor secret tables i
   assert.ok(!Object.hasOwn(migrated.secrets, "actorAgendas"));
   assert.ok(!Object.hasOwn(migrated.secrets, "actorKnowledgeLenses"));
 });
+
+void test("migrateState upgrades v18 to v19 with an empty dailyEvents log", () => {
+  const current = createInitialState();
+  const { dailyEvents: _dailyEvents, ...memoryV18 } = current.public.memory;
+  const rawV18 = {
+    ...current,
+    meta: { ...current.meta, schemaVersion: 18 },
+    public: { ...current.public, memory: memoryV18 },
+  };
+
+  const migrated = migrateState(rawV18);
+
+  assert.equal(migrated.meta.schemaVersion, CURRENT_STATE_SCHEMA_VERSION);
+  assert.deepEqual(migrated.public.memory.dailyEvents, []);
+});

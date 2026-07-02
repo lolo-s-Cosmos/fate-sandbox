@@ -16,6 +16,7 @@ import {
   SERVANT_SKILL_SCHEMA,
 } from "./actor-schema.ts";
 import { normalizeIsoInstant } from "./date-time.ts";
+import { DAILY_EVENT_KIND_SCHEMA, MEMORY_CLAIM_SCHEMA } from "./memory-schema.ts";
 import { STORY_WINDOW_STATE_SCHEMA } from "./scene-schema.ts";
 import {
   CIRCUIT_STATUS_SCHEMA,
@@ -65,7 +66,7 @@ function nullable<T extends TSchema>(schema: T) {
 }
 
 export const STATE_META_SCHEMA = Type.Object({
-  schemaVersion: Type.Literal(18),
+  schemaVersion: Type.Literal(19),
   createdAt: ISO_INSTANT_SCHEMA,
   updatedAt: ISO_INSTANT_SCHEMA,
   rngSeed: Type.Number(),
@@ -336,6 +337,15 @@ const MAJOR_EVENT_MEMORY_SCHEMA = Type.Object({
   title: NON_EMPTY_STRING_SCHEMA,
   summary: NON_EMPTY_STRING_SCHEMA,
   consequences: NON_EMPTY_STRING_ARRAY_SCHEMA,
+  claims: Type.Optional(Type.Array(MEMORY_CLAIM_SCHEMA)),
+});
+
+const DAILY_EVENT_MEMORY_SCHEMA = Type.Object({
+  id: NON_EMPTY_STRING_SCHEMA,
+  time: ISO_INSTANT_SCHEMA,
+  eventKind: DAILY_EVENT_KIND_SCHEMA,
+  title: NON_EMPTY_STRING_SCHEMA,
+  summary: NON_EMPTY_STRING_SCHEMA,
 });
 
 const DAILY_SUMMARY_MEMORY_SCHEMA = Type.Object({
@@ -348,6 +358,7 @@ const DAILY_SUMMARY_MEMORY_SCHEMA = Type.Object({
 const CAMPAIGN_MEMORY_SCHEMA = Type.Object({
   pinnedFacts: Type.Array(MEMORY_FACT_SCHEMA),
   eventLog: Type.Array(MAJOR_EVENT_MEMORY_SCHEMA),
+  dailyEvents: Type.Array(DAILY_EVENT_MEMORY_SCHEMA),
   dailySummaries: Type.Array(DAILY_SUMMARY_MEMORY_SCHEMA),
 });
 
@@ -656,6 +667,9 @@ function normalizeStateDatesInPlace(state: State): void {
   }
   for (const event of memory.eventLog) {
     event.time = normalizeIsoInstant(event.time, "majorEvent.time");
+  }
+  for (const dailyEvent of memory.dailyEvents) {
+    dailyEvent.time = normalizeIsoInstant(dailyEvent.time, "dailyEvent.time");
   }
   for (const dailySummary of memory.dailySummaries) {
     dailySummary.startDate = normalizeIsoInstant(dailySummary.startDate, "dailySummary.startDate");
