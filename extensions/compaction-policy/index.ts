@@ -5,7 +5,7 @@ import type {
 } from "@earendil-works/pi-coding-agent";
 
 import { dumpCompaction } from "../../engine/debug/api-trace.ts";
-import { buildSettlementCompactionSummary } from "../../engine/direction/settlement-compaction.ts";
+import { buildSettlementCompactionSummary } from "../../engine/render/settlement-compaction.ts";
 
 /**
  * 结算侧 compaction 接管：确定性截断，不调 LLM。

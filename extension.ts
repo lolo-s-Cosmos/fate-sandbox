@@ -14,8 +14,8 @@ import { exportState } from "./engine/core/state/state-store.ts";
 import { isRecord } from "./engine/core/utils/typebox-validation.ts";
 import { beginTurnTrace, dumpPassA } from "./engine/debug/api-trace.ts";
 import { maybeForceCompact } from "./engine/debug/force-compact.ts";
-import { PROSE_CUSTOM_TYPE } from "./engine/direction/render-turn.ts";
-import { stripLeakedSettlementProse } from "./engine/direction/settlement-prose-firewall.ts";
+import { PROSE_CUSTOM_TYPE } from "./engine/render/render-turn.ts";
+import { stripLeakedSettlementProse } from "./engine/render/settlement-prose-firewall.ts";
 import { buildSystemPrompt, injectGmPromptMessages } from "./engine/gm-prompt/injection.ts";
 import {
   buildTimelineStateContextBlock,

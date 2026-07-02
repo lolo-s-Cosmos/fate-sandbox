@@ -6,9 +6,9 @@ import type {
   SessionEntry,
 } from "@earendil-works/pi-coding-agent";
 
-import type { SuggestedAction } from "../../engine/direction/packet-schema.ts";
+import type { SuggestedAction } from "../../engine/render/packet-schema.ts";
 
-import { PROSE_CUSTOM_TYPE } from "../../engine/direction/render-turn.ts";
+import { PROSE_CUSTOM_TYPE } from "../../engine/render/render-turn.ts";
 
 const CHOICE_WIDGET_KEY = "fsn-player-choices";
 

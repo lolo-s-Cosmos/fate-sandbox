@@ -28,13 +28,13 @@ import { join } from "node:path";
 
 import { lintFinalProse } from "../engine/audit/lint-rules.ts";
 import { parseSessionJsonl, reconstructActivePath } from "../engine/audit/session-audit.ts";
-import { loadProseDigests } from "../engine/direction/prose-digest-store.ts";
+import { loadProseDigests } from "../engine/render/prose-digest-store.ts";
 import {
   buildRendererMessages,
   findPendingDirectionPacket,
   PROSE_CUSTOM_TYPE,
   type RendererMessage,
-} from "../engine/direction/render-turn.ts";
+} from "../engine/render/render-turn.ts";
 import { buildRendererSystemPrompt } from "../engine/gm-prompt/injection.ts";
 
 const PROJECT_ROOT = join(import.meta.dirname, "..");

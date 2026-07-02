@@ -5,15 +5,15 @@ import type {
   SessionEntry,
 } from "@earendil-works/pi-coding-agent";
 
-import type { RenderDirectionPacket } from "../../engine/direction/packet-schema.ts";
-import type { PendingDirectionPacket } from "../../engine/direction/render-turn.ts";
+import type { RenderDirectionPacket } from "../../engine/render/packet-schema.ts";
+import type { PendingDirectionPacket } from "../../engine/render/render-turn.ts";
 
 import { randomUUID } from "node:crypto";
 
 import {
   PROSE_CUSTOM_TYPE,
   findPendingDirectionPacket,
-} from "../../engine/direction/render-turn.ts";
+} from "../../engine/render/render-turn.ts";
 import { pruneAbandonedSubtree } from "../rewind/prune.ts";
 
 export interface RerollRenderedProse {

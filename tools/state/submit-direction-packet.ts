@@ -8,18 +8,18 @@ import {
   stringEnumSchema as omissionReasonSchema,
 } from "../../engine/core/state/state-enum-schemas.ts";
 import { getState } from "../../engine/core/state/state-store.ts";
-import { scanDirectionPacket } from "../../engine/direction/packet-firewall.ts";
+import { scanDirectionPacket } from "../../engine/render/packet-firewall.ts";
 import {
   type DirectionPacket,
   EVENT_WEIGHTS,
   NPC_OMISSION_REASON_CODES,
   parseDirectionPacket,
-} from "../../engine/direction/packet-schema.ts";
+} from "../../engine/render/packet-schema.ts";
 import {
   buildPacketValidationContext,
   validateRenderDirectionPacket,
-} from "../../engine/direction/packet-validation.ts";
-import { SUBMIT_DIRECTION_PACKET_TOOL } from "../../engine/direction/render-turn.ts";
+} from "../../engine/render/packet-validation.ts";
+import { SUBMIT_DIRECTION_PACKET_TOOL } from "../../engine/render/render-turn.ts";
 import { textResult, type ToolResult } from "../runtime/tool-result.ts";
 
 /**

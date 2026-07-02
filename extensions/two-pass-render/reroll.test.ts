@@ -6,7 +6,7 @@ import type {
   SessionMessageEntry,
 } from "@earendil-works/pi-coding-agent";
 
-import type { RenderDirectionPacket } from "../../engine/direction/packet-schema.ts";
+import type { RenderDirectionPacket } from "../../engine/render/packet-schema.ts";
 
 import assert from "node:assert/strict";
 import test from "node:test";
@@ -14,7 +14,7 @@ import test from "node:test";
 import {
   SUBMIT_DIRECTION_PACKET_TOOL,
   PROSE_CUSTOM_TYPE,
-} from "../../engine/direction/render-turn.ts";
+} from "../../engine/render/render-turn.ts";
 import { findRerollTarget, isRerollTargetStillCurrent } from "./reroll.ts";
 
 const PACKET: RenderDirectionPacket = {
