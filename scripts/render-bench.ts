@@ -20,7 +20,8 @@
 
 import type { Api, Message, Model, ThinkingLevel } from "@earendil-works/pi-ai";
 
-import { streamSimple } from "@earendil-works/pi-ai";
+// pi-ai 0.80 把全局 streamSimple() 移到临时 compat 入口（见 two-pass-render/index.ts）。
+import { streamSimple } from "@earendil-works/pi-ai/compat";
 import { AuthStorage, ModelRegistry } from "@earendil-works/pi-coding-agent";
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

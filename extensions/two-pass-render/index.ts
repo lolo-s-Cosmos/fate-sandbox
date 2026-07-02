@@ -9,7 +9,9 @@ import type {
   SuggestedAction,
 } from "../../engine/direction/packet-schema.ts";
 
-import { stream, streamSimple } from "@earendil-works/pi-ai";
+// pi-ai 0.80 把全局 stream()/streamSimple() 移到临时 compat 入口；
+// 待 coding-agent ModelManager 迁移完成后改用 createModels() + provider 工厂。
+import { stream, streamSimple } from "@earendil-works/pi-ai/compat";
 import { getMarkdownTheme } from "@earendil-works/pi-coding-agent";
 import { Markdown, Text } from "@earendil-works/pi-tui";
 
