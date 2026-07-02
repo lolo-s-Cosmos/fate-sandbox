@@ -5,7 +5,7 @@ import type {
   FateRankOrUnknown,
   FateRankRange,
   PublicActorState,
-} from "../state/state.ts";
+} from "./actor-state.ts";
 import type { TypeBoxValidator } from "../utils/typebox-validation.ts";
 
 import { Type } from "typebox";
@@ -136,18 +136,18 @@ export const COMMAND_SPELL_STATE_SCHEMA = Type.Object({
   remaining: Type.Integer({ minimum: 0 }),
 });
 
-const MASTER_ROLE_SCHEMA = Type.Object({
+export const MASTER_ROLE_SCHEMA = Type.Object({
   kind: Type.Literal("master"),
   commandSpells: COMMAND_SPELL_STATE_SCHEMA,
   contractedServantIds: Type.Array(Type.String({ minLength: 1 })),
 });
 
-const SOCIAL_ROLE_SCHEMA = Type.Object({
+export const SOCIAL_ROLE_SCHEMA = Type.Object({
   kind: Type.Literal("social"),
   label: Type.String({ minLength: 1 }),
 });
 
-const FACTION_ROLE_SCHEMA = Type.Object({
+export const FACTION_ROLE_SCHEMA = Type.Object({
   kind: Type.Literal("faction"),
   factionId: Type.String({ minLength: 1 }),
   label: Type.String({ minLength: 1 }),
@@ -289,7 +289,7 @@ export function parseActorRegistryInput(value: unknown, fieldName: string): Acto
  * 双向赋值检查在编译期拦截。
  */
 
-const MAGECRAFT_CIRCUIT_STATE_SCHEMA = Type.Object({
+export const MAGECRAFT_CIRCUIT_STATE_SCHEMA = Type.Object({
   count: NON_EMPTY_STRING_SCHEMA,
   quality: FATE_RANK_OR_NONE_SCHEMA,
   od: PERCENT_SCHEMA,
@@ -297,19 +297,19 @@ const MAGECRAFT_CIRCUIT_STATE_SCHEMA = Type.Object({
   traits: NON_EMPTY_STRING_ARRAY_SCHEMA,
 });
 
-const MAGECRAFT_DISCIPLINE_SCHEMA = Type.Object({
+export const MAGECRAFT_DISCIPLINE_SCHEMA = Type.Object({
   name: NON_EMPTY_STRING_SCHEMA,
   rank: FATE_RANK_OR_NONE_SCHEMA,
   notes: NON_EMPTY_STRING_SCHEMA,
 });
 
-const MAGECRAFT_CAPABILITY_SCHEMA = Type.Object({
+export const MAGECRAFT_CAPABILITY_SCHEMA = Type.Object({
   circuits: MAGECRAFT_CIRCUIT_STATE_SCHEMA,
   disciplines: Type.Array(MAGECRAFT_DISCIPLINE_SCHEMA),
   affiliation: nullable(NON_EMPTY_STRING_SCHEMA),
 });
 
-const IDENTITY_STATE_SCHEMA = Type.Object({
+export const IDENTITY_STATE_SCHEMA = Type.Object({
   publicIdentity: NON_EMPTY_STRING_SCHEMA,
   background: NON_EMPTY_STRING_SCHEMA,
   lockedFacts: Type.Array(
@@ -317,7 +317,7 @@ const IDENTITY_STATE_SCHEMA = Type.Object({
   ),
 });
 
-const PRESENTATION_STATE_SCHEMA = Type.Object({
+export const PRESENTATION_STATE_SCHEMA = Type.Object({
   internalName: NON_EMPTY_STRING_SCHEMA,
   renderName: NON_EMPTY_STRING_SCHEMA,
   apparentAge: NON_EMPTY_STRING_SCHEMA,
@@ -325,7 +325,7 @@ const PRESENTATION_STATE_SCHEMA = Type.Object({
   demeanor: NON_EMPTY_STRING_SCHEMA,
 });
 
-const WOUND_STATE_SCHEMA = Type.Object({
+export const WOUND_STATE_SCHEMA = Type.Object({
   id: NON_EMPTY_STRING_SCHEMA,
   severity: WOUND_SEVERITY_SCHEMA,
   text: NON_EMPTY_STRING_SCHEMA,
@@ -333,64 +333,64 @@ const WOUND_STATE_SCHEMA = Type.Object({
   treatment: nullable(NON_EMPTY_STRING_SCHEMA),
 });
 
-const AFFLICTION_STATE_SCHEMA = Type.Object({
+export const AFFLICTION_STATE_SCHEMA = Type.Object({
   id: NON_EMPTY_STRING_SCHEMA,
   source: NON_EMPTY_STRING_SCHEMA,
   text: NON_EMPTY_STRING_SCHEMA,
   expectedDuration: nullable(NON_EMPTY_STRING_SCHEMA),
 });
 
-const PERMANENT_EFFECT_SCHEMA = Type.Object({
+export const PERMANENT_EFFECT_SCHEMA = Type.Object({
   id: NON_EMPTY_STRING_SCHEMA,
   source: NON_EMPTY_STRING_SCHEMA,
   text: NON_EMPTY_STRING_SCHEMA,
   mechanicalEffect: NON_EMPTY_STRING_SCHEMA,
 });
 
-const CONDITION_STATE_SCHEMA = Type.Object({
+export const CONDITION_STATE_SCHEMA = Type.Object({
   wounds: Type.Array(WOUND_STATE_SCHEMA),
   afflictions: Type.Array(AFFLICTION_STATE_SCHEMA),
   permanentEffects: Type.Array(PERMANENT_EFFECT_SCHEMA),
 });
 
-const INVENTORY_STATE_SCHEMA = Type.Object({
+export const INVENTORY_STATE_SCHEMA = Type.Object({
   ordinaryItems: NON_EMPTY_STRING_ARRAY_SCHEMA,
 });
 
-const ABILITY_STATE_SCHEMA = Type.Object({
+export const ABILITY_STATE_SCHEMA = Type.Object({
   id: NON_EMPTY_STRING_SCHEMA,
   label: NON_EMPTY_STRING_SCHEMA,
   summary: NON_EMPTY_STRING_SCHEMA,
 });
 
-const TRUE_NAME_STATE_SCHEMA = Type.Object({
+export const TRUE_NAME_STATE_SCHEMA = Type.Object({
   status: REVEAL_STATUS_SCHEMA,
   display: NON_EMPTY_STRING_SCHEMA,
 });
 
-const SERVANT_IDENTITY_STATE_SCHEMA = Type.Object({
+export const SERVANT_IDENTITY_STATE_SCHEMA = Type.Object({
   className: SERVANT_CLASS_SCHEMA,
   trueName: TRUE_NAME_STATE_SCHEMA,
   locked: Type.Literal(true),
 });
 
-const RESOURCE_TRACK_SCHEMA = Type.Object({ value: PERCENT_SCHEMA });
+export const RESOURCE_TRACK_SCHEMA = Type.Object({ value: PERCENT_SCHEMA });
 
-const SERVANT_CONDITION_STATE_SCHEMA = Type.Object({
+export const SERVANT_CONDITION_STATE_SCHEMA = Type.Object({
   spiritualCore: RESOURCE_TRACK_SCHEMA,
   mana: RESOURCE_TRACK_SCHEMA,
   spiritualCondition: NON_EMPTY_STRING_SCHEMA,
   permanentDefects: Type.Array(PERMANENT_EFFECT_SCHEMA),
 });
 
-const SERVANT_CONTRACT_STATE_SCHEMA = Type.Object({
+export const SERVANT_CONTRACT_STATE_SCHEMA = Type.Object({
   masterActorId: nullable(NON_EMPTY_STRING_SCHEMA),
   masterName: nullable(NON_EMPTY_STRING_SCHEMA),
   status: CONTRACT_STATUS_SCHEMA,
   manaSupply: MANA_SUPPLY_SCHEMA,
 });
 
-const PARAM_MODIFIER_SCHEMA = Type.Object({
+export const PARAM_MODIFIER_SCHEMA = Type.Object({
   id: NON_EMPTY_STRING_SCHEMA,
   source: NON_EMPTY_STRING_SCHEMA,
   affectedParams: Type.Array(FATE_PARAM_KEY_SCHEMA),
@@ -398,13 +398,13 @@ const PARAM_MODIFIER_SCHEMA = Type.Object({
   expiresAt: nullable(ISO_INSTANT_SCHEMA),
 });
 
-const SERVANT_PARAMETER_STATE_SCHEMA = Type.Object({
+export const SERVANT_PARAMETER_STATE_SCHEMA = Type.Object({
   base: FATE_PARAMS_SCHEMA,
   modifiers: Type.Array(PARAM_MODIFIER_SCHEMA),
   baseLocked: Type.Literal(true),
 });
 
-const SERVANT_SKILL_STATE_SCHEMA = Type.Object({
+export const SERVANT_SKILL_STATE_SCHEMA = Type.Object({
   classSkills: Type.Array(SERVANT_SKILL_SCHEMA),
   personalSkills: Type.Array(SERVANT_SKILL_SCHEMA),
 });
@@ -432,12 +432,12 @@ const ACTOR_BASE_PROPERTIES = {
   relationshipToProtagonist: RELATIONSHIP_STATE_SCHEMA,
 } as const;
 
-const HUMAN_ACTOR_STATE_SCHEMA = Type.Object({
+export const HUMAN_ACTOR_STATE_SCHEMA = Type.Object({
   ...ACTOR_BASE_PROPERTIES,
   kind: Type.Literal("human"),
 });
 
-const OUTSIDER_ACTOR_STATE_SCHEMA = Type.Object({
+export const OUTSIDER_ACTOR_STATE_SCHEMA = Type.Object({
   ...ACTOR_BASE_PROPERTIES,
   kind: Type.Literal("outsider"),
   sourceProfile: NON_EMPTY_STRING_SCHEMA,
@@ -445,13 +445,13 @@ const OUTSIDER_ACTOR_STATE_SCHEMA = Type.Object({
   restrictions: NON_EMPTY_STRING_ARRAY_SCHEMA,
 });
 
-const SPIRIT_ACTOR_STATE_SCHEMA = Type.Object({
+export const SPIRIT_ACTOR_STATE_SCHEMA = Type.Object({
   ...ACTOR_BASE_PROPERTIES,
   kind: Type.Literal("spirit"),
   origin: NON_EMPTY_STRING_SCHEMA,
 });
 
-const OTHER_ACTOR_STATE_SCHEMA = Type.Object({
+export const OTHER_ACTOR_STATE_SCHEMA = Type.Object({
   ...ACTOR_BASE_PROPERTIES,
   kind: Type.Literal("other"),
   nature: NON_EMPTY_STRING_SCHEMA,

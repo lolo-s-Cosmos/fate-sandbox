@@ -1,22 +1,53 @@
-import type { ActorId, ItemId, LocationState, Percent } from "../state/core-types.ts";
+import type { Static } from "typebox";
+
+import type { ActorKind } from "../state/state-enum-schemas.ts";
 import type {
-  ActorKind,
-  ActorStance,
-  CircuitStatus,
-  ContractStatus,
-  ManaSupply,
-  RevealStatus,
-  ServantClass,
-  TrackedItemCondition,
-  TrackedItemKind,
-  TrackedItemVisibility,
-  WoundSeverity,
-} from "../state/state-enum-schemas.ts";
-import type { NoblePhantasm } from "./actor-schema.ts";
+  ABILITY_STATE_SCHEMA,
+  ACTOR_IMPRESSION_SCHEMA,
+  ACTOR_ROLE_SCHEMA,
+  AFFLICTION_STATE_SCHEMA,
+  COMMAND_SPELL_STATE_SCHEMA,
+  CONDITION_STATE_SCHEMA,
+  FACTION_ROLE_SCHEMA,
+  FATE_PARAMS_SCHEMA,
+  HUMAN_ACTOR_STATE_SCHEMA,
+  IDENTITY_STATE_SCHEMA,
+  INVENTORY_STATE_SCHEMA,
+  MAGECRAFT_CAPABILITY_SCHEMA,
+  MAGECRAFT_CIRCUIT_STATE_SCHEMA,
+  MAGECRAFT_DISCIPLINE_SCHEMA,
+  MASTER_ROLE_SCHEMA,
+  OTHER_ACTOR_STATE_SCHEMA,
+  OUTFIT_STATE_SCHEMA,
+  OUTSIDER_ACTOR_STATE_SCHEMA,
+  PARAM_MODIFIER_SCHEMA,
+  PERMANENT_EFFECT_SCHEMA,
+  PRESENTATION_STATE_SCHEMA,
+  PUBLIC_ACTOR_STATE_SCHEMA,
+  RELATIONSHIP_SIGNAL_SCHEMA,
+  RELATIONSHIP_SIGNAL_VISIBILITIES,
+  RELATIONSHIP_STATE_SCHEMA,
+  RESOURCE_TRACK_SCHEMA,
+  SERVANT_CONDITION_STATE_SCHEMA,
+  SERVANT_CONTRACT_STATE_SCHEMA,
+  SERVANT_CORE_STATE_SCHEMA,
+  SERVANT_IDENTITY_STATE_SCHEMA,
+  SERVANT_PARAMETER_STATE_SCHEMA,
+  SERVANT_SKILL_SCHEMA,
+  SERVANT_SKILL_STATE_SCHEMA,
+  SOCIAL_ROLE_SCHEMA,
+  SPIRIT_ACTOR_STATE_SCHEMA,
+  TRACKED_ITEM_STATE_SCHEMA,
+  TRUE_NAME_STATE_SCHEMA,
+  WOUND_STATE_SCHEMA,
+} from "./actor-schema.ts";
 
 /**
- * Actor 领域状态类型（自 state.ts 分拆而来，仅类型）。
- * 对应 schema 在 actor-schema.ts；漂移由 state-schema.ts 的双向赋值检查拦截。
+ * Actor 领域状态类型：自 actor-schema.ts 的 TypeBox schema 派生，
+ * schema 是唯一事实源——改状态形状只改 schema，类型自动跟进。
+ * 例外：FateRank 族是模板字面量类型，pattern 校验表达不了它，必须手写在此，
+ * schema 侧用 Type.Unsafe<FateRank> 反向引用（本文件与 actor-schema.ts 因此
+ * 构成 type-only 双向引用，运行时全部擦除）。
  * 对外仍经 state.ts re-export 原名。
  */
 
@@ -32,279 +63,52 @@ export type FateRankRange = `${FateRank}~${FateRank}`;
 /** 未知参数：对手尚未被观测/拍板时的占位；战斗比较时走中性路径。 */
 export type FateRankOrUnknown = FateRank | "unknown";
 
-export type PublicActorState =
-  | HumanActorState
-  | OutsiderActorState
-  | SpiritActorState
-  | OtherActorState;
+export type PublicActorState = Static<typeof PUBLIC_ACTOR_STATE_SCHEMA>;
+export type HumanActorState = Static<typeof HUMAN_ACTOR_STATE_SCHEMA>;
+export type OutsiderActorState = Static<typeof OUTSIDER_ACTOR_STATE_SCHEMA>;
+export type SpiritActorState = Static<typeof SPIRIT_ACTOR_STATE_SCHEMA>;
+export type OtherActorState = Static<typeof OTHER_ACTOR_STATE_SCHEMA>;
+/** 四个 kind 变体的公共骨架（schema 侧对应 ACTOR_BASE_PROPERTIES 展开）。 */
+export type ActorBase = Omit<HumanActorState, "kind"> & { kind: ActorKind };
 
-export interface ActorBase {
-  id: ActorId;
-  kind: ActorKind;
-  roles: ActorRole[];
-  magecraft: MagecraftCapability | null;
-  servantForm: ServantCoreState | null;
-  identity: IdentityState;
-  presentation: PresentationState;
-  condition: ConditionState;
-  inventory: InventoryState;
-  abilities: AbilityState[];
-  relationshipToProtagonist: RelationshipState;
-}
+export type ActorRole = Static<typeof ACTOR_ROLE_SCHEMA>;
+export type MasterRole = Static<typeof MASTER_ROLE_SCHEMA>;
+export type SocialRole = Static<typeof SOCIAL_ROLE_SCHEMA>;
+export type FactionRole = Static<typeof FACTION_ROLE_SCHEMA>;
+export type CommandSpellState = Static<typeof COMMAND_SPELL_STATE_SCHEMA>;
 
-export interface HumanActorState extends ActorBase {
-  kind: "human";
-}
+export type IdentityState = Static<typeof IDENTITY_STATE_SCHEMA>;
+export type LockedFact = IdentityState["lockedFacts"][number];
+export type PresentationState = Static<typeof PRESENTATION_STATE_SCHEMA>;
+export type OutfitState = Static<typeof OUTFIT_STATE_SCHEMA>;
+export type RelationshipState = Static<typeof RELATIONSHIP_STATE_SCHEMA>;
 
-export interface OutsiderActorState extends ActorBase {
-  kind: "outsider";
-  sourceProfile: string;
-  fateTranslation: string;
-  restrictions: string[];
-}
+export type MagecraftCapability = Static<typeof MAGECRAFT_CAPABILITY_SCHEMA>;
+export type MagecraftCircuitState = Static<typeof MAGECRAFT_CIRCUIT_STATE_SCHEMA>;
+export type MagecraftDiscipline = Static<typeof MAGECRAFT_DISCIPLINE_SCHEMA>;
 
-export interface SpiritActorState extends ActorBase {
-  kind: "spirit";
-  origin: string;
-}
+export type ConditionState = Static<typeof CONDITION_STATE_SCHEMA>;
+export type WoundState = Static<typeof WOUND_STATE_SCHEMA>;
+export type AfflictionState = Static<typeof AFFLICTION_STATE_SCHEMA>;
+export type PermanentEffect = Static<typeof PERMANENT_EFFECT_SCHEMA>;
+/** 与 PermanentEffect 同构；从者灵基上的永久缺损语义独立成名。 */
+export type PermanentDefect = Static<typeof PERMANENT_EFFECT_SCHEMA>;
+export type InventoryState = Static<typeof INVENTORY_STATE_SCHEMA>;
+export type AbilityState = Static<typeof ABILITY_STATE_SCHEMA>;
+export type TrackedItemState = Static<typeof TRACKED_ITEM_STATE_SCHEMA>;
 
-export interface OtherActorState extends ActorBase {
-  kind: "other";
-  nature: string;
-}
+export type ServantCoreState = Static<typeof SERVANT_CORE_STATE_SCHEMA>;
+export type ServantIdentityState = Static<typeof SERVANT_IDENTITY_STATE_SCHEMA>;
+export type TrueNameState = Static<typeof TRUE_NAME_STATE_SCHEMA>;
+export type ServantConditionState = Static<typeof SERVANT_CONDITION_STATE_SCHEMA>;
+export type ResourceTrack = Static<typeof RESOURCE_TRACK_SCHEMA>;
+export type ServantContractState = Static<typeof SERVANT_CONTRACT_STATE_SCHEMA>;
+export type ServantParameterState = Static<typeof SERVANT_PARAMETER_STATE_SCHEMA>;
+export type FateParams = Static<typeof FATE_PARAMS_SCHEMA>;
+export type ParamModifier = Static<typeof PARAM_MODIFIER_SCHEMA>;
+export type ServantSkillState = Static<typeof SERVANT_SKILL_STATE_SCHEMA>;
+export type ServantSkill = Static<typeof SERVANT_SKILL_SCHEMA>;
 
-export type ActorRole = MasterRole | SocialRole | FactionRole;
-
-export interface MasterRole {
-  kind: "master";
-  commandSpells: CommandSpellState;
-  contractedServantIds: ActorId[];
-}
-
-export interface SocialRole {
-  kind: "social";
-  label: string;
-}
-
-export interface FactionRole {
-  kind: "faction";
-  factionId: string;
-  label: string;
-}
-
-export interface CommandSpellState {
-  total: number;
-  remaining: number;
-}
-
-export interface IdentityState {
-  publicIdentity: string;
-  background: string;
-  lockedFacts: LockedFact[];
-}
-
-export interface LockedFact {
-  id: string;
-  text: string;
-}
-
-export interface PresentationState {
-  internalName: string;
-  /** Renderer-facing surface name; keep exact Chinese/canonical prose spelling here. */
-  renderName: string;
-  apparentAge: string;
-  outfit: OutfitState;
-  demeanor: string;
-}
-
-export interface OutfitState {
-  label: string;
-  details: string;
-}
-
-export interface MagecraftCapability {
-  circuits: MagecraftCircuitState;
-  disciplines: MagecraftDiscipline[];
-  affiliation: string | null;
-}
-
-export interface MagecraftCircuitState {
-  count: string;
-  quality: FateRank | "none";
-  od: Percent;
-  status: CircuitStatus;
-  traits: string[];
-}
-
-export interface MagecraftDiscipline {
-  name: string;
-  rank: FateRank | "none";
-  notes: string;
-}
-
-export interface RelationshipState {
-  stance: ActorStance;
-  summary: string;
-}
-
-export interface ConditionState {
-  wounds: WoundState[];
-  afflictions: AfflictionState[];
-  permanentEffects: PermanentEffect[];
-}
-
-export interface WoundState {
-  id: string;
-  severity: WoundSeverity;
-  text: string;
-  recoverable: boolean;
-  treatment: string | null;
-}
-
-export interface AfflictionState {
-  id: string;
-  source: string;
-  text: string;
-  expectedDuration: string | null;
-}
-
-export interface PermanentEffect {
-  id: string;
-  source: string;
-  text: string;
-  mechanicalEffect: string;
-}
-
-export interface PermanentDefect {
-  id: string;
-  source: string;
-  text: string;
-  mechanicalEffect: string;
-}
-
-export interface InventoryState {
-  ordinaryItems: string[];
-}
-
-export interface AbilityState {
-  id: string;
-  label: string;
-  summary: string;
-}
-
-export interface TrackedItemState {
-  id: ItemId;
-  label: string;
-  kind: TrackedItemKind;
-  ownerActorId: ActorId | null;
-  holderActorId: ActorId | null;
-  location: LocationState | null;
-  condition: TrackedItemCondition;
-  visibility: TrackedItemVisibility;
-  notes: string[];
-}
-
-export interface ServantCoreState {
-  identity: ServantIdentityState;
-  condition: ServantConditionState;
-  contract: ServantContractState;
-  parameters: ServantParameterState;
-  skills: ServantSkillState;
-  noblePhantasms: NoblePhantasm[];
-  currentOrder: string;
-}
-
-export interface ServantIdentityState {
-  className: ServantClass;
-  trueName: TrueNameState;
-  locked: true;
-}
-
-export interface TrueNameState {
-  status: RevealStatus;
-  display: string;
-}
-
-export interface ServantConditionState {
-  spiritualCore: ResourceTrack;
-  mana: ResourceTrack;
-  spiritualCondition: string;
-  permanentDefects: PermanentDefect[];
-}
-
-export interface ResourceTrack {
-  value: Percent;
-}
-
-export interface ServantContractState {
-  masterActorId: ActorId | null;
-  masterName: string | null;
-  status: ContractStatus;
-  manaSupply: ManaSupply;
-}
-
-export interface ServantParameterState {
-  base: FateParams;
-  modifiers: ParamModifier[];
-  baseLocked: true;
-}
-
-export interface FateParams {
-  strength: FateRankOrUnknown;
-  endurance: FateRankOrUnknown;
-  agility: FateRankOrUnknown;
-  mana: FateRankOrUnknown;
-  luck: FateRankOrUnknown;
-  noblePhantasm: FateRankOrUnknown;
-}
-
-export interface ParamModifier {
-  id: string;
-  source: string;
-  affectedParams: Array<keyof FateParams>;
-  summary: string;
-  expiresAt: string | null;
-}
-
-export interface ServantSkillState {
-  classSkills: ServantSkill[];
-  personalSkills: ServantSkill[];
-}
-
-export interface ServantSkill {
-  name: string;
-  rank: FateRank | "none";
-  summary: string;
-}
-
-/**
- * NPC 印象卡（backlog #6a）。
- * 公开层，几行即可。beat complete 或 compaction 时由 GM 蒸馏更新；
- * pre-response 注入时只注入当前 scene.presentActorIds 里的卡片。
- */
-export interface ActorImpression {
-  actorId: ActorId;
-  /** 外在气场：给人的第一印象、体格/气质/压迫感（1 行） */
-  presence: string;
-  /** 行动风格：说话习惯、决策偏好、典型行为模式（1 行） */
-  actionStyle: string;
-  /** 当前对主角的姿态（1 行） */
-  relationshipPosture: string;
-  /** 可选：语气材料（口头禅、断句习惯、情绪标记） */
-  voiceMaterial: string;
-  /** 最后更新时刻（游戏内时钟） */
-  updatedAt: string;
-}
-
-export type RelationshipSignalVisibility = "player-known" | "secret";
-
-export interface RelationshipSignal {
-  id: string;
-  actorId: ActorId;
-  targetActorId: ActorId;
-  signal: string;
-  interpretation: string;
-  boundary: string;
-  sourceEventId: string | null;
-  visibility: RelationshipSignalVisibility;
-}
+export type ActorImpression = Static<typeof ACTOR_IMPRESSION_SCHEMA>;
+export type RelationshipSignalVisibility = (typeof RELATIONSHIP_SIGNAL_VISIBILITIES)[number];
+export type RelationshipSignal = Static<typeof RELATIONSHIP_SIGNAL_SCHEMA>;
