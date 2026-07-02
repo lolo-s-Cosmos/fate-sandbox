@@ -1,30 +1,17 @@
-import type { ActorId } from "../state/core-types.ts";
-import type { CurrencyCode, PurseAccess } from "../state/state-enum-schemas.ts";
+import type { Static } from "typebox";
+
+import type {
+  DEBT_STATE_SCHEMA,
+  ECONOMY_STATE_SCHEMA,
+  MONEY_PURSE_SCHEMA,
+} from "./economy-schema.ts";
 
 /**
- * Economy 领域状态类型（自 state.ts 分拆而来，仅类型）。
- * 对应 schema 在 economy-schema.ts；漂移由 state-schema.ts 的双向赋值检查拦截。
+ * Economy 领域状态类型：自 economy-schema.ts 的 TypeBox schema 派生，
+ * schema 是唯一事实源——改状态形状只改 schema，类型自动跟进。
  * 对外仍经 state.ts re-export 原名。
  */
 
-export interface EconomyState {
-  currency: CurrencyCode;
-  accessibleFunds: MoneyPurse[];
-  debts: DebtState[];
-}
-
-export interface MoneyPurse {
-  id: string;
-  ownerActorId: ActorId;
-  label: string;
-  amount: number;
-  access: PurseAccess;
-}
-
-export interface DebtState {
-  id: string;
-  debtorActorId: ActorId;
-  creditor: string;
-  amount: number;
-  reason: string;
-}
+export type EconomyState = Static<typeof ECONOMY_STATE_SCHEMA>;
+export type MoneyPurse = Static<typeof MONEY_PURSE_SCHEMA>;
+export type DebtState = Static<typeof DEBT_STATE_SCHEMA>;

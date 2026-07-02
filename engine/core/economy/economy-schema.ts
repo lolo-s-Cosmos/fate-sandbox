@@ -124,7 +124,7 @@ export function parseEconomyEvent(value: unknown, fieldName: string): EconomyEve
  * 与 state.ts 手写接口一一对应；漂移由 state-schema.ts 的双向赋值检查拦截。
  */
 
-const MONEY_PURSE_SCHEMA = Type.Object({
+export const MONEY_PURSE_SCHEMA = Type.Object({
   id: NON_EMPTY_STRING_SCHEMA,
   ownerActorId: NON_EMPTY_STRING_SCHEMA,
   label: NON_EMPTY_STRING_SCHEMA,
@@ -132,7 +132,7 @@ const MONEY_PURSE_SCHEMA = Type.Object({
   access: PURSE_ACCESS_SCHEMA,
 });
 
-const DEBT_STATE_SCHEMA = Type.Object({
+export const DEBT_STATE_SCHEMA = Type.Object({
   id: NON_EMPTY_STRING_SCHEMA,
   debtorActorId: NON_EMPTY_STRING_SCHEMA,
   creditor: NON_EMPTY_STRING_SCHEMA,
