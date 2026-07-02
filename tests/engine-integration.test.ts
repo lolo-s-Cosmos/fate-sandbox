@@ -5,19 +5,19 @@ import test from "node:test";
 
 import { buildGmBrief } from "../engine/core/state/public-projection.ts";
 import { cloneState, commitState, getState, resetState } from "../engine/core/state/state-store.ts";
-import { commitTurnTool } from "../tools/state/commit-turn.ts";
-import { initializeNewGameTool } from "../tools/state/initialize-new-game.ts";
-import { manageFactionClockTool } from "../tools/state/manage-faction-clock.ts";
-import { recallMemoryTool } from "../tools/state/recall-memory.ts";
-import { recordActorKnowledgeTool } from "../tools/state/record-actor-knowledge.ts";
-import { recordOffscreenEventTool } from "../tools/state/record-offscreen-event.ts";
-import { recordRelationshipSignalTool } from "../tools/state/record-relationship-signal.ts";
-import { resolveCombatExchangeTool } from "../tools/state/resolve-combat-exchange.ts";
-import { revealSecretTool } from "../tools/state/reveal-secret.ts";
-import { setScenePresenceTool } from "../tools/state/set-scene-presence.ts";
-import { updateActorAgendaTool } from "../tools/state/update-actor-agenda.ts";
-import { updateHookTool } from "../tools/state/update-hook.ts";
-import { upsertActorTool } from "../tools/state/upsert-actor.ts";
+import { commitTurnTool } from "../tools/settlement/commit-turn.ts";
+import { initializeNewGameTool } from "../tools/settlement/initialize-new-game.ts";
+import { manageFactionClockTool } from "../tools/settlement/manage-faction-clock.ts";
+import { recallMemoryTool } from "../tools/settlement/recall-memory.ts";
+import { recordActorKnowledgeTool } from "../tools/settlement/record-actor-knowledge.ts";
+import { recordOffscreenEventTool } from "../tools/settlement/record-offscreen-event.ts";
+import { recordRelationshipSignalTool } from "../tools/settlement/record-relationship-signal.ts";
+import { resolveCombatExchangeTool } from "../tools/settlement/resolve-combat-exchange.ts";
+import { revealSecretTool } from "../tools/settlement/reveal-secret.ts";
+import { setScenePresenceTool } from "../tools/settlement/set-scene-presence.ts";
+import { updateActorAgendaTool } from "../tools/settlement/update-actor-agenda.ts";
+import { updateHookTool } from "../tools/settlement/update-hook.ts";
+import { upsertActorTool } from "../tools/settlement/upsert-actor.ts";
 
 /**
  * 引擎集成走查（回流自 lonestar engine-integration 模式；确定性，不调真 LLM）——

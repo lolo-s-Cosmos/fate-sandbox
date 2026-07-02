@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { getState, resetState } from "../../engine/core/state/state-store.ts";
-import { upsertActorTool } from "../state/upsert-actor.ts";
+import { upsertActorTool } from "../settlement/upsert-actor.ts";
 import { overrideLockedFactTool } from "./override-locked-fact.ts";
 
 void test("overrideLockedFactTool can hide an accidentally revealed true name", () => {

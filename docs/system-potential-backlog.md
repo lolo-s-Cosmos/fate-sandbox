@@ -108,7 +108,7 @@ interface ScheduledEvent {
 
 落地清单：
 
-- `run_parallel_line` 领域工具（`tools/state/run-parallel-line.ts`）：GM 只传 `lineId + timeWindow + 可选偏好`，engine 从 secret state、actor agenda、offscreenEventLog、pressure palette 自动装配完整 `ParallelLineInput`，返回可直接传给 `parallel-line` 子代理的 JSON。
+- `run_parallel_line` 领域工具（`tools/settlement/run-parallel-line.ts`）：GM 只传 `lineId + timeWindow + 可选偏好`，engine 从 secret state、actor agenda、offscreenEventLog、pressure palette 自动装配完整 `ParallelLineInput`，返回可直接传给 `parallel-line` 子代理的 JSON。
 - engine-side assembler（`engine/core/backstage/parallel-line-assembler.ts`）：自动提取 knownFacts（public memory eventLog + pinnedFacts）、privateFacts（campaignSecrets 未 reveal）、actorGoals（actorAgendas）、forbiddenEscalations（storyWindow 自动合并）、recentOffscreenEvents（最近 6 条 + pressureType 分类）、pressure palette（带 recentUses + coolingDown）。
 - `ParallelLineOutput` TypeBox 验证器（`engine/core/backstage/parallel-line-output-schema.ts`）：子代理返回裸 JSON 字符串由 TypeBox 严格验证，解析失败抛 Error 让调用方重试——从 prompt 恳求变成代码验收。
 - `ParallelLineInput` / `ParallelLineOutput` 扩展：新增 `recentOffscreenEvents`、`excludedActorIds`、`excludedPressureTypes`、`preferredPressureType`、`majorBeatEnd`、`arcTransition`；输出新增 `timelineId`、`toneDriftRisk`、`genreFitNotes`。
@@ -126,14 +126,14 @@ a) **NPC 印象卡**（`ActorImpression`）——公开层 per-actor voice/postu
 
 - 类型 `ActorImpression`（presence / actionStyle / relationshipPosture / voiceMaterial / updatedAt）加入 `PublicGameState.actorImpressions`。
 - 领域逻辑 `engine/core/actor/actor-impression.ts`：`upsertActorImpression` upsert；`presentActorImpressions` 按 scene.presentActorIds 过滤；`formatPresenceImpressionCards` 格式化注入文本。
-- `update_actor_impression` 领域工具（`tools/state/update-actor-impression.ts`）。
+- `update_actor_impression` 领域工具（`tools/settlement/update-actor-impression.ts`）。
 - 新 runtime prompt source `presence-impressions`，注册在 `preset-settlement.json` pre-response slot priority 15。在场 NPC 印象卡自动注入 pre-response。
 - schema v8→9 迁移，新增 `actorImpressions: []`。
 
 b) **Campaign memory 检索**：
 
 - `engine/core/knowledge/memory-recall.ts`：`recallMemory(state, query)` 纯函数，支持 keywords（OR）、actorId、location、scope 过滤，不上向量。
-- `recall_memory` 领域工具（`tools/state/recall-memory.ts`）：只读，不改状态。
+- `recall_memory` 领域工具（`tools/settlement/recall-memory.ts`）：只读，不改状态。
 - tool-policy 更新：需要回忆旧事实时调用 recall_memory，不凭模型记忆编造。
 
 进阶（未做）：brief 按当前 location/在场 actor 自动关联注入 2-3 条相关旧记忆。等待实际 session 审计反馈后再决定是否值得。
@@ -425,7 +425,7 @@ interface ActorRef {
 2. `upsert-public-npc` / `upsert-servant` 改为系统生成 id，返回给 LLM；id 字段从输入降级为可选诊断输出。
 3. 种子主角 id 从 `state-store.ts` 单点常量（已收敛，见 commit `007e5cb`）改为中性生成值。
 4. 清扠20+ 个测试 fixture 里假设主角 id=`protagonist` 的处，改引用 `state.public.protagonistActorId`。
-5. `tools/state/upsert-actor.ts` 的 `guardProtagonistTrueName`（现靠 `id==="protagonist"` 字面量、已标 BACKLOG）随流程改靠 kind/指针。
+5. `tools/settlement/upsert-actor.ts` 的 `guardProtagonistTrueName`（现靠 `id==="protagonist"` 字面量、已标 BACKLOG）随流程改靠 kind/指针。
 6. 考虑已有存档：schema migration 是否把存量语义 id rename 为 opaque（跨表引用全图重写），还是仅对新开局生效。
 
 前序工作：`e1d4205`（protagonistActorId 成主角身份唯一真相，斩断生产代码 `id==="protagonist"` 语义依赖）、`007e5cb`（种子 id 收敛单点）。这两步已把运行时“谁是主角”收到指针唯一真相、种子 id 收到单点，为本 slice 铺好地基。
