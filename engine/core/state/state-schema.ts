@@ -45,7 +45,7 @@ import {
   TIMELINE_ID_SCHEMA,
   TIMEZONE_ID_SCHEMA,
 } from "./state-enum-schemas.ts";
-import { LOCATION_STATE_SCHEMA } from "./turn-time-schema.ts";
+import { LOCATION_STATE_SCHEMA } from "../turn/turn-time-schema.ts";
 
 /**
  * State 反序列化边界 schema 的组合根：领域状态片段住在各自领域的

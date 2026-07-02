@@ -8,7 +8,7 @@
  * commit_turn）在收尾时对账：账未清则拒绝提交。
  */
 
-import type { State, TurnObligation, TurnObligationKind } from "./state.ts";
+import type { State, TurnObligation, TurnObligationKind } from "../state/state.ts";
 
 import { createId } from "../utils/ids.ts";
 

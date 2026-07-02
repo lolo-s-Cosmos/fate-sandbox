@@ -4,7 +4,7 @@ import test from "node:test";
 import { getOffscreenEventsForDebug } from "../knowledge/secrets.ts";
 import { buildGmBrief } from "../state/public-projection.ts";
 import { createInitialState } from "../state/state-store.ts";
-import { advanceClock } from "../state/turn-time.ts";
+import { advanceClock } from "../turn/turn-time.ts";
 import { recordOffscreenEvent } from "./offscreen-event.ts";
 
 const INITIAL_TIME = "2004-01-30T07:00:00.000Z";

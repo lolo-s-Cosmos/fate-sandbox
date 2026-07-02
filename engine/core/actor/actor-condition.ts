@@ -1,7 +1,7 @@
 import type { ActorId, PermanentEffect, PublicActorState, State } from "../state/state.ts";
 import type { ActorConditionEvent } from "./actor-condition-schema.ts";
 
-import { settleOldestObligation } from "../state/obligations.ts";
+import { settleOldestObligation } from "../turn/obligations.ts";
 import { createId } from "../utils/ids.ts";
 import { assertNonEmptyString } from "../utils/typebox-validation.ts";
 

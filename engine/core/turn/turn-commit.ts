@@ -4,7 +4,7 @@ import type { ServantFormEvent, ServantFormEventResult } from "../actor/servant.
 import type { EconomyEvent, EconomyEventResult } from "../economy/economy.ts";
 import type { MemoryEvent, MemoryEventResult } from "../knowledge/memory.ts";
 import type { SceneEvent, SceneEventResult } from "../scene/scene.ts";
-import type { State, TurnTimePolicy } from "./state.ts";
+import type { State, TurnTimePolicy } from "../state/state.ts";
 
 import { updateActorCondition } from "../actor/actor-condition.ts";
 import { setScenePresence } from "../actor/actor.ts";

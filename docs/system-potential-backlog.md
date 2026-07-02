@@ -92,7 +92,7 @@ interface ScheduledEvent {
 
 ## 4. resolve_combat_exchange 裁决-落地缝隙（turn obligations ledger）
 
-- [x] 状态：已完成（2026-06-11，schema v4）。`engine/core/state/obligations.ts`：`public.obligations` 账本（id/source/kind/summary/createdAt，kind 复用 CombatStateLandingKind 六类）；resolve_combat_exchange 改走 domain runner，required landing 自动登账并在返回文本提醒；各领域 applier（actor-condition/servant-form/memory/scene objective+threat/reveal-secret）成功执行时 FIFO 清账一条；`commit_turn` 与 `progress_scene_beat` 收尾对账，账未清则拒绝提交并逐条列出落地路径（同一次 commit 的 events 可以自清）；GM brief 露出未清义务行。迁移 v3→v4 补空账本，含迁移测试。后续：#3 阵营时钟的到期义务复用同一账本
+- [x] 状态：已完成（2026-06-11，schema v4）。`engine/core/turn/obligations.ts`：`public.obligations` 账本（id/source/kind/summary/createdAt，kind 复用 CombatStateLandingKind 六类）；resolve_combat_exchange 改走 domain runner，required landing 自动登账并在返回文本提醒；各领域 applier（actor-condition/servant-form/memory/scene objective+threat/reveal-secret）成功执行时 FIFO 清账一条；`commit_turn` 与 `progress_scene_beat` 收尾对账，账未清则拒绝提交并逐条列出落地路径（同一次 commit 的 events 可以自清）；GM brief 露出未清义务行。迁移 v3→v4 补空账本，含迁移测试。后续：#3 阵营时钟的到期义务复用同一账本
 
 该工具裁决但不改 state，伤势/魔力落地靠 GM 自觉跟进，存在「裁决了但没落地」的无人看守缝隙。
 

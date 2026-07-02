@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { beginSceneBeat } from "../scene/scene.ts";
-import { createInitialState } from "./state-store.ts";
+import { createInitialState } from "../state/state-store.ts";
 import { commitTurn } from "./turn-commit.ts";
 
 function beginTestBeat(draft: ReturnType<typeof createInitialState>, objectives: string[]): void {

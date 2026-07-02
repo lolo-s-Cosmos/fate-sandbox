@@ -4,8 +4,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { createInitialState } from "../state/state-store.ts";
-import { commitTurn } from "../state/turn-commit.ts";
-import { advanceClock } from "../state/turn-time.ts";
+import { commitTurn } from "../turn/turn-commit.ts";
+import { advanceClock } from "../turn/turn-time.ts";
 import {
   advanceFactionClock,
   collectBackstageDueNotices,

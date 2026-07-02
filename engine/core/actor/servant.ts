@@ -3,7 +3,7 @@ import type { ServantFormEvent } from "./servant-schema.ts";
 
 import { Temporal } from "@js-temporal/polyfill";
 
-import { settleOldestObligation } from "../state/obligations.ts";
+import { settleOldestObligation } from "../turn/obligations.ts";
 import { createId } from "../utils/ids.ts";
 import { assertNonEmptyString, assertPercent } from "../utils/typebox-validation.ts";
 

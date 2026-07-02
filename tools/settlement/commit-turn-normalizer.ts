@@ -1,12 +1,12 @@
 import type { ScenePresenceInput } from "../../engine/core/actor/actor.ts";
 import type { MemoryEvent } from "../../engine/core/knowledge/memory.ts";
-import type { TurnCommitEvent, TurnCommitInput } from "../../engine/core/state/turn-commit.ts";
+import type { TurnCommitEvent, TurnCommitInput } from "../../engine/core/turn/turn-commit.ts";
 
 import { parseServantFormEvent } from "../../engine/core/actor/servant-schema.ts";
 import { parseEconomyEvent } from "../../engine/core/economy/economy-schema.ts";
 import { parseMemoryEvent } from "../../engine/core/knowledge/memory-schema.ts";
 import { parseSceneEvent } from "../../engine/core/scene/scene-schema.ts";
-import { parseTurnTimePolicySchema } from "../../engine/core/state/turn-time-schema.ts";
+import { parseTurnTimePolicySchema } from "../../engine/core/turn/turn-time-schema.ts";
 import { isRecord } from "../../engine/core/utils/typebox-validation.ts";
 import { normalizeActorConditionEvent } from "./actor-condition-normalizer.ts";
 

@@ -1,4 +1,4 @@
-import type { TurnCommitEvent } from "../../engine/core/state/turn-commit.ts";
+import type { TurnCommitEvent } from "../../engine/core/turn/turn-commit.ts";
 import type { FateToolDefinition } from "../runtime/tool-definition.ts";
 import type { ToolResult } from "../runtime/tool-result.ts";
 
@@ -9,7 +9,7 @@ import {
   recordCanonicalTurnForBackstage,
 } from "../../engine/core/backstage/backstage-obligation.ts";
 import { formatPendingHarvestReminder } from "../../engine/core/backstage/backstage-pending.ts";
-import { commitTurn } from "../../engine/core/state/turn-commit.ts";
+import { commitTurn } from "../../engine/core/turn/turn-commit.ts";
 import { normalizeTurnCommitInput } from "./commit-turn-normalizer.ts";
 import { resultDetails, runDomainEventTool } from "./domain-tool-runner.ts";
 import { timePolicySchema } from "./time-policy-tool-schema.ts";

@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { createInitialState } from "../state/state-store.ts";
-import { advanceClock } from "../state/turn-time.ts";
+import { advanceClock } from "../turn/turn-time.ts";
 import { upsertActor } from "./actor.ts";
 import { updateServantForm } from "./servant.ts";
 

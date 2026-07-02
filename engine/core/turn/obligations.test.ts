@@ -1,4 +1,4 @@
-import type { State } from "./state.ts";
+import type { State } from "../state/state.ts";
 
 import assert from "node:assert/strict";
 import test from "node:test";
@@ -9,7 +9,7 @@ import {
   recordObligation,
   settleOldestObligation,
 } from "./obligations.ts";
-import { createInitialState } from "./state-store.ts";
+import { createInitialState } from "../state/state-store.ts";
 import { commitTurn } from "./turn-commit.ts";
 
 function draftWithObligation(): State {

@@ -12,7 +12,7 @@ import {
   type CombatStateLanding,
   type CombatSwing,
 } from "../../engine/core/combat/combat-exchange.ts";
-import { recordObligation } from "../../engine/core/state/obligations.ts";
+import { recordObligation } from "../../engine/core/turn/obligations.ts";
 import { seededRandomInt } from "../../engine/core/utils/seeded-rng.ts";
 import { noNumberNarrativeHint } from "../runtime/narrative-hints.ts";
 import { runDomainEventTool } from "./domain-tool-runner.ts";

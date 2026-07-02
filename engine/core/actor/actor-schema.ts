@@ -33,7 +33,7 @@ import {
   TRACKED_ITEM_VISIBILITY_SCHEMA,
   WOUND_SEVERITY_SCHEMA,
 } from "../state/state-enum-schemas.ts";
-import { LOCATION_STATE_SCHEMA } from "../state/turn-time-schema.ts";
+import { LOCATION_STATE_SCHEMA } from "../turn/turn-time-schema.ts";
 import {
   parseTaggedTypeBoxUnion,
   parseTypeBoxValue,
