@@ -5,7 +5,7 @@ import type {
   State,
 } from "../state/state.ts";
 
-import { allActorSecretSlots } from "../knowledge/secret-actor-state.ts";
+import { allActorSecretSlots } from "../secrets/secret-actor-state.ts";
 import { createId } from "../utils/ids.ts";
 import { assertNonEmptyString, isRecord } from "../utils/typebox-validation.ts";
 

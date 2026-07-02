@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getOffscreenEventsForDebug } from "../knowledge/secrets.ts";
+import { getOffscreenEventsForDebug } from "../secrets/secrets.ts";
 import { buildGmBrief } from "../state/public-projection.ts";
 import { createInitialState } from "../state/state-store.ts";
 import { advanceClock } from "../turn/turn-time.ts";

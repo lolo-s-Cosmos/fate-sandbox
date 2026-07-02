@@ -1,9 +1,9 @@
 import type { PublicNpcSkeletonInput, ServantInput } from "../actor/actor.ts";
-import type { MemoryClaim } from "../knowledge/memory.ts";
+import type { MemoryClaim } from "../memory/memory.ts";
 import type {
   ServantSecretNoblePhantasmInput,
   ServantSecretStringInput,
-} from "../knowledge/secrets.ts";
+} from "../secrets/secrets.ts";
 import type {
   ActorId,
   ActorRole,
@@ -20,9 +20,9 @@ import type {
 import type { ConfigureCampaignInput } from "./campaign.ts";
 
 import { setScenePresence, upsertActor } from "../actor/actor.ts";
-import { recordMemory } from "../knowledge/memory.ts";
-import { getActorSecretSlots } from "../knowledge/secret-actor-state.ts";
-import { configureServantSecrets } from "../knowledge/secrets.ts";
+import { recordMemory } from "../memory/memory.ts";
+import { getActorSecretSlots } from "../secrets/secret-actor-state.ts";
+import { configureServantSecrets } from "../secrets/secrets.ts";
 import { createInitialState, PROTAGONIST_ACTOR_ID } from "../state/state-store.ts";
 import { configureCampaign } from "./campaign.ts";
 

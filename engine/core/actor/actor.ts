@@ -8,7 +8,7 @@ import type {
   ServantInput,
 } from "./actor-schema.ts";
 
-import { deleteSecretActorState } from "../knowledge/secret-actor-state.ts";
+import { deleteSecretActorState } from "../secrets/secret-actor-state.ts";
 import { assertNonEmptyString } from "../utils/typebox-validation.ts";
 
 export interface UpsertActorInput {

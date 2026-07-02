@@ -36,7 +36,7 @@
 
 ## 2. Mystery hook 状态化（明确违宪存量）
 
-- [x] 状态：已完成（2026-06-11，schema v6）。`public.hooks: HookState[]`（id/label/status/lastSurfacedAt/surfaceCount/lastNovelty）；`engine/core/knowledge/hooks.ts` 提供 open/surface/park/escalate/pay/retire，`update_hook` 单工具六动作已注册。硬 invariant：active+escalated 同时最多 2 条（超额 open/parked 复活被拒）；surface/escalate 必须带非空 novelty，pay 必须带 payoff，retire 必须带理由；paid/retired 终态拒绝再转换但留在账本供审计。GM brief 加「悬念账本」行；gm-story-driver hook budget 段改为指向工具账本。迁移 v5→v6。后续：audit 脚本可对「账本外悬念复现」做对账；timeline-showrunner 输入接 hooks 账本
+- [x] 状态：已完成（2026-06-11，schema v6）。`public.hooks: HookState[]`（id/label/status/lastSurfacedAt/surfaceCount/lastNovelty）；`engine/core/memory/hooks.ts` 提供 open/surface/park/escalate/pay/retire，`update_hook` 单工具六动作已注册。硬 invariant：active+escalated 同时最多 2 条（超额 open/parked 复活被拒）；surface/escalate 必须带非空 novelty，pay 必须带 payoff，retire 必须带理由；paid/retired 终态拒绝再转换但留在账本供审计。GM brief 加「悬念账本」行；gm-story-driver hook budget 段改为指向工具账本。迁移 v5→v6。后续：audit 脚本可对「账本外悬念复现」做对账；timeline-showrunner 输入接 hooks 账本
 
 `gm-story-driver.md` 的 hook budget（active/parked/paid/escalated/retired、同场景最多 1-2 active、parked 1-2 轮内不抢焦点、复现必须带新状态）全部只活在 prompt 里。state 有 `storyWindow` 但 hook 不是领域对象。后果：compaction 后 hook 状态只能靠 5 条 narrative texture 苟活；timeline-showrunner 审计拿不到账本；「复现带新信息」无法验证。
 
@@ -132,7 +132,7 @@ a) **NPC 印象卡**（`ActorImpression`）——公开层 per-actor voice/postu
 
 b) **Campaign memory 检索**：
 
-- `engine/core/knowledge/memory-recall.ts`：`recallMemory(state, query)` 纯函数，支持 keywords（OR）、actorId、location、scope 过滤，不上向量。
+- `engine/core/memory/memory-recall.ts`：`recallMemory(state, query)` 纯函数，支持 keywords（OR）、actorId、location、scope 过滤，不上向量。
 - `recall_memory` 领域工具（`tools/settlement/recall-memory.ts`）：只读，不改状态。
 - tool-policy 更新：需要回忆旧事实时调用 recall_memory，不凭模型记忆编造。
 

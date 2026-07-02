@@ -11,7 +11,7 @@ import type { MemoryClaim, MemoryEvent } from "./memory-schema.ts";
 import { settleOldestObligation } from "../turn/obligations.ts";
 import { createId } from "../utils/ids.ts";
 import { assertIsoDateString, assertNonEmptyString } from "../utils/typebox-validation.ts";
-import { allActorSecretSlots } from "./secret-actor-state.ts";
+import { allActorSecretSlots } from "../secrets/secret-actor-state.ts";
 
 export type {
   MemoryCertainty,

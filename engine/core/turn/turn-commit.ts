@@ -2,7 +2,7 @@ import type { ActorConditionEvent, ActorConditionEventResult } from "../actor/ac
 import type { ScenePresenceInput, ScenePresenceResult } from "../actor/actor.ts";
 import type { ServantFormEvent, ServantFormEventResult } from "../actor/servant.ts";
 import type { EconomyEvent, EconomyEventResult } from "../economy/economy.ts";
-import type { MemoryEvent, MemoryEventResult } from "../knowledge/memory.ts";
+import type { MemoryEvent, MemoryEventResult } from "../memory/memory.ts";
 import type { SceneEvent, SceneEventResult } from "../scene/scene.ts";
 import type { State, TurnTimePolicy } from "../state/state.ts";
 
@@ -11,7 +11,7 @@ import { setScenePresence } from "../actor/actor.ts";
 import { updateServantForm } from "../actor/servant.ts";
 import { collectBackstageDueNotices } from "../backstage/faction-clock.ts";
 import { updateEconomy } from "../economy/economy.ts";
-import { recordMemory } from "../knowledge/memory.ts";
+import { recordMemory } from "../memory/memory.ts";
 import { updateScene } from "../scene/scene.ts";
 import { assertNonEmptyString } from "../utils/typebox-validation.ts";
 import { assertNoOpenObligations } from "./obligations.ts";

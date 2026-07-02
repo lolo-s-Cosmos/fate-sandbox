@@ -21,13 +21,13 @@ import {
   SCHEDULED_EVENT_SCHEMA,
 } from "../backstage/backstage-state-schema.ts";
 import { ECONOMY_STATE_SCHEMA } from "../economy/economy-schema.ts";
-import { HOOK_STATE_SCHEMA } from "../knowledge/hook-schema.ts";
-import { CAMPAIGN_MEMORY_SCHEMA } from "../knowledge/memory-schema.ts";
+import { HOOK_STATE_SCHEMA } from "../memory/hook-schema.ts";
+import { CAMPAIGN_MEMORY_SCHEMA } from "../memory/memory-schema.ts";
 import {
   SECRET_ACTOR_STATE_SCHEMA,
   SECRET_CAMPAIGN_FACT_SCHEMA,
   SECRET_EVENT_MEMORY_SCHEMA,
-} from "../knowledge/secrets-schema.ts";
+} from "../secrets/secrets-schema.ts";
 import { SCENE_STATE_SCHEMA } from "../scene/scene-schema.ts";
 import { normalizeIsoInstant } from "../utils/date-time.ts";
 import { isRecord, parseTypeBoxValue, trimStringsDeep } from "../utils/typebox-validation.ts";

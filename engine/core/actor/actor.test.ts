@@ -8,7 +8,7 @@ import {
   configureServantSecrets,
   privateResolve,
   revealSecret,
-} from "../knowledge/secrets.ts";
+} from "../secrets/secrets.ts";
 import { buildGmBrief } from "../state/public-projection.ts";
 import { createInitialState } from "../state/state-store.ts";
 import { retireActor, setScenePresence, upsertActor } from "./actor.ts";

@@ -13,7 +13,7 @@ import {
   payHook,
   retireHook,
   surfaceHook,
-} from "../../engine/core/knowledge/hooks.ts";
+} from "../../engine/core/memory/hooks.ts";
 import {
   assertNonEmptyString,
   isRecord,

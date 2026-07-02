@@ -11,7 +11,7 @@ import type { SceneBeatThreatInput } from "./scene-beat-schema.ts";
 import type { SceneEvent } from "./scene-schema.ts";
 
 import { setScenePresence } from "../actor/actor.ts";
-import { recordMemory } from "../knowledge/memory.ts";
+import { recordMemory } from "../memory/memory.ts";
 import { settleOldestObligation } from "../turn/obligations.ts";
 import { createId } from "../utils/ids.ts";
 import { assertNonEmptyString } from "../utils/typebox-validation.ts";

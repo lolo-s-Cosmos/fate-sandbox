@@ -93,14 +93,14 @@ export type {
   ParallelLineToneDriftRisk,
 } from "../backstage/parallel-line.ts";
 export type { DebtState, EconomyState, MoneyPurse } from "../economy/economy-state.ts";
-export type { HookState, HookStatus } from "../knowledge/hook-schema.ts";
+export type { HookState, HookStatus } from "../memory/hook-schema.ts";
 export type {
   CampaignMemory,
   DailyEventMemory,
   DailySummaryMemory,
   MajorEventMemory,
   MemoryFact,
-} from "../knowledge/memory-state.ts";
+} from "../memory/memory-state.ts";
 export type {
   ActorAgendaState,
   ActorKnowledgeLens,
@@ -109,7 +109,7 @@ export type {
   SecretCampaignFact,
   SecretEventMemory,
   SecretSlot,
-} from "../knowledge/secrets-state.ts";
+} from "../secrets/secrets-state.ts";
 export type {
   SceneObjective,
   SceneObjectiveStatus,

@@ -5,7 +5,7 @@ import { Type } from "typebox";
 import { Compile } from "typebox/compile";
 
 import { FATE_PARAMS_SCHEMA, OUTFIT_STATE_SCHEMA } from "../actor/actor-schema.ts";
-import { SERVANT_SECRET_STRING_INPUT_SCHEMA } from "../knowledge/secrets-schema.ts";
+import { SERVANT_SECRET_STRING_INPUT_SCHEMA } from "../secrets/secrets-schema.ts";
 import { SERVANT_CLASS_SCHEMA, stringEnumSchema } from "../state/state-enum-schemas.ts";
 import { parseTaggedTypeBoxUnion, trimStringsDeep } from "../utils/typebox-validation.ts";
 

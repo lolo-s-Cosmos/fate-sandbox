@@ -16,7 +16,7 @@ import type {
 } from "../state/state.ts";
 
 import { getTimelinePressureSlots } from "../../../data/timeline-pressure-palettes.ts";
-import { allActorAgendas } from "../knowledge/secret-actor-state.ts";
+import { allActorAgendas } from "../secrets/secret-actor-state.ts";
 import { assertNonEmptyString } from "../utils/typebox-validation.ts";
 
 export interface AssembleParallelLineInput {

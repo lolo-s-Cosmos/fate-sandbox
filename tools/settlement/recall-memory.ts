@@ -14,7 +14,7 @@ import {
   recallMemory,
   type RecallMemoryQuery,
   type RecallMemoryResult,
-} from "../../engine/core/knowledge/memory-recall.ts";
+} from "../../engine/core/memory/memory-recall.ts";
 import { hydrateStateFromSessionManager } from "../../engine/core/state/session-hydration.ts";
 import { getState } from "../../engine/core/state/state-store.ts";
 import { isRecord } from "../../engine/core/utils/typebox-validation.ts";

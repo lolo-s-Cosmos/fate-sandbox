@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getOffscreenEventsForDebug } from "../knowledge/secrets.ts";
+import { getOffscreenEventsForDebug } from "../secrets/secrets.ts";
 import { createInitialState } from "../state/state-store.ts";
 import { recordOffscreenEvent } from "./offscreen-event.ts";
 

@@ -7,7 +7,7 @@ import {
   getActorKnowledgeLens,
   setActorAgenda,
   setActorKnowledgeLens,
-} from "../knowledge/secret-actor-state.ts";
+} from "../secrets/secret-actor-state.ts";
 
 export type KnowledgeLensCategory = "knows" | "suspects" | "falseBeliefs" | "forbiddenKnowledge";
 

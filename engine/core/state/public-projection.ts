@@ -2,7 +2,7 @@ import type { PublicGameState } from "./state.ts";
 
 import { actorDisplayName } from "../actor/actor-display.ts";
 import { recentPlayerKnownRelationshipSignals } from "../actor/relationship-signal.ts";
-import { formatHookLedger } from "../knowledge/hooks.ts";
+import { formatHookLedger } from "../memory/hooks.ts";
 import { formatHumanTime } from "../utils/date-time.ts";
 
 export function buildGmBrief(publicState: PublicGameState): string {
