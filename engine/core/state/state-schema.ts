@@ -1,7 +1,6 @@
 import type { Static } from "typebox";
 
 import type { TypeBoxValidator } from "../utils/typebox-validation.ts";
-import type { State } from "./state.ts";
 
 import { Type } from "typebox";
 import { Compile } from "typebox/compile";
@@ -56,14 +55,17 @@ import { LOCATION_STATE_SCHEMA } from "./turn-time-schema.ts";
  * 跨字段引用（actor 引用、registry key 一致性等）由 parseStateSchema 的
  * 后置 pass 处理——schema 表达不了的不变量集中在那里。
  *
- * 与 state.ts 手写接口的漂移由文件底部的双向赋值检查在编译期拦截。
+ * schema 是唯一事实源：state.ts 的骨架类型从这里 Static 派生，
+ * 不存在第二份手写形状，也就不再需要双向赋值漂移检查。
  */
 
 export const STATE_META_SCHEMA = Type.Object({
   schemaVersion: Type.Literal(19),
   createdAt: ISO_INSTANT_SCHEMA,
   updatedAt: ISO_INSTANT_SCHEMA,
+  /** Seeded RNG seed（backlog #9）：确定性随机源，初始化时生成 */
   rngSeed: Type.Number(),
+  /** Seeded RNG counter：每次消耗 +1，rewind 后重放行为一致 */
   rngCounter: Type.Integer({ minimum: 0 }),
 });
 
@@ -83,7 +85,7 @@ export const CLOCK_STATE_SCHEMA = Type.Object({
 });
 
 /** turnLog 里的 time 与 parseTurnTimePolicySchema 保持同等约束（elapsedMinutes > 0）。 */
-const TURN_TIME_POLICY_STATE_SCHEMA = Type.Union([
+export const TURN_TIME_POLICY_STATE_SCHEMA = Type.Union([
   Type.Object({
     kind: Type.Literal("elapsed"),
     elapsedMinutes: Type.Integer({ minimum: 1 }),
@@ -97,7 +99,7 @@ const TURN_TIME_POLICY_STATE_SCHEMA = Type.Union([
   }),
 ]);
 
-const TURN_LOG_ENTRY_SCHEMA = Type.Object({
+export const TURN_LOG_ENTRY_SCHEMA = Type.Object({
   id: NON_EMPTY_STRING_SCHEMA,
   summary: NON_EMPTY_STRING_SCHEMA,
   startedAt: ISO_INSTANT_SCHEMA,
@@ -116,8 +118,9 @@ export const TURN_OBLIGATION_KINDS = [
   "reveal-secret",
 ] as const;
 
-const TURN_OBLIGATION_SCHEMA = Type.Object({
+export const TURN_OBLIGATION_SCHEMA = Type.Object({
   id: NON_EMPTY_STRING_SCHEMA,
+  /** 产生此义务的裁决源，如 "combat-exchange" */
   source: NON_EMPTY_STRING_SCHEMA,
   kind: stringEnumSchema(TURN_OBLIGATION_KINDS),
   summary: NON_EMPTY_STRING_SCHEMA,
@@ -135,23 +138,46 @@ export const PUBLIC_GAME_STATE_SCHEMA = Type.Object({
   economy: ECONOMY_STATE_SCHEMA,
   memory: CAMPAIGN_MEMORY_SCHEMA,
   turnLog: Type.Array(TURN_LOG_ENTRY_SCHEMA),
+  /** 裁决已出、尚未落地的强制状态变更；canonical commit 前必须清空 */
   obligations: Type.Array(TURN_OBLIGATION_SCHEMA),
+  /** Mystery hook 账本：hook budget 从 prompt 自觉变成领域对象（backlog #2） */
   hooks: Type.Array(HOOK_STATE_SCHEMA),
+  /** 玩家已知的关系信号证据链；只记录行为证据，不写隐藏内心判词 */
   relationshipSignals: Type.Array(RELATIONSHIP_SIGNAL_SCHEMA),
+  /** NPC 印象卡：voice/posture/texture 蒸馏快照，presence 驱动注入；按 actorId 聚合 */
   actorImpressions: Type.Record(Type.String(), ACTOR_IMPRESSION_SCHEMA),
 });
 
 export const SECRET_GAME_STATE_SCHEMA = Type.Object({
+  /**
+   * GM 对每个 actor 的隐藏内部模型，按 actorId 聚合。
+   * 三个 facet（secrets / agenda / knowledgeLens）同生死、同过 removeActorEverywhere 级联。
+   * 未来新增的 per-actor 秘密状态应作为 SecretActorState 的新字段，而非新的顶层侧表。
+   */
   actorStates: Type.Record(Type.String(), SECRET_ACTOR_STATE_SCHEMA),
   campaignSecrets: Type.Array(SECRET_CAMPAIGN_FACT_SCHEMA),
   secretEventLog: Type.Array(SECRET_EVENT_MEMORY_SCHEMA),
   offscreenEventLog: Type.Array(OFFSCREEN_EVENT_SCHEMA),
+  /** BITD 式阵营进度钟：世界不为玩家暂停的机械载体 */
   factionClocks: Type.Array(FACTION_CLOCK_SCHEMA),
+  /** 到期义务：越过 dueAt 后 canonical commit 会在返回值里催账 */
   scheduledEvents: Type.Array(SCHEDULED_EVENT_SCHEMA),
+  /** 玩家未确认的关系信号与误判，只给 GM/private resolve/subagent 使用 */
   relationshipSignals: Type.Array(RELATIONSHIP_SIGNAL_SCHEMA),
+  /**
+   * 后台世界推进义务账本（backlog #5 runtime 闭环）：触发器命中时生成，
+   * 下一 canonical turn 前必须清账（延迟硬阻断）。与 public obligations 独立。
+   */
   backstageObligations: Type.Array(BACKSTAGE_OBLIGATION_SCHEMA),
+  /** 后台义务的审查记录：candidate 落地 / no-change / blocked 都在此留痕，不污染 public */
   backstageReviewLog: Type.Array(BACKSTAGE_REVIEW_ENTRY_SCHEMA),
+  /** 后台压力计数：跨回合的连续无代价计数器 */
   backstagePressure: BACKSTAGE_PRESSURE_STATE_SCHEMA,
+  /**
+   * 待 harvest 的后台 director run（run_parallel_line 起飞即记，harvest 即清）。
+   * 引擎据此在 canonical commit 催账，并让 resolve_backstage_line 在有未 harvest run 时
+   * 拒绝清账——防止已产出的候选被一句 no-change 静默丢弃。
+   */
   backstagePendingHarvests: Type.Array(BACKSTAGE_PENDING_HARVEST_SCHEMA),
 });
 
@@ -161,17 +187,8 @@ export const STATE_SCHEMA = Type.Object({
   secrets: SECRET_GAME_STATE_SCHEMA,
 });
 
-type SchemaState = Static<typeof STATE_SCHEMA>;
-
-/**
- * 双向赋值检查：schema 与 state.ts 手写接口任何一边漂移（加字段、改类型、
- * 改枚举）都会让 tsc 在这里报错，杜绝“改了 schema 漏改校验器被静默放过”。
- */
-type AssertAssignable<T extends U, U> = T;
-export type StateSchemaParityCheck = [
-  AssertAssignable<SchemaState, State>,
-  AssertAssignable<State, SchemaState>,
-];
+/** 与 state.ts 导出的 GameState 同源（都是 Static<typeof STATE_SCHEMA>）。 */
+type State = Static<typeof STATE_SCHEMA>;
 
 // Compile 必须在独立常量上调用：带注解的上下文类型会干扰泛型推导，把 Validator 退化成 unknown。
 const COMPILED_STATE_VALIDATOR = Compile(STATE_SCHEMA);

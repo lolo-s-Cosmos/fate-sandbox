@@ -1,12 +1,12 @@
 import type { Static } from "typebox";
 
+import type { TypeBoxValidator } from "../utils/typebox-validation.ts";
 import type {
   FateRank,
   FateRankOrUnknown,
   FateRankRange,
   PublicActorState,
 } from "./actor-state.ts";
-import type { TypeBoxValidator } from "../utils/typebox-validation.ts";
 
 import { Type } from "typebox";
 import { Compile } from "typebox/compile";
@@ -285,8 +285,7 @@ export function parseActorRegistryInput(value: unknown, fieldName: string): Acto
 
 /**
  * ---- Actor 状态树 schema（自 state-schema.ts 分拆而来） ----
- * 与 state.ts 手写接口一一对应；漂移由 state-schema.ts 底部的
- * 双向赋值检查在编译期拦截。
+ * 状态类型在 actor-state.ts 从这里派生，schema 是唯一事实源。
  */
 
 export const MAGECRAFT_CIRCUIT_STATE_SCHEMA = Type.Object({

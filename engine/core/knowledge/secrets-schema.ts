@@ -151,7 +151,7 @@ export function parseRevealSecretToolInput(
 
 /**
  * ---- Secrets 状态树 schema（自 state-schema.ts 分拆而来） ----
- * 与 state.ts 手写接口一一对应；漂移由 state-schema.ts 的双向赋值检查拦截。
+ * 状态类型在同域 *-state.ts 从这里派生，schema 是唯一事实源。
  */
 
 export const SECRET_REVEAL_STATES = ["hidden", "foreshadowed", "revealed"] as const;
