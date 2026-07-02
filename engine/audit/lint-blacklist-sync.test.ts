@@ -10,8 +10,8 @@ import { lintFinalProse } from "./lint-rules.ts";
  * md 加了新禁令而 lint-rules.ts 没跟上时，这里会红。
  */
 
-const blacklist = readFileSync("agents/gm-style-blacklist.md", "utf-8");
-const localLintPath = "agents/user/prose-lint.json";
+const blacklist = readFileSync("prompts/gm-style-blacklist.md", "utf-8");
+const localLintPath = "prompts/user/prose-lint.json";
 
 function hardBanPhrases(): string[] {
   const section = blacklist.split(/## Hard bans[^\n]*\n/u)[1]?.split(/\n## /u)[0] ?? "";
@@ -68,7 +68,7 @@ void test("players can add local prose lint regex rules", () => {
 
 function withLocalLintFile(content: string, run: () => void): void {
   const original = existsSync(localLintPath) ? readFileSync(localLintPath, "utf-8") : undefined;
-  mkdirSync("agents/user", { recursive: true });
+  mkdirSync("prompts/user", { recursive: true });
   writeFileSync(localLintPath, content, "utf-8");
   try {
     run();

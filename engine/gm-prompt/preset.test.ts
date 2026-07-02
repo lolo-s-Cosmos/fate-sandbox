@@ -14,7 +14,7 @@ void test("parsePromptPreset accepts file and runtime sources", () => {
           slot: "pre-history",
           priority: 10,
           header: "world_context",
-          source: "agents/gm-context.md",
+          source: "prompts/gm-context.md",
         },
         {
           id: "state",
@@ -31,7 +31,7 @@ void test("parsePromptPreset accepts file and runtime sources", () => {
 
   assert.equal(preset.version, 1);
   assert.equal(preset.modules.length, 2);
-  assert.deepEqual(preset.modules[0]?.source, { kind: "file", path: "agents/gm-context.md" });
+  assert.deepEqual(preset.modules[0]?.source, { kind: "file", path: "prompts/gm-context.md" });
   assert.deepEqual(preset.modules[1]?.source, { kind: "runtime", name: "state-brief" });
 });
 
@@ -54,7 +54,7 @@ void test("parsePromptPreset rejects unsafe file sources", () => {
         },
         "test-preset.json",
       ),
-    /source must be agents\/\*\.md or runtime:\*/u,
+    /source must be prompts\/\*\.md or runtime:\*/u,
   );
 });
 
@@ -71,7 +71,7 @@ void test("parsePromptPreset rejects duplicate module ids", () => {
               slot: "pre-history",
               priority: 10,
               header: "first",
-              source: "agents/gm-context.md",
+              source: "prompts/gm-context.md",
             },
             {
               id: "same",
@@ -79,7 +79,7 @@ void test("parsePromptPreset rejects duplicate module ids", () => {
               slot: "final-contract",
               priority: 20,
               header: "second",
-              source: "agents/gm-output-contract.md",
+              source: "prompts/gm-output-contract.md",
             },
           ],
         },

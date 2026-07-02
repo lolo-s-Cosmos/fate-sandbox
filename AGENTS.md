@@ -10,7 +10,7 @@
 
 核心组成：
 
-- `agents/`：GM prompt 模块。分工包括 system、context、rules、tool-policy、story-driver、render、style、input-guide、output-contract 等。
+- `prompts/`：GM prompt 模块。分工包括 system、context、rules、tool-policy、story-driver、render、style、input-guide、output-contract 等。
 - `skills/start-game/`：新游戏初始化流程机。只负责新游戏/重新开始/创建角色，不负责续局或修档。
 - `engine/core/`：确定性领域引擎。state、scene、actor、servant、economy、memory、secret、offscreen 等逻辑在这里落地。
 - `tools/`：GM 领域事件工具。工具不是状态栏更新器，而是 GM 改变世界的接口。
@@ -225,9 +225,9 @@ type SceneResult =
 发布包不是 git 工作区原样打包。
 
 - 不要提交或发布 `.pi/agent/auth.json`、`sessions/`、`state/`、`.pi/npm/`、本地 session HTML。
-- 不要把 `agents/user/` 本地玩家角色印象打进发布包。
+- 不要把 `prompts/user/` 本地玩家角色印象打进发布包。
 - `docs/` 是开发文档，不进 release zip。
-- 发布脚本会删除 `agents/user/` 和 `*.test.ts`；不要移除这道防线。
+- 发布脚本会删除 `prompts/user/` 和 `*.test.ts`；不要移除这道防线。
 - `start.ps1` 必须保持 ASCII-safe / UTF-8 without BOM，避免 Windows PowerShell 编码误读。
 - README/release copy 描述项目为 experimental interactive narrative game；当前测试重点是 FSF 绫香线，但不要把具体玩家角色作为发布默认。
 - License 为 GPL-3.0-or-later；Fate / TYPE-MOON rights remain with their respective holders。
@@ -252,7 +252,7 @@ tools/                 # 工具定义与注册
   debug/               # debug/修档工具；常规玩法不得依赖
   lookup/              # 世界数据查询工具
 
-agents/                # GM prompt 分层模块
+prompts/                # GM prompt 分层模块
 skills/                # 玩家可调用技能，如 start-game
 extensions/            # pi extension 动态注入、UI panel、subagent context
   subagents/
@@ -499,7 +499,7 @@ pnpm typecheck && pnpm lint && pnpm format:check && pnpm test
 - **查 state 的代码** → 必须处理 `noUncheckedIndexedAccess` 带来的 `| undefined`——每个索引访问都有判空路径。
 - **改 lookup/data** → 保留 canonical fact skeleton，避免复制 wiki prose；不要引入非 TYPE-MOON 材料污染目标世界。
 - **改 subagent** → project-scope、explicit `tools`、explicit `extensions`、bare JSON 输出约束必须保留。
-- **改 release 包** → 跑打包检查，确认不含 `sessions/`、`state/`、`.pi/agent/`、`agents/user/`、`docs/`、`*.test.ts`。
+- **改 release 包** → 跑打包检查，确认不含 `sessions/`、`state/`、`.pi/agent/`、`prompts/user/`、`docs/`、`*.test.ts`。
 - **任何改动** → `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test` 全过。
 
 ---

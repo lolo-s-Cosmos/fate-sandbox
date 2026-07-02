@@ -40,7 +40,7 @@ export function buildSystemPrompt(baseSystemPrompt: string): string {
   return (
     baseSystemPrompt +
     "\n" +
-    readFileSync(join(PROJECT_ROOT, "agents", "system-settlement.md"), "utf-8")
+    readFileSync(join(PROJECT_ROOT, "prompts", "system-settlement.md"), "utf-8")
   );
 }
 
@@ -113,7 +113,7 @@ function findLastUserMessageIndex(messages: ReadonlyArray<unknown>): number {
  * + 全部 render/both 模块，按 slot 顺序与 priority 拼接。零工具 schema、零机械规则。
  */
 export function buildRendererSystemPrompt(): string {
-  const sections = [readPromptFile("agents/system-render.md").trim()];
+  const sections = [readPromptFile("prompts/system-render.md").trim()];
   for (const slot of ["pre-history", "pre-response", "final-contract"] as const) {
     for (const module of promptModulesForSlot(slot, "render")) {
       sections.push(`<${module.header}>\n${module.body.trim()}\n</${module.header}>`);
@@ -157,7 +157,7 @@ function readPromptFile(path: string): string {
 }
 
 function resolvePromptFilePath(path: string): string {
-  const userPath = path.replace(/^agents\//u, "agents/user/");
+  const userPath = path.replace(/^prompts\//u, "prompts/user/");
   const absoluteUserPath = join(PROJECT_ROOT, userPath);
   if (userPath !== path && existsSync(absoluteUserPath)) {
     return absoluteUserPath;

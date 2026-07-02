@@ -28,12 +28,12 @@
 
 - 结算器**不写散文**，渲染器**看不到 state / 工具 / 秘密真名**，只看到 packet。
 - packet 的字段分 `binding`（必须到达成品场景）/ `free`（建议）/ `player-safe`（已过秘密防火墙）。
-- 关键文件：`agents/gm-direction.md`（packet 契约）、`agents/gm-render.md`（渲染协议）、`agents/system-render.md`（渲染器身份）、`agents/gm-style-rules.md`（23KB 笔触圣经）、`extensions/two-pass-render/`（接线）、`engine/audit/lint-rules.ts`（机械 lint，审计与渲染复用同一份）。
+- 关键文件：`prompts/gm-direction.md`（packet 契约）、`prompts/gm-render.md`（渲染协议）、`prompts/system-render.md`（渲染器身份）、`prompts/gm-style-rules.md`（23KB 笔触圣经）、`extensions/two-pass-render/`（接线）、`engine/audit/lint-rules.ts`（机械 lint，审计与渲染复用同一份）。
 
 ## 2. 阅读路径（不要读整个 repo）
 
 1. `AGENTS.md` 宪章段：Prompt 不是防线 / public-secrets-knowledge 三层 / 真名防线 / 硬切优先。
-2. `agents/gm-direction.md` + `agents/gm-render.md`：吃透 direction↔render 的职责切分（下面 §3 的主战场就在这条缝）。
+2. `prompts/gm-direction.md` + `prompts/gm-render.md`：吃透 direction↔render 的职责切分（下面 §3 的主战场就在这条缝）。
 3. 跑一遍 `docs/render-bench/`：看现有渲染水准的盲样对比，建立 baseline 体感。
 4. `docs/system-potential-backlog.md`：18 项里大部分已 `[x]`，**只看 `[ ]` 的和每节末尾「后续 / 进阶（未做）」**——那是已知未挖的矿。
 
@@ -101,7 +101,7 @@ backlog #12 自己记了：双 pass 延迟靠"结算器上下文缩水"对冲，
 
 | ST 概念                  | fsn 对应                                                                                | 备注                                         |
 | ------------------------ | --------------------------------------------------------------------------------------- | -------------------------------------------- |
-| System prompt / 角色卡   | `agents/system-*.md` + `agents/gm-*.md` 分模块                                          | 按 pass 分组（settlement/render/both）       |
+| System prompt / 角色卡   | `prompts/system-*.md` + `prompts/gm-*.md` 分模块                                        | 按 pass 分组（settlement/render/both）       |
 | Jailbreak / prefill      | 两段式 render（洁净室渲染器）                                                           | 我们用结构隔离代替越狱，不喂 prefill         |
 | World Info / Lorebook    | `data/*.json`（characters/servants/locations/timelines/world）+ engine 按 presence 注入 | 注入是 engine 算的，不是关键词触发           |
 | Regex 后处理             | `engine/audit/lint-rules.ts`（纯函数 + 测试）                                           | 审计与渲染复用同一份                         |

@@ -4,13 +4,13 @@ import test from "node:test";
 
 /**
  * Direction packet 契约在两处维护：
- * - agents/gm-direction.md（结算器：怎么写 packet）
- * - agents/system-render.md（渲染器：怎么读 packet）
+ * - prompts/gm-direction.md（结算器：怎么写 packet）
+ * - prompts/system-render.md（渲染器：怎么读 packet）
  * 本测试锁住两份文件的共享语义，防止单边修改造成漂移。
  */
 
-const direction = readFileSync("agents/gm-direction.md", "utf-8");
-const renderSystem = readFileSync("agents/system-render.md", "utf-8");
+const direction = readFileSync("prompts/gm-direction.md", "utf-8");
+const renderSystem = readFileSync("prompts/system-render.md", "utf-8");
 
 const PACKET_FIELDS = [
   "playerAction",

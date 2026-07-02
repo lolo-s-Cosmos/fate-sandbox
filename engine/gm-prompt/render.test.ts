@@ -4,10 +4,10 @@ import test from "node:test";
 
 void test("render prompt avoids priming the denied negation pattern", () => {
   const prompts = [
-    readFileSync("agents/gm-render.md", "utf-8"),
-    readFileSync("agents/gm-style-rules.md", "utf-8"),
-    readFileSync("agents/gm-style-blacklist.md", "utf-8"),
-    readFileSync("agents/gm-output-contract.md", "utf-8"),
+    readFileSync("prompts/gm-render.md", "utf-8"),
+    readFileSync("prompts/gm-style-rules.md", "utf-8"),
+    readFileSync("prompts/gm-style-blacklist.md", "utf-8"),
+    readFileSync("prompts/gm-output-contract.md", "utf-8"),
   ];
 
   for (const prompt of prompts) {
@@ -16,8 +16,8 @@ void test("render prompt avoids priming the denied negation pattern", () => {
 });
 
 void test("renderer prompt keeps current player input as the first prose seed", () => {
-  const systemRender = readFileSync("agents/system-render.md", "utf-8");
-  const renderPrompt = readFileSync("agents/gm-render.md", "utf-8");
+  const systemRender = readFileSync("prompts/system-render.md", "utf-8");
+  const renderPrompt = readFileSync("prompts/gm-render.md", "utf-8");
 
   assert.match(systemRender, /Player Input Render Contract/u);
   assert.match(systemRender, /# Current Player Input` is the prose seed/u);
@@ -27,7 +27,7 @@ void test("renderer prompt keeps current player input as the first prose seed", 
 });
 
 void test("output contract blocks assistant delivery wrappers", () => {
-  const outputContract = readFileSync("agents/gm-output-contract.md", "utf-8");
+  const outputContract = readFileSync("prompts/gm-output-contract.md", "utf-8");
 
   assert.match(outputContract, /状态已经/u);
   assert.match(outputContract, /现在为你写/u);
@@ -36,7 +36,7 @@ void test("output contract blocks assistant delivery wrappers", () => {
 });
 
 void test("render prompt emphasizes relationship and body rendering", () => {
-  const renderPrompt = readFileSync("agents/gm-render.md", "utf-8");
+  const renderPrompt = readFileSync("prompts/gm-render.md", "utf-8");
 
   assert.match(renderPrompt, /Formation \/ distance/u);
   assert.match(renderPrompt, /Body cost/u);

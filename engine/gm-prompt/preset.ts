@@ -34,7 +34,7 @@ const RUNTIME_SOURCES: readonly string[] = [
 ];
 
 export function loadPromptPreset(projectRoot: string, pass: PromptPass): PromptPreset {
-  const path = join(projectRoot, "agents", `preset-${pass}.json`);
+  const path = join(projectRoot, "prompts", `preset-${pass}.json`);
   const raw = readFileSync(path, "utf-8");
   return parsePromptPreset(parseJsonFile(raw, path), path);
 }
@@ -165,9 +165,9 @@ function readPromptSource(
     }
     return { kind: "runtime", name };
   }
-  if (!source.startsWith("agents/") || !source.endsWith(".md") || source.includes("..")) {
+  if (!source.startsWith("prompts/") || !source.endsWith(".md") || source.includes("..")) {
     throw new Error(
-      `Invalid prompt preset ${sourcePath}: modules[${index}].source must be agents/*.md or runtime:*.`,
+      `Invalid prompt preset ${sourcePath}: modules[${index}].source must be prompts/*.md or runtime:*.`,
     );
   }
   return { kind: "file", path: source };

@@ -11,7 +11,7 @@
 7. `tools/state/run-parallel-line.ts` (lines 1-141) - engine-assembled parallel-line input; subagent call remains a manual two-step workflow.
 8. `engine/core/parallel-line-assembler.ts` (lines 1-190) - builds parallel-line input from state, including heuristic recent pressure classification.
 9. `extensions/subagents/timeline/task-injection.ts` (lines 15-108) - injects safe state context into timeline subagent tasks.
-10. `agents/gm-tool-policy.md` (lines 23-58) - prompt-level routing for turns, state landing, offscreen orchestration, combat boundary.
+10. `prompts/gm-tool-policy.md` (lines 23-58) - prompt-level routing for turns, state landing, offscreen orchestration, combat boundary.
 11. `.pi/agents/parallel-line.md` (full file reviewed) - backstage candidate-generator contract and output constraints.
 12. `.pi/agents/timeline-showrunner.md` (full file reviewed) - timeline drift auditor contract and output constraints.
 
@@ -71,7 +71,7 @@ export function buildTimelineStateContextBlock(rawState: unknown): string {
 
 The runtime is built around deterministic engine mutations plus prompt/tool routing:
 
-- GM prompt modules (`agents/*.md`) define turn policy, information safety, pressure discipline, and when to call tools/subagents. Critical routing is in `agents/gm-tool-policy.md:23-58`.
+- GM prompt modules (`prompts/*.md`) define turn policy, information safety, pressure discipline, and when to call tools/subagents. Critical routing is in `prompts/gm-tool-policy.md:23-58`.
 - Tools in `tools/state/*` are public domain-event boundaries. `tools/registry.ts:40-77` registers normal play tools, lookup, and debug tools in one list.
 - `commit_turn` is the canonical non-Scene-Beat turn envelope: time is applied first, then domain events are dispatched, obligations are checked, and `turnLog` is appended (`engine/core/turn-commit.ts`). It no longer embeds scene-beat events nor auto-closes story windows; objectives/threats are beat-scoped and `resolve-objective` refuses to clear a beat's last objective (that requires `progress_scene_beat complete`).
 - `progress_scene_beat` is a stricter lifecycle API for begin/complete of foreground action windows. It also applies top-level time and appends turn log (`engine/core/scene-beat-lifecycle.ts:67-129`).
