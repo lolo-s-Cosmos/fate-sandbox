@@ -143,7 +143,7 @@ export function parseMemoryEvent(value: unknown, fieldName: string): MemoryEvent
  * 与 state.ts 手写接口一一对应；漂移由 state-schema.ts 的双向赋值检查拦截。
  */
 
-const MEMORY_FACT_SCHEMA = Type.Object({
+export const MEMORY_FACT_SCHEMA = Type.Object({
   id: NON_EMPTY_STRING_SCHEMA,
   scope: MEMORY_SCOPE_SCHEMA,
   subject: NON_EMPTY_STRING_SCHEMA,
@@ -152,7 +152,7 @@ const MEMORY_FACT_SCHEMA = Type.Object({
   sourceEventId: nullable(NON_EMPTY_STRING_SCHEMA),
 });
 
-const MAJOR_EVENT_MEMORY_SCHEMA = Type.Object({
+export const MAJOR_EVENT_MEMORY_SCHEMA = Type.Object({
   id: NON_EMPTY_STRING_SCHEMA,
   time: ISO_INSTANT_SCHEMA,
   title: NON_EMPTY_STRING_SCHEMA,
@@ -161,7 +161,7 @@ const MAJOR_EVENT_MEMORY_SCHEMA = Type.Object({
   claims: Type.Optional(Type.Array(MEMORY_CLAIM_SCHEMA)),
 });
 
-const DAILY_EVENT_MEMORY_SCHEMA = Type.Object({
+export const DAILY_EVENT_MEMORY_SCHEMA = Type.Object({
   id: NON_EMPTY_STRING_SCHEMA,
   time: ISO_INSTANT_SCHEMA,
   eventKind: DAILY_EVENT_KIND_SCHEMA,
@@ -169,7 +169,7 @@ const DAILY_EVENT_MEMORY_SCHEMA = Type.Object({
   summary: NON_EMPTY_STRING_SCHEMA,
 });
 
-const DAILY_SUMMARY_MEMORY_SCHEMA = Type.Object({
+export const DAILY_SUMMARY_MEMORY_SCHEMA = Type.Object({
   id: NON_EMPTY_STRING_SCHEMA,
   startDate: ISO_INSTANT_SCHEMA,
   endDate: ISO_INSTANT_SCHEMA,
