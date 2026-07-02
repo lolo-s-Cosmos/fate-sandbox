@@ -1,21 +1,21 @@
-import type { FateToolDefinition } from "../runtime/tool-definition.ts";
-import { Type } from "typebox";
 import type {
   ConfigureActorSecretsResult,
   ConfigureServantSecretsResult,
   RevealSecretResult,
   RevealSecretToolInput,
-} from "../../engine/core/secrets.ts";
+} from "../../engine/core/knowledge/secrets.ts";
+import type { State } from "../../engine/core/state/state.ts";
+import type { FateToolDefinition } from "../runtime/tool-definition.ts";
 import type { ToolResult } from "../runtime/tool-result.ts";
 
+import { Type } from "typebox";
+
+import { parseRevealSecretToolInput } from "../../engine/core/knowledge/secrets-schema.ts";
 import {
   configureActorSecrets,
   configureServantSecrets,
   revealSecret,
-} from "../../engine/core/secrets.ts";
-import type { State } from "../../engine/core/state.ts";
-import { parseRevealSecretToolInput } from "../../engine/core/secrets-schema.ts";
-
+} from "../../engine/core/knowledge/secrets.ts";
 import { runDomainEventTool } from "./domain-tool-runner.ts";
 
 type RevealSecretToolResult =
@@ -25,7 +25,8 @@ type RevealSecretToolResult =
 export function revealSecretTool(params: unknown, sessionManager: unknown): ToolResult {
   return runDomainEventTool({
     sessionManager,
-    execute: (draft) => executeSecretTool(draft, parseRevealSecretToolInput(params, "reveal_secret 参数")),
+    execute: (draft) =>
+      executeSecretTool(draft, parseRevealSecretToolInput(params, "reveal_secret 参数")),
     details: secretDetails,
     message: secretMessage,
   });

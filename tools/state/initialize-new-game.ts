@@ -1,10 +1,10 @@
 import type { FateToolDefinition } from "../runtime/tool-definition.ts";
-import { Type } from "typebox";
 import type { ToolResult } from "../runtime/tool-result.ts";
 
-import { initializeNewGame } from "../../engine/core/new-game-initialization.ts";
-import { parseNewGameInitializationInput } from "../../engine/core/new-game-schema.ts";
+import { Type } from "typebox";
 
+import { initializeNewGame } from "../../engine/core/campaign/new-game-initialization.ts";
+import { parseNewGameInitializationInput } from "../../engine/core/campaign/new-game-schema.ts";
 import { resultDetails, runDomainEventTool } from "./domain-tool-runner.ts";
 
 export function initializeNewGameTool(params: unknown, sessionManager: unknown): ToolResult {

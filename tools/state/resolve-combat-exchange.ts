@@ -1,19 +1,20 @@
+import type { State } from "../../engine/core/state/state.ts";
 import type { FateToolDefinition } from "../runtime/tool-definition.ts";
+import type { ToolResult } from "../runtime/tool-result.ts";
+
 import { Type } from "typebox";
 
+import { parseCombatExchangeInput } from "../../engine/core/combat/combat-exchange-schema.ts";
 import {
   formatCombatSwing,
   resolveCombatExchange,
   type CombatExchangeResult,
   type CombatStateLanding,
   type CombatSwing,
-} from "../../engine/core/combat-exchange.ts";
-import { parseCombatExchangeInput } from "../../engine/core/combat-exchange-schema.ts";
-import { recordObligation } from "../../engine/core/obligations.ts";
-import { seededRandomInt } from "../../engine/core/seeded-rng.ts";
-import type { State } from "../../engine/core/state.ts";
+} from "../../engine/core/combat/combat-exchange.ts";
+import { recordObligation } from "../../engine/core/state/obligations.ts";
+import { seededRandomInt } from "../../engine/core/utils/seeded-rng.ts";
 import { noNumberNarrativeHint } from "../runtime/narrative-hints.ts";
-import type { ToolResult } from "../runtime/tool-result.ts";
 import { runDomainEventTool } from "./domain-tool-runner.ts";
 
 export function resolveCombatExchangeTool(params: unknown, sessionManager: unknown): ToolResult {
@@ -61,7 +62,9 @@ function formatCombatExchangeResult(
     ...uniqueLines(result.consequenceGuidance).map((line) => `- ${line}`),
     "",
     "叙事约束：",
-    ...uniqueLines([...result.narrativeConstraints, noNumberNarrativeHint()]).map((line) => `- ${line}`),
+    ...uniqueLines([...result.narrativeConstraints, noNumberNarrativeHint()]).map(
+      (line) => `- ${line}`,
+    ),
     "",
     "禁止写法：",
     ...uniqueLines(result.forbiddenNarration).map((line) => `- ${line}`),

@@ -7,9 +7,8 @@ import test from "node:test";
 import {
   setBackstageDirectorSpawnerForTest,
   type BackstageDirectorHandle,
-} from "../../engine/core/backstage-spawn.ts";
-import { getState, resetState } from "../../engine/core/state-store.ts";
-
+} from "../../engine/core/backstage/backstage-spawn.ts";
+import { getState, resetState } from "../../engine/core/state/state-store.ts";
 import { commitTurnTool } from "./commit-turn.ts";
 import { harvestBackstageCandidateTool } from "./harvest-backstage-candidate.ts";
 import { recordOffscreenEventTool } from "./record-offscreen-event.ts";
@@ -158,7 +157,10 @@ void test("commit_turn surfaces a pending-harvest reminder in its return", () =>
   stubSpawner();
   try {
     spawnLine("caster-ryudou");
-    const result = commitTurnTool({ summary: "继续。", time: MIN_TIME, events: [] }, noopSessionManager());
+    const result = commitTurnTool(
+      { summary: "继续。", time: MIN_TIME, events: [] },
+      noopSessionManager(),
+    );
     assert.match(result.content[0]?.text ?? "", /待 harvest/);
     assert.match(result.content[0]?.text ?? "", /bl-caster-ryudou/);
   } finally {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { cloneState, commitState, resetState } from "../../engine/core/state-store.ts";
+import { cloneState, commitState, resetState } from "../../engine/core/state/state-store.ts";
 import { submitDirectionPacketTool } from "./submit-direction-packet.ts";
 import { upsertActorTool } from "./upsert-actor.ts";
 
@@ -131,10 +131,7 @@ void test("submitDirectionPacketTool rejects a stance for an off-scene actor", (
   const draft = cloneState();
   draft.public.scene.presentActorIds = ["protagonist"];
   commitState(draft);
-  assert.throws(
-    () => submitDirectionPacketTool(RENDER_PACKET),
-    /指向不在场的 actor：saber_shiki/u,
-  );
+  assert.throws(() => submitDirectionPacketTool(RENDER_PACKET), /指向不在场的 actor：saber_shiki/u);
 });
 
 void test("submitDirectionPacketTool requires important present NPCs to be covered", () => {

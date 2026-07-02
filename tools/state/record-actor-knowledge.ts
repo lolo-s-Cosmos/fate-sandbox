@@ -1,3 +1,4 @@
+import type { ActorKnowledgeLens, State } from "../../engine/core/state/state.ts";
 import type { FateToolDefinition } from "../runtime/tool-definition.ts";
 import type { ToolResult } from "../runtime/tool-result.ts";
 
@@ -10,15 +11,13 @@ import {
   removeActorKnowledgeFact,
   upsertActorKnowledgeLens,
   type KnowledgeLensCategory,
-} from "../../engine/core/actor-agenda.ts";
-import type { ActorKnowledgeLens, State } from "../../engine/core/state.ts";
-import { stringEnumSchema } from "../../engine/core/state-enum-schemas.ts";
+} from "../../engine/core/actor/actor-agenda.ts";
+import { stringEnumSchema } from "../../engine/core/state/state-enum-schemas.ts";
 import {
   assertNonEmptyString,
   isRecord,
   parseTypeBoxValue,
-} from "../../engine/core/typebox-validation.ts";
-
+} from "../../engine/core/utils/typebox-validation.ts";
 import { runDomainEventTool } from "./domain-tool-runner.ts";
 
 const RECORD_ACTOR_KNOWLEDGE_KINDS = ["upsert-lens", "add-fact", "remove-fact", "clear"] as const;
@@ -93,6 +92,10 @@ function formatResult(result: RecordActorKnowledgeResult): string {
       return `NPC 认知边界已移除：${result.lens.actorId}.${result.category} -= ${result.fact}`;
     case "clear":
       return `NPC 认知边界已清除：${result.lens.actorId}（${result.reason}）`;
+    default: {
+      const unreachable: never = result;
+      throw new Error(`未知认知边界操作：${JSON.stringify(unreachable)}`);
+    }
   }
 }
 
@@ -155,7 +158,9 @@ export const recordActorKnowledgeToolDefinition: FateToolDefinition = {
     kind: Type.String({ description: "允许: upsert-lens / add-fact / remove-fact / clear" }),
     actorId: Type.String({ description: "目标 actor id；必须已存在于 public actors" }),
     category: Type.Optional(
-      Type.String({ description: "add/remove 必填：knows / suspects / falseBeliefs / forbiddenKnowledge" }),
+      Type.String({
+        description: "add/remove 必填：knows / suspects / falseBeliefs / forbiddenKnowledge",
+      }),
     ),
     fact: Type.Optional(Type.String({ description: "add/remove 必填：一条具体认知事实" })),
     knows: Type.Optional(Type.Array(Type.String({ description: "upsert-lens 必填" }))),

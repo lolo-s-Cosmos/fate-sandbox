@@ -14,8 +14,8 @@
   "ignorePatterns": [
     "node_modules",
     "dist",
-    "sessions",
-    "state",
+    "/sessions",
+    "/state",
     ".pi/agent",
     ".pi/npm",
     ".pi-lens",

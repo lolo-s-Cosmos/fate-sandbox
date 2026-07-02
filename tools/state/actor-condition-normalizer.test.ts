@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getState, resetState } from "../../engine/core/state-store.ts";
+import { getState, resetState } from "../../engine/core/state/state-store.ts";
 import { normalizeActorConditionEvent } from "./actor-condition-normalizer.ts";
 import { commitTurnTool } from "./commit-turn.ts";
 import { updateActorConditionTool } from "./update-actor-condition.ts";

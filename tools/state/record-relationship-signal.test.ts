@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { cloneState, resetState } from "../../engine/core/state-store.ts";
-
+import { cloneState, resetState } from "../../engine/core/state/state-store.ts";
 import { recordRelationshipSignalTool } from "./record-relationship-signal.ts";
 
 void test("recordRelationshipSignalTool writes player-known and secret ledgers", () => {

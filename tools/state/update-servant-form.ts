@@ -1,16 +1,16 @@
+import type { ServantFormEvent } from "../../engine/core/actor/servant.ts";
 import type { FateToolDefinition } from "../runtime/tool-definition.ts";
-import { Type } from "typebox";
-import type { ServantFormEvent } from "../../engine/core/servant.ts";
 import type { ToolResult } from "../runtime/tool-result.ts";
 
-import { updateServantForm } from "../../engine/core/servant.ts";
+import { Type } from "typebox";
+
 import {
   parseServantFormEvent,
   SERVANT_FORM_EVENT_KINDS,
-} from "../../engine/core/servant-schema.ts";
-
+} from "../../engine/core/actor/servant-schema.ts";
+import { updateServantForm } from "../../engine/core/actor/servant.ts";
+import { isRecord } from "../../engine/core/utils/typebox-validation.ts";
 import { resultDetails, runDomainEventTool } from "./domain-tool-runner.ts";
-import { isRecord } from "../../engine/core/typebox-validation.ts";
 
 /** 锁定字段的 kind 有专属指引（指向 override_locked_fact），必须先于 schema 枚举报错。 */
 const LOCKED_FIELD_KINDS = [
@@ -31,10 +31,7 @@ export function updateServantFormTool(params: unknown, sessionManager: unknown):
 
 function parseServantFormEventBoundary(params: unknown): ServantFormEvent {
   assertNotLockedFieldKind(params);
-  return parseServantFormEvent(
-    normalizeNullableFields(params),
-    "update_servant_form 参数",
-  );
+  return parseServantFormEvent(normalizeNullableFields(params), "update_servant_form 参数");
 }
 
 function assertNotLockedFieldKind(params: unknown): void {
@@ -74,7 +71,7 @@ export const updateServantFormToolDefinition: FateToolDefinition = {
   description:
     "更新从者形态的魔力、灵核、契约、参数修正和永久缺损；锁定字段不可改。\n\n" +
     "使用边界：魔力消耗/恢复、灵核受损、契约变化、供魔不足、参数修正、概念伤或不可恢复创伤。\n" +
-    "禁区：改写已确立职阶/真名/基础参数/宝具，临场新增宝具，或把资源写成免费恢复。", 
+    "禁区：改写已确立职阶/真名/基础参数/宝具，临场新增宝具，或把资源写成免费恢复。",
   parameters: Type.Object({
     kind: Type.String({
       description:

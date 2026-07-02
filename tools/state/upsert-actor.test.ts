@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { getState, resetState } from "../../engine/core/state/state-store.ts";
 import { upsertActorTool } from "./upsert-actor.ts";
-import { getState, resetState } from "../../engine/core/state-store.ts";
 
 void test("upsertActorTool accepts omitted master fields for masterless servants", () => {
   resetState();
@@ -166,7 +166,13 @@ void test("upsertActorTool fills omitted magecraft discipline array", () => {
       actor: {
         ...baseProtagonistActor(),
         magecraft: {
-          circuits: { count: "未确认", quality: "none", od: 100, status: "normal", traits: undefined },
+          circuits: {
+            count: "未确认",
+            quality: "none",
+            od: 100,
+            status: "normal",
+            traits: undefined,
+          },
           disciplines: undefined,
           affiliation: undefined,
         },

@@ -1,7 +1,9 @@
+import type { HookState, State } from "../../engine/core/state/state.ts";
 import type { FateToolDefinition } from "../runtime/tool-definition.ts";
+import type { ToolResult } from "../runtime/tool-result.ts";
+
 import { Type } from "typebox";
 import { Compile } from "typebox/compile";
-import type { ToolResult } from "../runtime/tool-result.ts";
 
 import {
   MAX_ACTIVE_HOOKS,
@@ -11,14 +13,12 @@ import {
   payHook,
   retireHook,
   surfaceHook,
-} from "../../engine/core/hooks.ts";
-import type { HookState, State } from "../../engine/core/state.ts";
+} from "../../engine/core/knowledge/hooks.ts";
 import {
   assertNonEmptyString,
   isRecord,
   parseTypeBoxValue,
-} from "../../engine/core/typebox-validation.ts";
-
+} from "../../engine/core/utils/typebox-validation.ts";
 import { runDomainEventTool } from "./domain-tool-runner.ts";
 
 const UPDATE_HOOK_KINDS = ["open", "surface", "park", "escalate", "pay", "retire"] as const;

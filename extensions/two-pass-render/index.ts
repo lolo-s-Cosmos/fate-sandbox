@@ -16,9 +16,9 @@ import { getMarkdownTheme } from "@earendil-works/pi-coding-agent";
 import { Markdown, Text } from "@earendil-works/pi-tui";
 
 import { collectUnrevealedSecretStrings } from "../../engine/audit/lint-rules.ts";
-import { syncStateFromSessionManager } from "../../engine/core/session-hydration.ts";
-import { getState } from "../../engine/core/state-store.ts";
-import { isRecord } from "../../engine/core/typebox-validation.ts";
+import { syncStateFromSessionManager } from "../../engine/core/state/session-hydration.ts";
+import { getState } from "../../engine/core/state/state-store.ts";
+import { isRecord } from "../../engine/core/utils/typebox-validation.ts";
 import { loadProseDigests, saveProseDigest } from "../../engine/direction/prose-digest-store.ts";
 import {
   buildLintRetryMessages,

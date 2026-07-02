@@ -1,17 +1,17 @@
 import type { FateToolDefinition } from "../runtime/tool-definition.ts";
-import { Type } from "typebox";
 import type { ToolResult } from "../runtime/tool-result.ts";
+
+import { Type } from "typebox";
 
 import {
   resetBackstagePressure,
   settleOldestBackstageObligation,
-} from "../../engine/core/backstage-obligation.ts";
-import { clearPendingHarvestByLine } from "../../engine/core/backstage-pending.ts";
-import { recordOffscreenEvent } from "../../engine/core/offscreen-event.ts";
-import { parseRecordOffscreenEventInput } from "../../engine/core/offscreen-event-schema.ts";
-
+} from "../../engine/core/backstage/backstage-obligation.ts";
+import { clearPendingHarvestByLine } from "../../engine/core/backstage/backstage-pending.ts";
+import { parseRecordOffscreenEventInput } from "../../engine/core/backstage/offscreen-event-schema.ts";
+import { recordOffscreenEvent } from "../../engine/core/backstage/offscreen-event.ts";
+import { isRecord } from "../../engine/core/utils/typebox-validation.ts";
 import { runDomainEventTool } from "./domain-tool-runner.ts";
-import { isRecord } from "../../engine/core/typebox-validation.ts";
 
 export function recordOffscreenEventTool(params: unknown, sessionManager: unknown): ToolResult {
   return runDomainEventTool({
@@ -69,7 +69,9 @@ export const recordOffscreenEventToolDefinition: FateToolDefinition = {
         "canonical 后台压力类型，取自 run_parallel_line 返回的 activePressurePalette 里某个 slot 的 pressureType（如 servant-autonomy / church-supervision）",
     }),
     pressureSlotId: Type.Optional(
-      Type.String({ description: "可选：对应 pressure palette slot 的 id（如 fsn-night-servant-scouting）" }),
+      Type.String({
+        description: "可选：对应 pressure palette slot 的 id（如 fsn-night-servant-scouting）",
+      }),
     ),
   }),
   execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>

@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { recordActorKnowledgeFact, upsertActorAgenda } from "../engine/core/actor-agenda.ts";
-import { configureCampaign } from "../engine/core/campaign.ts";
-import { recordRelationshipSignal } from "../engine/core/relationship-signal.ts";
-import { createInitialState } from "../engine/core/state-store.ts";
-import { isRecord } from "../engine/core/typebox-validation.ts";
+import { recordActorKnowledgeFact, upsertActorAgenda } from "../engine/core/actor/actor-agenda.ts";
+import { recordRelationshipSignal } from "../engine/core/actor/relationship-signal.ts";
+import { configureCampaign } from "../engine/core/campaign/campaign.ts";
+import { createInitialState } from "../engine/core/state/state-store.ts";
+import { isRecord } from "../engine/core/utils/typebox-validation.ts";
 import { buildTimelineStateContext } from "../extensions/subagents/timeline/index.ts";
 
 void test("timeline subagent context renders campaign timezone local time", () => {

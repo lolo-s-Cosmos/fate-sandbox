@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getState, resetState } from "../../engine/core/state-store.ts";
+import { getState, resetState } from "../../engine/core/state/state-store.ts";
 import { manageFactionClockTool } from "./manage-faction-clock.ts";
 
 function noopSessionManager(): unknown {
@@ -13,7 +13,13 @@ void test("manage_faction_clock full lifecycle through the tool surface", () => 
   const sm = noopSessionManager();
 
   const created = manageFactionClockTool(
-    { kind: "upsert-clock", factionId: "matou", label: "圣杯容器准备", size: 4, visibility: "hidden" },
+    {
+      kind: "upsert-clock",
+      factionId: "matou",
+      label: "圣杯容器准备",
+      size: 4,
+      visibility: "hidden",
+    },
     sm,
   );
   assert.match(created.content[0]?.text ?? "", /0\/4/);
@@ -33,7 +39,11 @@ void test("manage_faction_clock full lifecycle through the tool surface", () => 
   assert.equal(getState().secrets.factionClocks[0]?.filled, 0);
 
   assert.throws(
-    () => manageFactionClockTool({ kind: "advance-clock", clockId: "不存在", ticks: 1, reason: "x" }, sm),
+    () =>
+      manageFactionClockTool(
+        { kind: "advance-clock", clockId: "不存在", ticks: 1, reason: "x" },
+        sm,
+      ),
     /faction clock 不存在/,
   );
 

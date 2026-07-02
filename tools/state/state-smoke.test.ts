@@ -7,18 +7,18 @@ import {
   hydrateStateFromSessionEntries,
   syncStateFromSessionEntries,
   syncStateFromSessionManager,
-} from "../../engine/core/session-hydration.ts";
-import { cloneState, resetState } from "../../engine/core/state-store.ts";
-import { sessionKey } from "../../engine/core/state-persistence.ts";
+} from "../../engine/core/state/session-hydration.ts";
+import { sessionKey } from "../../engine/core/state/state-persistence.ts";
+import { cloneState, resetState } from "../../engine/core/state/state-store.ts";
 import { commitTurnTool } from "./commit-turn.ts";
 import { getStatusTool } from "./get-status.ts";
-import { upsertActorTool } from "./upsert-actor.ts";
 import { setScenePresenceTool } from "./set-scene-presence.ts";
 import { updateActorConditionTool } from "./update-actor-condition.ts";
 import { updateEconomyTool } from "./update-economy.ts";
+import { upsertActorTool } from "./upsert-actor.ts";
 
-describe("Fate state tool-level smoke flow", () => {
-  it("persists state details that can hydrate a later session", () => {
+void describe("Fate state tool-level smoke flow", () => {
+  void it("persists state details that can hydrate a later session", () => {
     resetState();
     const sessionManager = createMockSessionManager();
 
@@ -78,7 +78,7 @@ describe("Fate state tool-level smoke flow", () => {
     assert.deepEqual(hydrated.public, beforeHydration.public);
   });
 
-  it("accepts minimal NPC skeletons through upsert_actor tool", () => {
+  void it("accepts minimal NPC skeletons through upsert_actor tool", () => {
     resetState();
     const sessionManager = createMockSessionManager();
 
@@ -102,7 +102,7 @@ describe("Fate state tool-level smoke flow", () => {
     assert.equal(sessionManager.entries.length, 1);
   });
 
-  it("accepts runtime servant setup through upsert_actor tool", () => {
+  void it("accepts runtime servant setup through upsert_actor tool", () => {
     resetState();
     const sessionManager = createMockSessionManager();
 
@@ -146,7 +146,11 @@ describe("Fate state tool-level smoke flow", () => {
 
     assert.match(textOf(result), /从者已写入：caster/);
     const presenceResult = setScenePresenceTool(
-      { presentActorIds: ["protagonist", "caster"], allyActorIds: [], reason: "Caster enters scene" },
+      {
+        presentActorIds: ["protagonist", "caster"],
+        allyActorIds: [],
+        reason: "Caster enters scene",
+      },
       sessionManager,
     );
     assert.match(textOf(presenceResult), /场景在场 actor 已更新/);
@@ -156,7 +160,7 @@ describe("Fate state tool-level smoke flow", () => {
     assert.equal(sessionManager.entries.length, 2);
   });
 
-  it("ignores branch_summary details when hydrating after tree navigation", () => {
+  void it("ignores branch_summary details when hydrating after tree navigation", () => {
     resetState();
     commitTurnTool(
       {
@@ -192,7 +196,7 @@ describe("Fate state tool-level smoke flow", () => {
     assert.equal(state.public.scene.location.site, "深山镇");
   });
 
-  it("resets in-memory state when the current branch has no Fate state", () => {
+  void it("resets in-memory state when the current branch has no Fate state", () => {
     resetState();
     commitTurnTool(
       {
@@ -221,7 +225,7 @@ describe("Fate state tool-level smoke flow", () => {
     assert.equal(cloneState().public.scene.location.site, "深山镇");
   });
 
-  it("get_status rehydrates from the active session branch before reading state", () => {
+  void it("get_status rehydrates from the active session branch before reading state", () => {
     resetState();
     const sessionManager = createMockSessionManager();
     commitTurnTool(
@@ -324,7 +328,11 @@ function sessionEntryFromCurrentState(): ReturnType<typeof sessionEntryFromState
   return sessionEntryFromState(cloneState());
 }
 
-function sessionEntryFromState(state: ReturnType<typeof cloneState>): { v: number; turn: number; state: unknown } {
+function sessionEntryFromState(state: ReturnType<typeof cloneState>): {
+  v: number;
+  turn: number;
+  state: unknown;
+} {
   return { v: 1, turn: 0, state };
 }
 

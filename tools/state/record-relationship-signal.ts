@@ -1,18 +1,17 @@
+import type { RelationshipSignal, State } from "../../engine/core/state/state.ts";
 import type { FateToolDefinition } from "../runtime/tool-definition.ts";
 import type { ToolResult } from "../runtime/tool-result.ts";
 
 import { Type } from "typebox";
 import { Compile } from "typebox/compile";
 
-import { recordRelationshipSignal } from "../../engine/core/relationship-signal.ts";
-import type { RelationshipSignal, State } from "../../engine/core/state.ts";
-import { stringEnumSchema } from "../../engine/core/state-enum-schemas.ts";
-import { RELATIONSHIP_SIGNAL_VISIBILITIES } from "../../engine/core/state-schema.ts";
+import { recordRelationshipSignal } from "../../engine/core/actor/relationship-signal.ts";
+import { stringEnumSchema } from "../../engine/core/state/state-enum-schemas.ts";
+import { RELATIONSHIP_SIGNAL_VISIBILITIES } from "../../engine/core/state/state-schema.ts";
 import {
   assertNonEmptyString,
   parseTypeBoxValue,
-} from "../../engine/core/typebox-validation.ts";
-
+} from "../../engine/core/utils/typebox-validation.ts";
 import { runDomainEventTool } from "./domain-tool-runner.ts";
 
 interface RecordRelationshipSignalResult {
@@ -88,12 +87,15 @@ export const recordRelationshipSignalToolDefinition: FateToolDefinition = {
   parameters: Type.Object({
     actorId: Type.String({ description: "发出信号的 actor id；必须已存在于 public actors" }),
     targetActorId: Type.String({
-      description: "信号指向的 actor id；必须已存在于 public actors；通常是 protagonist，也可以是 NPC",
+      description:
+        "信号指向的 actor id；必须已存在于 public actors；通常是 protagonist，也可以是 NPC",
     }),
     signal: Type.String({ description: "行为证据：动作、称呼、距离、停顿、回避、照料或选择" }),
     interpretation: Type.String({ description: "当前解读：为什么这条行为改变关系读法" }),
     boundary: Type.String({ description: "边界：这条信号不能被过度解读成什么" }),
-    sourceEventId: Type.Optional(Type.Unknown({ description: "可选来源 event/fact/offscreen id；无来源填 null 或省略" })),
+    sourceEventId: Type.Optional(
+      Type.Unknown({ description: "可选来源 event/fact/offscreen id；无来源填 null 或省略" }),
+    ),
     visibility: Type.String({ description: "player-known / secret" }),
   }),
   execute: async (_toolCallId, params, _signal, _onUpdate, ctx) =>

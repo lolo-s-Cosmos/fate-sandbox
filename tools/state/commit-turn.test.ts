@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getState, resetState } from "../../engine/core/state-store.ts";
+import { getState, resetState } from "../../engine/core/state/state-store.ts";
 import { commitTurnTool } from "./commit-turn.ts";
 
 // objectives/threats 是 beat-scoped：需要在 active beat 里验证 scene objective 事件的用例先开 beat。

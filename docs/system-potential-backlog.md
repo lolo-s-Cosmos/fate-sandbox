@@ -36,7 +36,7 @@
 
 ## 2. Mystery hook 状态化（明确违宪存量）
 
-- [x] 状态：已完成（2026-06-11，schema v6）。`public.hooks: HookState[]`（id/label/status/lastSurfacedAt/surfaceCount/lastNovelty）；`engine/core/hooks.ts` 提供 open/surface/park/escalate/pay/retire，`update_hook` 单工具六动作已注册。硬 invariant：active+escalated 同时最多 2 条（超额 open/parked 复活被拒）；surface/escalate 必须带非空 novelty，pay 必须带 payoff，retire 必须带理由；paid/retired 终态拒绝再转换但留在账本供审计。GM brief 加「悬念账本」行；gm-story-driver hook budget 段改为指向工具账本。迁移 v5→v6。后续：audit 脚本可对「账本外悬念复现」做对账；timeline-showrunner 输入接 hooks 账本
+- [x] 状态：已完成（2026-06-11，schema v6）。`public.hooks: HookState[]`（id/label/status/lastSurfacedAt/surfaceCount/lastNovelty）；`engine/core/knowledge/hooks.ts` 提供 open/surface/park/escalate/pay/retire，`update_hook` 单工具六动作已注册。硬 invariant：active+escalated 同时最多 2 条（超额 open/parked 复活被拒）；surface/escalate 必须带非空 novelty，pay 必须带 payoff，retire 必须带理由；paid/retired 终态拒绝再转换但留在账本供审计。GM brief 加「悬念账本」行；gm-story-driver hook budget 段改为指向工具账本。迁移 v5→v6。后续：audit 脚本可对「账本外悬念复现」做对账；timeline-showrunner 输入接 hooks 账本
 
 `gm-story-driver.md` 的 hook budget（active/parked/paid/escalated/retired、同场景最多 1-2 active、parked 1-2 轮内不抢焦点、复现必须带新状态）全部只活在 prompt 里。state 有 `storyWindow` 但 hook 不是领域对象。后果：compaction 后 hook 状态只能靠 5 条 narrative texture 苟活；timeline-showrunner 审计拿不到账本；「复现带新信息」无法验证。
 
@@ -62,7 +62,7 @@ interface HookState {
 
 ## 3. 阵营时钟与到期义务（faction clock / scheduled obligation）
 
-- [x] 状态：已完成（2026-06-11，schema v5）。`secrets.factionClocks`（id/factionId/label/filled/size 2-12/visibility hidden|leaked，不变量 filled≤size）+ `secrets.scheduledEvents`（dueAt/summary）；`engine/core/faction-clock.ts` 提供 upsert/advance（封顶+becameFull）/reset（outcomeSummary 强制留痕 secretEventLog）/retire/schedule（拒绝过去时刻）/resolve-due/extend-due；`manage_faction_clock` 单工具七动作已注册。催账：`collectBackstageDueNotices` 在 commit_turn warnings 与 progress_scene_beat 返回值里列出到期事件/填满时钟（提醒不硬拒，区别于 #4：叙事义务不可机械验证落地），出口只有 resolve-due 兑现或 extend-due 显式展期。迁移 v4→v5 补空账本。后续：#5 parallel-line 工具化时输出契约加结构化 clockAdvance；timeline-showrunner 审计可读时钟数字
+- [x] 状态：已完成（2026-06-11，schema v5）。`secrets.factionClocks`（id/factionId/label/filled/size 2-12/visibility hidden|leaked，不变量 filled≤size）+ `secrets.scheduledEvents`（dueAt/summary）；`engine/core/backstage/faction-clock.ts` 提供 upsert/advance（封顶+becameFull）/reset（outcomeSummary 强制留痕 secretEventLog）/retire/schedule（拒绝过去时刻）/resolve-due/extend-due；`manage_faction_clock` 单工具七动作已注册。催账：`collectBackstageDueNotices` 在 commit_turn warnings 与 progress_scene_beat 返回值里列出到期事件/填满时钟（提醒不硬拒，区别于 #4：叙事义务不可机械验证落地），出口只有 resolve-due 兑现或 extend-due 显式展期。迁移 v4→v5 补空账本。后续：#5 parallel-line 工具化时输出契约加结构化 clockAdvance；timeline-showrunner 审计可读时钟数字
 
 「世界不为玩家暂停」「每 2-3 次后台推进要有一次格局变化」「倒计时」目前全靠 GM 与 parallel-line 自觉。引入 BITD 进度钟思路：
 
@@ -92,7 +92,7 @@ interface ScheduledEvent {
 
 ## 4. resolve_combat_exchange 裁决-落地缝隙（turn obligations ledger）
 
-- [x] 状态：已完成（2026-06-11，schema v4）。`engine/core/obligations.ts`：`public.obligations` 账本（id/source/kind/summary/createdAt，kind 复用 CombatStateLandingKind 六类）；resolve_combat_exchange 改走 domain runner，required landing 自动登账并在返回文本提醒；各领域 applier（actor-condition/servant-form/memory/scene objective+threat/reveal-secret）成功执行时 FIFO 清账一条；`commit_turn` 与 `progress_scene_beat` 收尾对账，账未清则拒绝提交并逐条列出落地路径（同一次 commit 的 events 可以自清）；GM brief 露出未清义务行。迁移 v3→v4 补空账本，含迁移测试。后续：#3 阵营时钟的到期义务复用同一账本
+- [x] 状态：已完成（2026-06-11，schema v4）。`engine/core/state/obligations.ts`：`public.obligations` 账本（id/source/kind/summary/createdAt，kind 复用 CombatStateLandingKind 六类）；resolve_combat_exchange 改走 domain runner，required landing 自动登账并在返回文本提醒；各领域 applier（actor-condition/servant-form/memory/scene objective+threat/reveal-secret）成功执行时 FIFO 清账一条；`commit_turn` 与 `progress_scene_beat` 收尾对账，账未清则拒绝提交并逐条列出落地路径（同一次 commit 的 events 可以自清）；GM brief 露出未清义务行。迁移 v3→v4 补空账本，含迁移测试。后续：#3 阵营时钟的到期义务复用同一账本
 
 该工具裁决但不改 state，伤势/魔力落地靠 GM 自觉跟进，存在「裁决了但没落地」的无人看守缝隙。
 
@@ -109,8 +109,8 @@ interface ScheduledEvent {
 落地清单：
 
 - `run_parallel_line` 领域工具（`tools/state/run-parallel-line.ts`）：GM 只传 `lineId + timeWindow + 可选偏好`，engine 从 secret state、actor agenda、offscreenEventLog、pressure palette 自动装配完整 `ParallelLineInput`，返回可直接传给 `parallel-line` 子代理的 JSON。
-- engine-side assembler（`engine/core/parallel-line-assembler.ts`）：自动提取 knownFacts（public memory eventLog + pinnedFacts）、privateFacts（campaignSecrets 未 reveal）、actorGoals（actorAgendas）、forbiddenEscalations（storyWindow 自动合并）、recentOffscreenEvents（最近 6 条 + pressureType 分类）、pressure palette（带 recentUses + coolingDown）。
-- `ParallelLineOutput` TypeBox 验证器（`engine/core/parallel-line-output-schema.ts`）：子代理返回裸 JSON 字符串由 TypeBox 严格验证，解析失败抛 Error 让调用方重试——从 prompt 恳求变成代码验收。
+- engine-side assembler（`engine/core/backstage/parallel-line-assembler.ts`）：自动提取 knownFacts（public memory eventLog + pinnedFacts）、privateFacts（campaignSecrets 未 reveal）、actorGoals（actorAgendas）、forbiddenEscalations（storyWindow 自动合并）、recentOffscreenEvents（最近 6 条 + pressureType 分类）、pressure palette（带 recentUses + coolingDown）。
+- `ParallelLineOutput` TypeBox 验证器（`engine/core/backstage/parallel-line-output-schema.ts`）：子代理返回裸 JSON 字符串由 TypeBox 严格验证，解析失败抛 Error 让调用方重试——从 prompt 恳求变成代码验收。
 - `ParallelLineInput` / `ParallelLineOutput` 扩展：新增 `recentOffscreenEvents`、`excludedActorIds`、`excludedPressureTypes`、`preferredPressureType`、`majorBeatEnd`、`arcTransition`；输出新增 `timelineId`、`toneDriftRisk`、`genreFitNotes`。
 - `gm-tool-policy.md` parallel-line 小节改为 `run_parallel_line` 工具装配流程。
 - 前置依赖 #15（actor agenda）、#16（relationship signal）、#17（pressure palette）已在先前完成。
@@ -125,14 +125,14 @@ interface ScheduledEvent {
 a) **NPC 印象卡**（`ActorImpression`）——公开层 per-actor voice/posture/texture 快照：
 
 - 类型 `ActorImpression`（presence / actionStyle / relationshipPosture / voiceMaterial / updatedAt）加入 `PublicGameState.actorImpressions`。
-- 领域逻辑 `engine/core/actor-impression.ts`：`upsertActorImpression` upsert；`presentActorImpressions` 按 scene.presentActorIds 过滤；`formatPresenceImpressionCards` 格式化注入文本。
+- 领域逻辑 `engine/core/actor/actor-impression.ts`：`upsertActorImpression` upsert；`presentActorImpressions` 按 scene.presentActorIds 过滤；`formatPresenceImpressionCards` 格式化注入文本。
 - `update_actor_impression` 领域工具（`tools/state/update-actor-impression.ts`）。
 - 新 runtime prompt source `presence-impressions`，注册在 `preset-settlement.json` pre-response slot priority 15。在场 NPC 印象卡自动注入 pre-response。
 - schema v8→9 迁移，新增 `actorImpressions: []`。
 
 b) **Campaign memory 检索**：
 
-- `engine/core/memory-recall.ts`：`recallMemory(state, query)` 纯函数，支持 keywords（OR）、actorId、location、scope 过滤，不上向量。
+- `engine/core/knowledge/memory-recall.ts`：`recallMemory(state, query)` 纯函数，支持 keywords（OR）、actorId、location、scope 过滤，不上向量。
 - `recall_memory` 领域工具（`tools/state/recall-memory.ts`）：只读，不改状态。
 - tool-policy 更新：需要回忆旧事实时调用 recall_memory，不凭模型记忆编造。
 
@@ -169,7 +169,7 @@ AGENTS.md 说「先写 JSONL 统计复现」，但没有现成统计工具。建
 
 落地清单：
 
-- `engine/core/seeded-rng.ts`：xoshiro128\*\* 算法，`seededRandomInt(state, bound)` 和 `seededRandomFloat(state)`。seed 存在 `state.meta.rngSeed`，每次消耗推进 `state.meta.rngCounter`。counter fast-forward 保证 rewind 后重放行为一致。
+- `engine/core/utils/seeded-rng.ts`：xoshiro128\*\* 算法，`seededRandomInt(state, bound)` 和 `seededRandomFloat(state)`。seed 存在 `state.meta.rngSeed`，每次消耗推进 `state.meta.rngCounter`。counter fast-forward 保证 rewind 后重放行为一致。
 - `resolve_combat_exchange` 内部战场变数 roll 已改用 seeded RNG（原 `randomInt(100)` from `node:crypto` → `seededRandomInt(draft, 100)`）。
 - schema v9→10 迁移（rngSeed + rngCounter）。
 - 9 新测试（确定性、序列范围、边界、fast-forward、差异性）。
@@ -185,7 +185,7 @@ AGENTS.md 说「先写 JSONL 统计复现」，但没有现成统计工具。建
 
 落地清单（2026-06-14）：
 
-- 投影函数在 `engine/core/player-widgets.ts`（纯 PublicGameState → Markdown，不泄露 secrets）。
+- 投影函数在 `engine/core/state/player-widgets.ts`（纯 PublicGameState → Markdown，不泄露 secrets）。
 - 四个 `/` 命令注册在 `extensions/player-panel/index.ts`（复用已有 `showPanel` TUI 框架）。
 - 7 新测试覆盖四个投影函数。
 
@@ -298,7 +298,7 @@ pi 架构可行性验证结论（pi 0.79.1）：
 
 ## 15. NPC 自主性：actor agenda + knowledge lens
 
-- [x] 状态：已完成（2026-06-14，schema v7）。`secrets.actorAgendas` 记录 actorId/goal/fear/currentOrder/lastIndependentActionAt，`secrets.actorKnowledgeLenses` 记录 knows/suspects/falseBeliefs/forbiddenKnowledge；新增 `engine/core/actor-agenda.ts` 纯函数与 `update_actor_agenda`、`record_actor_knowledge` 两个窄领域工具；state schema/migration/invariant/test 已补齐；`buildTimelineStateContextFromRaw` 给 timeline 子代理投影 agenda 与 knowledge lens；`gm-tool-policy.md` 与 `gm-direction.md` 已要求 NPC 动机/认知边界先落账，`timeline-showrunner` prompt 已把无 agenda/无自主行动列为 autonomy check。
+- [x] 状态：已完成（2026-06-14，schema v7）。`secrets.actorAgendas` 记录 actorId/goal/fear/currentOrder/lastIndependentActionAt，`secrets.actorKnowledgeLenses` 记录 knows/suspects/falseBeliefs/forbiddenKnowledge；新增 `engine/core/actor/actor-agenda.ts` 纯函数与 `update_actor_agenda`、`record_actor_knowledge` 两个窄领域工具；state schema/migration/invariant/test 已补齐；`buildTimelineStateContextFromRaw` 给 timeline 子代理投影 agenda 与 knowledge lens；`gm-tool-policy.md` 与 `gm-direction.md` 已要求 NPC 动机/认知边界先落账，`timeline-showrunner` prompt 已把无 agenda/无自主行动列为 autonomy check。
 
 当前 NPC 有 `relationshipToProtagonist`、roles、presence 与 offscreen events，但缺一个稳定的「此刻主动性」与「认知边界」载体。结果是长跑后 NPC 容易退化成 clue container、受害者、等待物，或者把 GM 视角事实说出口。
 
@@ -324,7 +324,7 @@ interface ActorKnowledgeLens {
 
 落地路线：
 
-1. 先在 `engine/core/state.ts` 加 state 结构与 schema migration。
+1. 先在 `engine/core/state/state.ts` 加 state 结构与 schema migration。
 2. 增加窄工具：`update_actor_agenda` / `record_actor_knowledge`。
 3. `buildTimelineStateContextFromRaw` 给子代理投影 agenda 和 player-safe knowledge 摘要。
 4. `submit_direction_packet.npcStances` 可引用 agenda，但不得把 secret knowledge 写入 packet。
@@ -334,7 +334,7 @@ interface ActorKnowledgeLens {
 
 ## 16. 关系信号账本（relationship signal ledger）
 
-- [x] 状态：已完成（2026-06-14，schema v8）。新增 `public.relationshipSignals` 与 `secrets.relationshipSignals` 分层账本（id/actorId/targetActorId/signal/interpretation/boundary/sourceEventId/visibility），`engine/core/relationship-signal.ts` 负责记录、分层和未揭示秘密字符串防漏；`record_relationship_signal` 工具已注册。GM brief 露出最近 player-known 信号，timeline 子代理上下文注入 recent relationshipSignals，tool-policy/social/direction prompt 已要求关系转折先落行为证据。迁移 v7→v8 与 schema/invariant/tool 测试已补齐。
+- [x] 状态：已完成（2026-06-14，schema v8）。新增 `public.relationshipSignals` 与 `secrets.relationshipSignals` 分层账本（id/actorId/targetActorId/signal/interpretation/boundary/sourceEventId/visibility），`engine/core/actor/relationship-signal.ts` 负责记录、分层和未揭示秘密字符串防漏；`record_relationship_signal` 工具已注册。GM brief 露出最近 player-known 信号，timeline 子代理上下文注入 recent relationshipSignals，tool-policy/social/direction prompt 已要求关系转折先落行为证据。迁移 v7→v8 与 schema/invariant/tool 测试已补齐。
 
 已有 `relationshipToProtagonist.stance/summary`，但它是当前摘要，不保留「关系为何变成这样」的行为证据。情感线需要记录微动作，而不是好感数值。
 

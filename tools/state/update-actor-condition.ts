@@ -1,10 +1,11 @@
 import type { FateToolDefinition } from "../runtime/tool-definition.ts";
-import { Type } from "typebox";
-import { updateActorCondition } from "../../engine/core/actor-condition.ts";
 import type { ToolResult } from "../runtime/tool-result.ts";
 
-import { resultDetails, runDomainEventTool } from "./domain-tool-runner.ts";
+import { Type } from "typebox";
+
+import { updateActorCondition } from "../../engine/core/actor/actor-condition.ts";
 import { normalizeActorConditionEvent } from "./actor-condition-normalizer.ts";
+import { resultDetails, runDomainEventTool } from "./domain-tool-runner.ts";
 
 export function updateActorConditionTool(params: unknown, sessionManager: unknown): ToolResult {
   return runDomainEventTool({
@@ -14,7 +15,6 @@ export function updateActorConditionTool(params: unknown, sessionManager: unknow
     message: (result) => result.message,
   });
 }
-
 
 export const updateActorConditionToolDefinition: FateToolDefinition = {
   name: "update_actor_condition",
@@ -38,9 +38,7 @@ export const updateActorConditionToolDefinition: FateToolDefinition = {
     actorId: Type.Optional(
       Type.String({ description: "目标 actor id；必须已存在于 public actors" }),
     ),
-    severity: Type.Optional(
-      Type.String({ description: "minor / moderate / severe / critical" }),
-    ),
+    severity: Type.Optional(Type.String({ description: "minor / moderate / severe / critical" })),
     text: Type.Optional(Type.String()),
     source: Type.Optional(Type.String()),
     recoverable: Type.Optional(Type.Boolean()),
@@ -82,7 +80,9 @@ export const updateActorConditionToolDefinition: FateToolDefinition = {
     visibility: Type.Optional(Type.String({ description: "player-known / suspected" })),
     notes: Type.Optional(Type.Array(Type.String())),
     treatment: Type.Optional(Type.String({ description: "update-wound 可用：当前处理状态" })),
-    conditionKind: Type.Optional(Type.String({ description: "resolve-condition：wound / affliction" })),
+    conditionKind: Type.Optional(
+      Type.String({ description: "resolve-condition：wound / affliction" }),
+    ),
     conditionId: Type.Optional(Type.String()),
     outcome: Type.Optional(
       Type.String({

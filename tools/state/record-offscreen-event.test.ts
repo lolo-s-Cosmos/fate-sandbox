@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { advanceClock } from "../../engine/core/turn-time.ts";
-import { cloneState, commitState, resetState } from "../../engine/core/state-store.ts";
+import { cloneState, commitState, resetState } from "../../engine/core/state/state-store.ts";
+import { advanceClock } from "../../engine/core/state/turn-time.ts";
 import { recordOffscreenEventTool } from "./record-offscreen-event.ts";
 
 void test("record_offscreen_event tool persists a foreshadowed offscreen event", () => {

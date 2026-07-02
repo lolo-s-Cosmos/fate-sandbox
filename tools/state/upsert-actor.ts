@@ -1,14 +1,14 @@
+import type { PublicActorState } from "../../engine/core/state/state.ts";
 import type { FateToolDefinition } from "../runtime/tool-definition.ts";
-import { Type } from "typebox";
-import type { PublicActorState } from "../../engine/core/state.ts";
 import type { ToolResult } from "../runtime/tool-result.ts";
 
-import { upsertActor } from "../../engine/core/actor.ts";
-import { parseActorRegistryInput } from "../../engine/core/actor-schema.ts";
-import { ACTOR_KINDS } from "../../engine/core/state-enum-schemas.ts";
+import { Type } from "typebox";
 
+import { parseActorRegistryInput } from "../../engine/core/actor/actor-schema.ts";
+import { upsertActor } from "../../engine/core/actor/actor.ts";
+import { ACTOR_KINDS } from "../../engine/core/state/state-enum-schemas.ts";
+import { isRecord } from "../../engine/core/utils/typebox-validation.ts";
 import { resultDetails, runDomainEventTool } from "./domain-tool-runner.ts";
-import { isRecord } from "../../engine/core/typebox-validation.ts";
 
 /**
  * upsert_actor 边界：结构校验交给 actor-schema；这里只保留领域归一化——
@@ -19,7 +19,10 @@ export function upsertActorTool(params: unknown, sessionManager: unknown): ToolR
   return runDomainEventTool({
     sessionManager,
     execute: (draft) =>
-      upsertActor(draft, parseActorRegistryInput(prepareUpsertActorParams(params), "upsert_actor 参数")),
+      upsertActor(
+        draft,
+        parseActorRegistryInput(prepareUpsertActorParams(params), "upsert_actor 参数"),
+      ),
     details: resultDetails,
     message: (result) => result.message,
   });
@@ -219,8 +222,7 @@ export const upsertActorToolDefinition: FateToolDefinition = {
     "- 把本局不需要追踪的角色全量写进 state",
   parameters: Type.Object({
     kind: Type.String({
-      description:
-        "setup-protagonist / ensure-public-npc / upsert-public-npc / upsert-servant",
+      description: "setup-protagonist / ensure-public-npc / upsert-public-npc / upsert-servant",
     }),
     actor: Type.Optional(publicActorSchema()),
     npc: Type.Optional(loosePublicNpcSchema()),

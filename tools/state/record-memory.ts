@@ -1,13 +1,13 @@
+import type { MemoryEvent, MemoryEventResult } from "../../engine/core/knowledge/memory.ts";
 import type { FateToolDefinition } from "../runtime/tool-definition.ts";
-import { Type } from "typebox";
-import type { MemoryEvent, MemoryEventResult } from "../../engine/core/memory.ts";
 import type { ToolResult } from "../runtime/tool-result.ts";
 
-import { recordMemory } from "../../engine/core/memory.ts";
-import { parseMemoryEvent } from "../../engine/core/memory-schema.ts";
+import { Type } from "typebox";
 
+import { parseMemoryEvent } from "../../engine/core/knowledge/memory-schema.ts";
+import { recordMemory } from "../../engine/core/knowledge/memory.ts";
+import { isRecord } from "../../engine/core/utils/typebox-validation.ts";
 import { runDomainEventTool } from "./domain-tool-runner.ts";
-import { isRecord } from "../../engine/core/typebox-validation.ts";
 
 export function recordMemoryTool(params: unknown, sessionManager: unknown): ToolResult {
   return runDomainEventTool({
@@ -31,6 +31,10 @@ function formatResult(params: MemoryEvent, result: MemoryEventResult): string {
       return `日常摘要已记录：${result.dailySummaryId ?? "?"}\n- ${params.summary}`;
     case "record-daily-event":
       return `日常事件已记录：${result.dailyEventId ?? "?"}\n- [${params.eventKind}] ${params.title}: ${params.summary}`;
+    default: {
+      const unreachable: never = params;
+      throw new Error(`未知 memory 事件：${JSON.stringify(unreachable)}`);
+    }
   }
 }
 
@@ -97,7 +101,8 @@ export const recordMemoryToolDefinition: FateToolDefinition = {
     ),
     summary: Type.Optional(
       Type.String({
-        description: "record-major-event / record-daily-event / record-daily-summary 必填：事件描述",
+        description:
+          "record-major-event / record-daily-event / record-daily-summary 必填：事件描述",
       }),
     ),
     consequences: Type.Optional(Type.Array(Type.String())),

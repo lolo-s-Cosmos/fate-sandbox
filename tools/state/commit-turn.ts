@@ -1,18 +1,18 @@
+import type { TurnCommitEvent } from "../../engine/core/state/turn-commit.ts";
 import type { FateToolDefinition } from "../runtime/tool-definition.ts";
-import { Type } from "typebox";
-import { timePolicySchema } from "./time-policy-tool-schema.ts";
-import { commitTurn } from "../../engine/core/turn-commit.ts";
 import type { ToolResult } from "../runtime/tool-result.ts";
+
+import { Type } from "typebox";
 
 import {
   assertNoOpenBackstageObligation,
   recordCanonicalTurnForBackstage,
-} from "../../engine/core/backstage-obligation.ts";
-import { formatPendingHarvestReminder } from "../../engine/core/backstage-pending.ts";
-import type { TurnCommitEvent } from "../../engine/core/turn-commit.ts";
-
-import { resultDetails, runDomainEventTool } from "./domain-tool-runner.ts";
+} from "../../engine/core/backstage/backstage-obligation.ts";
+import { formatPendingHarvestReminder } from "../../engine/core/backstage/backstage-pending.ts";
+import { commitTurn } from "../../engine/core/state/turn-commit.ts";
 import { normalizeTurnCommitInput } from "./commit-turn-normalizer.ts";
+import { resultDetails, runDomainEventTool } from "./domain-tool-runner.ts";
+import { timePolicySchema } from "./time-policy-tool-schema.ts";
 
 // 本轮是否产生机械代价：用于打断后台 no-cost 连击。可检测核心集。
 const COST_EVENT_KINDS = new Set(["actor-condition", "economy", "servant-form"]);
@@ -92,8 +92,7 @@ export const commitTurnToolDefinition: FateToolDefinition = {
     events: Type.Array(
       Type.Object({
         kind: Type.String({
-          description:
-            "scene / scene-presence / actor-condition / servant-form / economy / memory",
+          description: "scene / scene-presence / actor-condition / servant-form / economy / memory",
         }),
         event: Type.Unknown({
           description:
