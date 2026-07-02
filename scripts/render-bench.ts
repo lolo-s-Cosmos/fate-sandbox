@@ -28,7 +28,7 @@ import { join } from "node:path";
 
 import { lintFinalProse } from "../engine/audit/lint-rules.ts";
 import { parseSessionJsonl, reconstructActivePath } from "../engine/audit/session-audit.ts";
-import { buildRendererSystemPrompt } from "../engine/gm-prompt/injection.ts";
+import { buildRendererSystemPrompt } from "../engine/prompt-assembly/injection.ts";
 import { loadProseDigests } from "../engine/render/prose-digest-store.ts";
 import {
   buildRendererMessages,

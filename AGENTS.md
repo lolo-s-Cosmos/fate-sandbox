@@ -241,7 +241,7 @@ type SceneResult =
 ```
 engine/                # 确定性运行时引擎
   core/                # state、scene、actor、servant、economy、memory、secret 等领域逻辑
-  gm-prompt/           # prompt 组装、preset、render/injection 测试
+  prompt-assembly/     # prompt 组装（素材在顶层 prompts/）、preset、render/injection 测试
   world-data/          # lookup 索引与世界数据读取
 
 world-data/                  # 结构化世界数据、campaign preset、timeline contract

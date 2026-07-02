@@ -17,7 +17,7 @@ import { syncStateFromSessionManager } from "../../engine/core/state/session-hyd
 import { getState } from "../../engine/core/state/state-store.ts";
 import { isRecord } from "../../engine/core/utils/typebox-validation.ts";
 import { dumpPassB } from "../../engine/debug/api-trace.ts";
-import { buildRendererSystemPrompt } from "../../engine/gm-prompt/injection.ts";
+import { buildRendererSystemPrompt } from "../../engine/prompt-assembly/injection.ts";
 import { loadProseDigests, saveProseDigest } from "../../engine/render/prose-digest-store.ts";
 import {
   buildLintRetryMessages,
