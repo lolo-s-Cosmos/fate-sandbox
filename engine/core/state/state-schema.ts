@@ -23,12 +23,13 @@ import {
 import { ECONOMY_STATE_SCHEMA } from "../economy/economy-schema.ts";
 import { HOOK_STATE_SCHEMA } from "../memory/hook-schema.ts";
 import { CAMPAIGN_MEMORY_SCHEMA } from "../memory/memory-schema.ts";
+import { SCENE_STATE_SCHEMA } from "../scene/scene-schema.ts";
 import {
   SECRET_ACTOR_STATE_SCHEMA,
   SECRET_CAMPAIGN_FACT_SCHEMA,
   SECRET_EVENT_MEMORY_SCHEMA,
 } from "../secrets/secrets-schema.ts";
-import { SCENE_STATE_SCHEMA } from "../scene/scene-schema.ts";
+import { LOCATION_STATE_SCHEMA } from "../turn/turn-time-schema.ts";
 import { normalizeIsoInstant } from "../utils/date-time.ts";
 import { isRecord, parseTypeBoxValue, trimStringsDeep } from "../utils/typebox-validation.ts";
 import {
@@ -45,7 +46,6 @@ import {
   TIMELINE_ID_SCHEMA,
   TIMEZONE_ID_SCHEMA,
 } from "./state-enum-schemas.ts";
-import { LOCATION_STATE_SCHEMA } from "../turn/turn-time-schema.ts";
 
 /**
  * State 反序列化边界 schema 的组合根：领域状态片段住在各自领域的

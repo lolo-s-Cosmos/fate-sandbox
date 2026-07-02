@@ -18,7 +18,7 @@ import { basename, join } from "node:path";
 import { parseSessionJsonl, reconstructActivePath } from "../engine/audit/session-audit.ts";
 
 const SESSIONS_DIR = join(import.meta.dirname, "..", "sessions");
-const OUTPUT_DIR = join(import.meta.dirname, "..", "state", "exports");
+const OUTPUT_DIR = join(import.meta.dirname, "..", "runtime", "exports");
 const PROSE_CUSTOM_TYPE = "fsn-prose";
 
 // ─── entry classification ────────────────────────────────────────

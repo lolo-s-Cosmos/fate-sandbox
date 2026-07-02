@@ -4,10 +4,7 @@ import type {
   MessageRenderer,
 } from "@earendil-works/pi-coding-agent";
 
-import type {
-  RenderDirectionPacket,
-  SuggestedAction,
-} from "../../engine/render/packet-schema.ts";
+import type { RenderDirectionPacket, SuggestedAction } from "../../engine/render/packet-schema.ts";
 
 // pi-ai 0.80 把全局 stream()/streamSimple() 移到临时 compat 入口；
 // 待 coding-agent ModelManager 迁移完成后改用 createModels() + provider 工厂。
@@ -20,6 +17,7 @@ import { syncStateFromSessionManager } from "../../engine/core/state/session-hyd
 import { getState } from "../../engine/core/state/state-store.ts";
 import { isRecord } from "../../engine/core/utils/typebox-validation.ts";
 import { dumpPassB } from "../../engine/debug/api-trace.ts";
+import { buildRendererSystemPrompt } from "../../engine/gm-prompt/injection.ts";
 import { loadProseDigests, saveProseDigest } from "../../engine/render/prose-digest-store.ts";
 import {
   buildLintRetryMessages,
@@ -32,11 +30,7 @@ import {
   type RendererMessage,
 } from "../../engine/render/render-turn.ts";
 import { stripLeakedSettlementProse } from "../../engine/render/settlement-prose-firewall.ts";
-import {
-  stripThinkingResidue,
-  THINKING_PREFILL_TEXT,
-} from "../../engine/render/strip-thinking.ts";
-import { buildRendererSystemPrompt } from "../../engine/gm-prompt/injection.ts";
+import { stripThinkingResidue, THINKING_PREFILL_TEXT } from "../../engine/render/strip-thinking.ts";
 import { setChoiceWidget } from "../player-choices/index.ts";
 import { registerRerollCommand } from "./reroll.ts";
 

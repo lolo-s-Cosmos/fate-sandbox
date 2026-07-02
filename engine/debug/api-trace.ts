@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { isRecord } from "../core/utils/typebox-validation.ts";
 
-const DEBUG_DIR = join("state", "debug");
+const DEBUG_DIR = join("runtime", "debug");
 
 /** 简化的渲染消息形态（Pass-B 用 {role,text}，见 render-turn.ts RendererMessage）。 */
 export interface TraceMessage {

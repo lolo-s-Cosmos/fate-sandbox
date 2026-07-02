@@ -28,6 +28,7 @@ import { join } from "node:path";
 
 import { lintFinalProse } from "../engine/audit/lint-rules.ts";
 import { parseSessionJsonl, reconstructActivePath } from "../engine/audit/session-audit.ts";
+import { buildRendererSystemPrompt } from "../engine/gm-prompt/injection.ts";
 import { loadProseDigests } from "../engine/render/prose-digest-store.ts";
 import {
   buildRendererMessages,
@@ -35,7 +36,6 @@ import {
   PROSE_CUSTOM_TYPE,
   type RendererMessage,
 } from "../engine/render/render-turn.ts";
-import { buildRendererSystemPrompt } from "../engine/gm-prompt/injection.ts";
 
 const PROJECT_ROOT = join(import.meta.dirname, "..");
 const DEFAULT_MODELS = [
@@ -155,7 +155,7 @@ function collectBenchTurns(sessionPath: string, wanted: number): BenchTurn[] {
   });
 
   const systemPrompt = buildRendererSystemPrompt();
-  const digests = loadProseDigests(join(PROJECT_ROOT, "state", "prose-digests.json"));
+  const digests = loadProseDigests(join(PROJECT_ROOT, "runtime", "prose-digests.json"));
   const turns: BenchTurn[] = [];
   for (const [ordinal, proseIndex] of proseIndices.entries()) {
     if (ordinal < proseIndices.length - wanted) continue;

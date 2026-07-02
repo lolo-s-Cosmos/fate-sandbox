@@ -1,11 +1,11 @@
-import type { TypeBoxValidator } from "../utils/typebox-validation.ts";
 import type { LocationState, TurnTimePolicy } from "../state/state.ts";
+import type { TypeBoxValidator } from "../utils/typebox-validation.ts";
 
 import { Type } from "typebox";
 import { Compile } from "typebox/compile";
 
-import { parseTaggedTypeBoxUnion } from "../utils/typebox-validation.ts";
 import { BOUNDARY_KIND_SCHEMA } from "../state/state-enum-schemas.ts";
+import { parseTaggedTypeBoxUnion } from "../utils/typebox-validation.ts";
 
 export const TURN_TIME_KIND_SCHEMA = Type.Unsafe<TurnTimePolicy["kind"]>({
   enum: ["elapsed", "travel"],

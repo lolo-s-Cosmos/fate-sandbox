@@ -2,7 +2,7 @@
  * 主 GM 进程侧的 timeline 子代理上下文注入。
  *
  * canonical state 只活在主进程内存 + session entries 里；子代理是独立 pi 进程，
- * 看不到这两者。旧方案让子代理 extension 去读 state/state.json 侧通道，
+ * 看不到这两者。旧方案让子代理 extension 去读 runtime/state.json 侧通道，
  * 会拿到陈旧/被测试砸坏/属于别的 session 的快照。新方案：主进程在 subagent
  * 工具调用发出前（tool_call 事件的 event.input 官方可变），把调用瞬间的
  * 子代理安全投影直接改写进 task 参数，零文件、零 env、secrets 过滤留在父侧。

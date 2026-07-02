@@ -10,10 +10,7 @@ import type { PendingDirectionPacket } from "../../engine/render/render-turn.ts"
 
 import { randomUUID } from "node:crypto";
 
-import {
-  PROSE_CUSTOM_TYPE,
-  findPendingDirectionPacket,
-} from "../../engine/render/render-turn.ts";
+import { PROSE_CUSTOM_TYPE, findPendingDirectionPacket } from "../../engine/render/render-turn.ts";
 import { pruneAbandonedSubtree } from "../rewind/prune.ts";
 
 export interface RerollRenderedProse {

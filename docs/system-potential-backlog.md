@@ -282,7 +282,7 @@ pi 架构可行性验证结论（pi 0.79.1）：
 
 ## 13. 散文史 writer 化（渲染侧 compaction）
 
-- [x] 状态：已落地（2026-06-12）。动手时发现 8 轮硬截断早已被双层滑窗（全文层滑回 + packet 机械摘要层）取代，所以实际增量是摘要质量：`prose-digest-store.ts`（state/prose-digests.json，按 toolCallId 索引→rewind/分叉安全，single-writer，500 条 LRU）+ 渲染扩展内的异步 digest writer（正文落地后 fire-and-forget，产出事件+关系变化单行摘要）。查不到时自动回退机械 packet 摘要，永不阻塞渲染。待跟进：>32 轮摘要层滑出后仍会丢失，长期可加 arc-summary 层
+- [x] 状态：已落地（2026-06-12）。动手时发现 8 轮硬截断早已被双层滑窗（全文层滑回 + packet 机械摘要层）取代，所以实际增量是摘要质量：`prose-digest-store.ts`（runtime/prose-digests.json，按 toolCallId 索引→rewind/分叉安全，single-writer，500 条 LRU）+ 渲染扩展内的异步 digest writer（正文落地后 fire-and-forget，产出事件+关系变化单行摘要）。查不到时自动回退机械 packet 摘要，永不阻塞渲染。待跟进：>32 轮摘要层滑出后仍会丢失，长期可加 arc-summary 层
 
 渲染器的散文史现为「最近 8 轮硬截断」，早期轮次的声音/关系连续性直接丢失。拆解 MiMo 的方案：
 

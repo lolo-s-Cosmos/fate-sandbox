@@ -14,7 +14,7 @@ import { isRecord } from "../core/utils/typebox-validation.ts";
  *   渲染装配只读。
  */
 
-const DEFAULT_PATH = "state/prose-digests.json";
+const DEFAULT_PATH = "runtime/prose-digests.json";
 /** 条目上限；超出时按插入顺序淘汰最旧（旧轮次早已滑出摘要窗口）。 */
 const MAX_ENTRIES = 500;
 

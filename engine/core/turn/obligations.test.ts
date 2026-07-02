@@ -4,12 +4,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { updateActorCondition } from "../actor/actor-condition.ts";
+import { createInitialState } from "../state/state-store.ts";
 import {
   assertNoOpenObligations,
   recordObligation,
   settleOldestObligation,
 } from "./obligations.ts";
-import { createInitialState } from "../state/state-store.ts";
 import { commitTurn } from "./turn-commit.ts";
 
 function draftWithObligation(): State {

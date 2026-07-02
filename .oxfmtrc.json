@@ -15,7 +15,7 @@
     "node_modules",
     "dist",
     "/sessions",
-    "/state",
+    "/runtime",
     ".pi/agent",
     ".pi/npm",
     ".pi-lens",

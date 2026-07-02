@@ -8,7 +8,7 @@ import { lookupTool } from "../../../tools/lookup/lookup.ts";
 /**
  * timeline 子代理运行时 extension：只提供 lookup 工具。
  *
- * <timeline_state_context> 不再由本 extension 读 state/state.json 注入——
+ * <timeline_state_context> 不再由本 extension 读 runtime/state.json 注入——
  * 那是会被测试/别的 session 砸坏的陈旧侧通道。现在由主 GM 进程在 subagent
  * 工具调用发出前，把调用瞬间的投影直接注入 task（见 task-injection.ts），
  * 子代理从输入末尾拿到上下文块。

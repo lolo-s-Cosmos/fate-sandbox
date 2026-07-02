@@ -214,7 +214,7 @@ type SceneResult =
 - 主 GM 必须以 project scope 调用项目子代理；不要依赖 user-scope agent。
 - 子代理不得继承大块主项目上下文或技能目录：`inheritProjectContext: false`、`inheritSkills: false`。
 - 子代理必须显式配置 `tools` 和 `extensions`。不要 omitted `extensions`，否则可能加载普通扩展。
-- timeline 子代理只应加载 `extensions/subagents/timeline/index.ts`（提供 `lookup`）。`<timeline_state_context>` 由主 GM 进程在 subagent 工具调用发出前注入 task（`extensions/subagents/timeline/task-injection.ts`），不再读 state/state.json 侧通道。
+- timeline 子代理只应加载 `extensions/subagents/timeline/index.ts`（提供 `lookup`）。`<timeline_state_context>` 由主 GM 进程在 subagent 工具调用发出前注入 task（`extensions/subagents/timeline/task-injection.ts`），不再读 runtime/state.json 侧通道。
 - 后台导演（parallel_line）输出必须是 bare JSON；不要 Markdown、解释、长 prose。回程由 `harvest_backstage_candidate` 过 engine 验收后才能落地。
 - 后台事件必须归属到 actor / faction / location / consequence，并给前台一个可行动痕迹；新闻、巡逻、门响、信件不能替代事件本体。
 

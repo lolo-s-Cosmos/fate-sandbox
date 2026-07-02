@@ -8,8 +8,8 @@ const MIN_BRANCH_FOR_COMPACT = 4;
 
 function devLog(line: string): void {
   try {
-    mkdirSync(join("state", "debug"), { recursive: true });
-    appendFileSync(join("state", "debug", "_force-compact.log"), `${line}\n`);
+    mkdirSync(join("runtime", "debug"), { recursive: true });
+    appendFileSync(join("runtime", "debug", "_force-compact.log"), `${line}\n`);
   } catch {
     // ignore
   }

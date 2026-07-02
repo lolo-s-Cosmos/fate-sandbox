@@ -10,7 +10,7 @@ import { migrateRawGameState } from "./state-migration.ts";
 import { parseStateSchema } from "./state-schema.ts";
 import { CURRENT_STATE_SCHEMA_VERSION } from "./state.ts";
 
-const DEBUG_STATE_PATH = "state/state.json";
+const DEBUG_STATE_PATH = "runtime/state.json";
 const INITIAL_CURRENT_TIME = "2004-01-30T07:00:00.000Z";
 
 /**
@@ -100,7 +100,7 @@ function setStore(state: State): void {
 let lastWrittenSnapshot: string | undefined;
 
 function writeStateDebugSnapshot(state: State): void {
-  // node --test 子进程里的 commitState/resetState 不得覆写 state/state.json，
+  // node --test 子进程里的 commitState/resetState 不得覆写 runtime/state.json，
   // 否则跑一轮测试就会把调试快照砋成最后一个测试用例的近初始状态。
   if (process.env["NODE_TEST_CONTEXT"] !== undefined) {
     return;
