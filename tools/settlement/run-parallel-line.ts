@@ -133,7 +133,7 @@ export const runParallelLineToolDefinition: FateToolDefinition = {
     "engine 装配 hermetic director prompt 并【直接异步 fork 后台导演】（detached pi -p，不经主循环、不阻塞）。GM 只给 lineId + timeWindow + 可选偏好，一次调用即起异步后台线。\n\n" +
     "【使用边界】\n" +
     "- 需推进后台世界线，不想手写全部 ParallelLineInput\n" +
-    "- gm-tool-policy 触发 parallel-line（跳时 >10-30min、beat 关闭、连续 2 轮无代价）\n" +
+    "- settlement/tool-policy.md 触发 parallel-line（跳时 >10-30min、beat 关闭、连续 2 轮无代价）\n" +
     "流程：调 run_parallel_line（引擎自动起后台导演）→ 隔轮从 session_dir 取裸候选 → harvest_backstage_candidate 验收 → 审查 → record_offscreen_event / resolve_backstage_line 落地。你不需要手动 spawn。\n\n" +
     "禁区：\n" +
     "- 绕过 engine 装配手写完整 ParallelLineInput / director prompt\n" +

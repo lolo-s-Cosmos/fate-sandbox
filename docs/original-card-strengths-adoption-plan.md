@@ -205,7 +205,7 @@ record_actor_knowledge
 
 ### 实施步骤
 
-1. 加入 `prompts/gm-rules.md` 或 `prompts/gm-context.md`。
+1. 加入 `prompts/settlement/hard-rules.md` 或 `prompts/settlement/world-context.md`。
 2. 在 playtest 中特别测试：潜入、撤退、追踪、结界侦察。
 3. 检查 GM 是否仍只给结论；若是，继续加强工具描述或 few-shot。
 

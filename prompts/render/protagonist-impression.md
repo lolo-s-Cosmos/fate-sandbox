@@ -1,6 +1,6 @@
 # Protagonist Impression Module
 
-This is the repository template with empty fields. Runtime should prefer the local file at `prompts/user/protagonist-impression.md` when it exists.
+This is the repository template with empty fields. Runtime should prefer the local file at `prompts/user/render/protagonist-impression.md` when it exists.
 
 This module is the default camera template for the player character. It does not change mechanical state and does not replace tool settlement.
 

@@ -439,7 +439,7 @@ function proseLengthContextForTurn(turn: AuditTurn): ProseLengthContext | undefi
   return undefined;
 }
 
-/** parallel-line 触发条件（gm-tool-policy）：>=30min 推进 / beat complete / 连续 2 轮无代价 */
+/** parallel-line 触发条件（settlement/tool-policy.md）：>=30min 推进 / beat complete / 连续 2 轮无代价 */
 const PARALLEL_LINE_TRIGGER_MINUTES = 30;
 
 export interface ParallelLineReport {

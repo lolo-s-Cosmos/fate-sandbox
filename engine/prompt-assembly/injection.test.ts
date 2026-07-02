@@ -82,9 +82,9 @@ void test("buildRendererSystemPrompt assembles clean-room render stack", () => {
 
 void test("prompt assembly prefers local user prompt overrides", () => {
   resetState();
-  const overridePath = "prompts/user/protagonist-impression.md";
+  const overridePath = "prompts/user/render/protagonist-impression.md";
   const original = existsSync(overridePath) ? readFileSync(overridePath, "utf-8") : null;
-  mkdirSync("prompts/user", { recursive: true });
+  mkdirSync("prompts/user/render", { recursive: true });
   writeFileSync(overridePath, "# 本地主角印象\n\n本地覆盖测试。\n");
   try {
     const prompt = buildRendererSystemPrompt();

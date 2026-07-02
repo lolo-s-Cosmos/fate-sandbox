@@ -1,6 +1,6 @@
 # Style Hard Bans
 
-Mechanical lint list. Positive style guidance lives in `gm-style-rules.md`.
+Mechanical lint list. Positive style guidance lives in `style-rules.md`.
 
 ## Hard bans (mechanically linted; violations force a rewrite)
 

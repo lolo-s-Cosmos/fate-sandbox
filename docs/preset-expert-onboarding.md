@@ -28,12 +28,12 @@
 
 - 结算器**不写散文**，渲染器**看不到 state / 工具 / 秘密真名**，只看到 packet。
 - packet 的字段分 `binding`（必须到达成品场景）/ `free`（建议）/ `player-safe`（已过秘密防火墙）。
-- 关键文件：`prompts/gm-direction.md`（packet 契约）、`prompts/gm-render.md`（渲染协议）、`prompts/system-render.md`（渲染器身份）、`prompts/gm-style-rules.md`（23KB 笔触圣经）、`extensions/two-pass-render/`（接线）、`engine/audit/lint-rules.ts`（机械 lint，审计与渲染复用同一份）。
+- 关键文件：`prompts/settlement/direction-contract.md`（packet 契约）、`prompts/render/protocol.md`（渲染协议）、`prompts/render/system.md`（渲染器身份）、`prompts/render/style-rules.md`（23KB 笔触圣经）、`extensions/two-pass-render/`（接线）、`engine/audit/lint-rules.ts`（机械 lint，审计与渲染复用同一份）。
 
 ## 2. 阅读路径（不要读整个 repo）
 
 1. `AGENTS.md` 宪章段：Prompt 不是防线 / public-secrets-knowledge 三层 / 真名防线 / 硬切优先。
-2. `prompts/gm-direction.md` + `prompts/gm-render.md`：吃透 direction↔render 的职责切分（下面 §3 的主战场就在这条缝）。
+2. `prompts/settlement/direction-contract.md` + `prompts/render/protocol.md`：吃透 direction↔render 的职责切分（下面 §3 的主战场就在这条缝）。
 3. 跑一遍 `docs/render-bench/`：看现有渲染水准的盲样对比，建立 baseline 体感。
 4. `docs/system-potential-backlog.md`：18 项里大部分已 `[x]`，**只看 `[ ]` 的和每节末尾「后续 / 进阶（未做）」**——那是已知未挖的矿。
 
@@ -47,15 +47,15 @@
 
 ### T1 — direction↔render 的职责边界是否最优【最高价值】
 
-这是整个系统最大的灰区。`gm-direction.md` 规定结算器把 NPC 行为压成 `npcStances[].move`（一句话的"主动行为"），`gm-render.md` 再把它展开成有声音的场景。问题：
+这是整个系统最大的灰区。`direction-contract.md` 规定结算器把 NPC 行为压成 `npcStances[].move`（一句话的"主动行为"），`render/protocol.md` 再把它展开成有声音的场景。问题：
 
 - **哪些决策该在 direction（可被审计/账本约束），哪些该留给 render 自由发挥？** 现在 `move` 是结算器写死的，渲染器只许"演出不许改写"。这条线划在这里对吗？放太多到 direction → 渲染僵硬；放太多到 render → 失去机械可验证性，违反第一性原则。
-- `npcStances` / `npcOmissions` 的"在场重要 NPC 必须二选一覆盖"是 tool 硬执法的。这个 coverage 模型会不会逼出"为了填字段而填"的假 move？（`gm-direction.md` 自己列了一堆 Bad 例子在防这个——说明这是活的痛点。）
+- `npcStances` / `npcOmissions` 的"在场重要 NPC 必须二选一覆盖"是 tool 硬执法的。这个 coverage 模型会不会逼出"为了填字段而填"的假 move？（`direction-contract.md` 自己列了一堆 Bad 例子在防这个——说明这是活的痛点。）
 - packet 是 language-neutral 的，中文 canon 走 `canonFacts`。这层"英文意图 → 中文成品"的翻译损耗有多大？酒馆预设里 prefill / 深度注入是直接喂目标语言的，我们故意没这么做——你判断这个 trade-off 值不值。
 
 **交付形态**：对几个真实 turn 的 packet→成品做拆解，指出哪些质感损失发生在 direction 过度规约、哪些发生在 render 自由度不足，给出移动这条线的实验。
 
-### T2 — `gm-style-rules.md` 23KB 的下沉率
+### T2 — `style-rules.md` 23KB 的下沉率
 
 这是最大的静态 prompt block。backlog #1 进阶里已经点名一个例子：**"同一意象簇 3 轮内不得重复"可以机械化**——对最近 3 轮正文做意象关键词计数，超限就在下一轮 pre-response 动态注入"本轮禁用意象：X、Y"，把静态黑名单变成带违规上下文的动态注入。
 

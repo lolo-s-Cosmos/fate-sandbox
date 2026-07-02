@@ -5,12 +5,12 @@ import test from "node:test";
 import { lintFinalProse } from "./lint-rules.ts";
 
 /**
- * gm-style-blacklist.md 的「Hard bans」声称 mechanically linted。
+ * style-blacklist.md 的「Hard bans」声称 mechanically linted。
  * 本测试逐条验证：md 里列出的每个禁用短语，lintFinalProse 都真的能命中。
  * md 加了新禁令而 lint-rules.ts 没跟上时，这里会红。
  */
 
-const blacklist = readFileSync("prompts/gm-style-blacklist.md", "utf-8");
+const blacklist = readFileSync("prompts/render/style-blacklist.md", "utf-8");
 const localLintPath = "prompts/user/prose-lint.json";
 
 function hardBanPhrases(): string[] {
@@ -42,7 +42,7 @@ function sampleFor(phrase: string): string {
   return `${phrase}，雨还在下。`;
 }
 
-void test("every hard-ban phrase in gm-style-blacklist.md is caught by lintFinalProse", () => {
+void test("every hard-ban phrase in style-blacklist.md is caught by lintFinalProse", () => {
   const phrases = hardBanPhrases();
   assert.ok(phrases.length >= 20, `expected to parse hard-ban phrases, got ${phrases.length}`);
 

@@ -30,7 +30,7 @@ if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/n
     VERSION_PART="${PACKAGE_VERSION}-${HASH}"
   fi
 
-  if ! git diff --quiet -- . ':!state' ':!sessions' || ! git diff --cached --quiet -- . ':!state' ':!sessions'; then
+  if ! git diff --quiet -- . ':!runtime' ':!sessions' || ! git diff --cached --quiet -- . ':!runtime' ':!sessions'; then
     echo "警告: 当前有未提交的 tracked 改动；打包内容会包含工作区当前文件。" >&2
   fi
 else
@@ -48,7 +48,7 @@ mkdir -p "$DIST_DIR" "$STAGE_DIR"
 rm -f "$OUT_PATH" "$OUT_PATH.sha256"
 
 # 按 package.json#files 组装发布内容，并额外确保 package.json 本身进入包内。
-# 这样可以包含 npm/pnpm pack 默认可能忽略的项目运行文件，同时仍排除 node_modules/sessions/state 等运行产物。
+# 这样可以包含 npm/pnpm pack 默认可能忽略的项目运行文件，同时仍排除 node_modules/sessions/runtime 等运行产物。
 node <<'NODE' | while IFS= read -r rel; do
 const pkg = require('./package.json');
 const files = new Set(['package.json', ...(pkg.files || [])]);
@@ -66,7 +66,7 @@ NODE
 done
 
 # 移除本地玩家角色印象和测试文件；发布包只保留运行所需内容。
-rm -rf "$STAGE_DIR/agents/user"
+rm -rf "$STAGE_DIR/prompts/user"
 find "$STAGE_DIR" -type f -name '*.test.ts' -delete
 
 # 避免 macOS zip 写入 AppleDouble 扩展属性文件。

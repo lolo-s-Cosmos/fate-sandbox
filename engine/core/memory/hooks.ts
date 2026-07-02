@@ -1,7 +1,7 @@
 /**
  * Mystery hook 账本（backlog #2）。
  *
- * gm-story-driver 的 hook budget（active 上限、parked 冷却、复现必带新状态）
+ * settlement/story-driver.md 的 hook budget（active 上限、parked 冷却、复现必带新状态）
  * 以前全活在 prompt 里——compaction 后只能靠叙事质感苟活，审计无账可查。
  * 现在 hook 是领域对象：active 压力上限是硬 invariant，复现/升级/兑现
  * 强制写 novelty，paid/retired 终态留在账本里供 timeline-showrunner 对账。

@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 /**
  * 叙事输出契约 / style blacklist 的机械可检测子集（纯函数规则集）。
  *
- * 单一事实来源：`prompts/gm-output-contract.md` 与 `prompts/gm-style-blacklist.md`。
+ * 单一事实来源：`prompts/render/output-contract.md` 与 `prompts/render/style-blacklist.md`。
  * 这里只收录可正则化的禁令；语义类禁令（作者总结、抽象名词定义等）不在此层。
  *
  * 消费方：

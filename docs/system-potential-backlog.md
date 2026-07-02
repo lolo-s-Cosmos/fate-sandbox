@@ -15,7 +15,7 @@
 
 - [x] 状态：已完成（2026-06-14）。规则集本体已落在 `engine/audit/lint-rules.ts`，JSONL 审计与双 pass 渲染复用同一机械 lint；`submit_direction_packet` 先过 packet secret 防火墙，`two-pass-render` 对最终 `fsn-prose` 正文执行 style/output lint + 未揭示秘密扫描，失败重试一次，秘密泄漏仍存在则遮蔽并告警。单独 output-lint extension 被 #12 吸收，不再另接一条 turn_end 扩展。
 
-原问题：`gm-output-contract.md` + `gm-style-blacklist.md` 大半禁令可正则检测，但早期全靠模型自查（违反「Prompt 不是防线」）。
+原问题：`output-contract.md` + `style-blacklist.md` 大半禁令可正则检测，但早期全靠模型自查（违反「Prompt 不是防线」）。
 
 可机械检测项：
 
@@ -36,9 +36,9 @@
 
 ## 2. Mystery hook 状态化（明确违宪存量）
 
-- [x] 状态：已完成（2026-06-11，schema v6）。`public.hooks: HookState[]`（id/label/status/lastSurfacedAt/surfaceCount/lastNovelty）；`engine/core/memory/hooks.ts` 提供 open/surface/park/escalate/pay/retire，`update_hook` 单工具六动作已注册。硬 invariant：active+escalated 同时最多 2 条（超额 open/parked 复活被拒）；surface/escalate 必须带非空 novelty，pay 必须带 payoff，retire 必须带理由；paid/retired 终态拒绝再转换但留在账本供审计。GM brief 加「悬念账本」行；gm-story-driver hook budget 段改为指向工具账本。迁移 v5→v6。后续：audit 脚本可对「账本外悬念复现」做对账；timeline-showrunner 输入接 hooks 账本
+- [x] 状态：已完成（2026-06-11，schema v6）。`public.hooks: HookState[]`（id/label/status/lastSurfacedAt/surfaceCount/lastNovelty）；`engine/core/memory/hooks.ts` 提供 open/surface/park/escalate/pay/retire，`update_hook` 单工具六动作已注册。硬 invariant：active+escalated 同时最多 2 条（超额 open/parked 复活被拒）；surface/escalate 必须带非空 novelty，pay 必须带 payoff，retire 必须带理由；paid/retired 终态拒绝再转换但留在账本供审计。GM brief 加「悬念账本」行；settlement/story-driver.md hook budget 段改为指向工具账本。迁移 v5→v6。后续：audit 脚本可对「账本外悬念复现」做对账；timeline-showrunner 输入接 hooks 账本
 
-`gm-story-driver.md` 的 hook budget（active/parked/paid/escalated/retired、同场景最多 1-2 active、parked 1-2 轮内不抢焦点、复现必须带新状态）全部只活在 prompt 里。state 有 `storyWindow` 但 hook 不是领域对象。后果：compaction 后 hook 状态只能靠 5 条 narrative texture 苟活；timeline-showrunner 审计拿不到账本；「复现带新信息」无法验证。
+`story-driver.md` 的 hook budget（active/parked/paid/escalated/retired、同场景最多 1-2 active、parked 1-2 轮内不抢焦点、复现必须带新状态）全部只活在 prompt 里。state 有 `storyWindow` 但 hook 不是领域对象。后果：compaction 后 hook 状态只能靠 5 条 narrative texture 苟活；timeline-showrunner 审计拿不到账本；「复现带新信息」无法验证。
 
 方案：
 
@@ -112,7 +112,7 @@ interface ScheduledEvent {
 - engine-side assembler（`engine/core/backstage/parallel-line-assembler.ts`）：自动提取 knownFacts（public memory eventLog + pinnedFacts）、privateFacts（campaignSecrets 未 reveal）、actorGoals（actorAgendas）、forbiddenEscalations（storyWindow 自动合并）、recentOffscreenEvents（最近 6 条 + pressureType 分类）、pressure palette（带 recentUses + coolingDown）。
 - `ParallelLineOutput` TypeBox 验证器（`engine/core/backstage/parallel-line-output-schema.ts`）：子代理返回裸 JSON 字符串由 TypeBox 严格验证，解析失败抛 Error 让调用方重试——从 prompt 恳求变成代码验收。
 - `ParallelLineInput` / `ParallelLineOutput` 扩展：新增 `recentOffscreenEvents`、`excludedActorIds`、`excludedPressureTypes`、`preferredPressureType`、`majorBeatEnd`、`arcTransition`；输出新增 `timelineId`、`toneDriftRisk`、`genreFitNotes`。
-- `gm-tool-policy.md` parallel-line 小节改为 `run_parallel_line` 工具装配流程。
+- `tool-policy.md` parallel-line 小节改为 `run_parallel_line` 工具装配流程。
 - 前置依赖 #15（actor agenda）、#16（relationship signal）、#17（pressure palette）已在先前完成。
 - async 预取暂缓：需要 pi-subagents result-intercom 桥，待后续 #14 一并处理。
 
@@ -191,11 +191,11 @@ AGENTS.md 说「先写 JSONL 统计复现」，但没有现成统计工具。建
 
 ## 11. preset 注入顺序微优化（KV cache）
 
-- [x] 状态：已完成（2026-06-12），且超出原范围：tool-policy/hard-rules/story-driver 整体移到 pre-history（可缓存前缀），pre-response 只剩动态 mechanical_state + 短提醒 gm-turn-reminder.md，direction-contract 保留在 final-contract（recency 关键）。待实测静态规则前置后的指令遵从是否退化。
+- [x] 状态：已完成（2026-06-12），且超出原范围：tool-policy/hard-rules/story-driver 整体移到 pre-history（可缓存前缀），pre-response 只剩动态 mechanical_state + 短提醒 turn-reminder.md，direction-contract 保留在 final-contract（recency 关键）。待实测静态规则前置后的指令遵从是否退化。
 
 ## 12. 结算/渲染双 pass 分离（工具调用与叙事完全隔离）
 
-- [x] 状态：已交互式实测验收（2026-06-14 用户确认）。已接线：`submit_direction_packet` 工具（验证 + 防火墙 + terminate，拦截时报错回喷让结算器重写）；`extensions/two-pass-render/`（agent_end 检出未渲染 packet → 洁净室 complete() 渲染 → lint 不过重试一次 → 泄密仍存则遮蔽 → fsn-prose custom message 落 session + Markdown renderer；渲染不可用时兑底输出结算摘要）；preset 模块加 `pass: settlement|render|both` 字段按 pass 分组（吸收 #11：mechanical-state 调到静态块之后）；结算投影在 extension.ts context 事件过滤 fsn-prose；`gm-system.md` 改写为结算器身份，新增 `gm-direction.md`（packet 填写契约）与 `gm-render-system.md`（渲染器核心）；start.sh 加载新扩展。已知跟进项：#8 审计脚本对新 session 需要改从 fsn-prose custom message 取正文（现只读 assistant text）；渲染侧长期可继续演进 arc-summary 层与 heavy 轮选优。
+- [x] 状态：已交互式实测验收（2026-06-14 用户确认）。已接线：`submit_direction_packet` 工具（验证 + 防火墙 + terminate，拦截时报错回喷让结算器重写）；`extensions/two-pass-render/`（agent_end 检出未渲染 packet → 洁净室 complete() 渲染 → lint 不过重试一次 → 泄密仍存则遮蔽 → fsn-prose custom message 落 session + Markdown renderer；渲染不可用时兑底输出结算摘要）；preset 模块加 `pass: settlement|render|both` 字段按 pass 分组（吸收 #11：mechanical-state 调到静态块之后）；结算投影在 extension.ts context 事件过滤 fsn-prose；`gm-system.md` 改写为结算器身份，新增 `direction-contract.md`（packet 填写契约）与 `render/system.md`（渲染器核心，时名 gm-render-system.md）；start.sh 加载新扩展。已知跟进项：#8 审计脚本对新 session 需要改从 fsn-prose custom message 取正文（现只读 assistant text）；渲染侧长期可继续演进 arc-summary 层与 heavy 轮选优。
 - [x] pi 架构可行性已验证（2026-06-11，对照 pi 0.79.1 extensions.md 全文 + 官方 examples）
 - [x] Spike 已完成（2026-06-11，`docs/spikes/two-pass/`）：取 2026-06-08 session 的 turn 52/55/57（对白揭示/战斗裁决/宝具高潮三类），手工构造 packet 喂洁净室渲染器。结论 GO：resolvedChanges 全部落地、refusesToSay 防线成立、endWindow 全命中、声音一致性不丢，渲染质量持平或优于单 pass 基线（heavy 轮基线有 2 处 blacklist 违规，渲染版更干净）。已确认的真风险：生产中 packet 由结算器生成，其信息密度未验证；渲染器会自行补充 packet 外的 canon，两道 lint 关卡不可省。
 
@@ -287,7 +287,7 @@ pi 架构可行性验证结论（pi 0.79.1）：
 渲染器的散文史现为「最近 8 轮硬截断」，早期轮次的声音/关系连续性直接丢失。拆解 MiMo 的方案：
 
 - 独立 writer（subagent 或纯函数 + 廉价模型调用）**增量**维护早期轮次的 digest（每轮一行：事件 + 关系变化），不在渲染时一次性总结。关键论据：提取要趁早（低利用率时模型压缩能力完好），不要拖到快满才压。
-- 渲染器输入变为：digest（事件连续性，非文风样本）+ 最近 N 轮全文（文风连续性）+ 本轮 packet。gm-render-system.md 的输入契约已预留了 digest 位置（「Optionally, a digest of early turns」），只差生产它的机制。
+- 渲染器输入变为：digest（事件连续性，非文风样本）+ 最近 N 轮全文（文风连续性）+ 本轮 packet。render/system.md 的输入契约已预留了 digest 位置（「Optionally, a digest of early turns」），只差生产它的机制。
 - single-writer 不变量：digest 文件只许 writer 写，渲染器/结算器只读。
 
 ## 14. heavy 轮并行渲染选优（Max Mode 歪用）
@@ -298,7 +298,7 @@ pi 架构可行性验证结论（pi 0.79.1）：
 
 ## 15. NPC 自主性：actor agenda + knowledge lens
 
-- [x] 状态：已完成（2026-06-14，schema v7）。`secrets.actorAgendas` 记录 actorId/goal/fear/currentOrder/lastIndependentActionAt，`secrets.actorKnowledgeLenses` 记录 knows/suspects/falseBeliefs/forbiddenKnowledge；新增 `engine/core/actor/actor-agenda.ts` 纯函数与 `update_actor_agenda`、`record_actor_knowledge` 两个窄领域工具；state schema/migration/invariant/test 已补齐；`buildTimelineStateContextFromRaw` 给 timeline 子代理投影 agenda 与 knowledge lens；`gm-tool-policy.md` 与 `gm-direction.md` 已要求 NPC 动机/认知边界先落账，`timeline-showrunner` prompt 已把无 agenda/无自主行动列为 autonomy check。
+- [x] 状态：已完成（2026-06-14，schema v7）。`secrets.actorAgendas` 记录 actorId/goal/fear/currentOrder/lastIndependentActionAt，`secrets.actorKnowledgeLenses` 记录 knows/suspects/falseBeliefs/forbiddenKnowledge；新增 `engine/core/actor/actor-agenda.ts` 纯函数与 `update_actor_agenda`、`record_actor_knowledge` 两个窄领域工具；state schema/migration/invariant/test 已补齐；`buildTimelineStateContextFromRaw` 给 timeline 子代理投影 agenda 与 knowledge lens；`tool-policy.md` 与 `direction-contract.md` 已要求 NPC 动机/认知边界先落账，`timeline-showrunner` prompt 已把无 agenda/无自主行动列为 autonomy check。
 
 当前 NPC 有 `relationshipToProtagonist`、roles、presence 与 offscreen events，但缺一个稳定的「此刻主动性」与「认知边界」载体。结果是长跑后 NPC 容易退化成 clue container、受害者、等待物，或者把 GM 视角事实说出口。
 

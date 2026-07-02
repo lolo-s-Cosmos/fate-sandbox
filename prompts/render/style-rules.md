@@ -1,6 +1,6 @@
 # Prose Style Rules
 
-Single source of truth for the renderer's prose style: viewpoint discipline, positive style direction, and engineering-level detection rules. Hard-ban word lists live in `gm-style-blacklist.md`.
+Single source of truth for the renderer's prose style: viewpoint discipline, positive style direction, and engineering-level detection rules. Hard-ban word lists live in `style-blacklist.md`.
 
 ## Player viewpoint
 

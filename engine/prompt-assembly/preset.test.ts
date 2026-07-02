@@ -14,7 +14,7 @@ void test("parsePromptPreset accepts file and runtime sources", () => {
           slot: "pre-history",
           priority: 10,
           header: "world_context",
-          source: "prompts/gm-context.md",
+          source: "prompts/settlement/world-context.md",
         },
         {
           id: "state",
@@ -31,7 +31,10 @@ void test("parsePromptPreset accepts file and runtime sources", () => {
 
   assert.equal(preset.version, 1);
   assert.equal(preset.modules.length, 2);
-  assert.deepEqual(preset.modules[0]?.source, { kind: "file", path: "prompts/gm-context.md" });
+  assert.deepEqual(preset.modules[0]?.source, {
+    kind: "file",
+    path: "prompts/settlement/world-context.md",
+  });
   assert.deepEqual(preset.modules[1]?.source, { kind: "runtime", name: "state-brief" });
 });
 
@@ -71,7 +74,7 @@ void test("parsePromptPreset rejects duplicate module ids", () => {
               slot: "pre-history",
               priority: 10,
               header: "first",
-              source: "prompts/gm-context.md",
+              source: "prompts/settlement/world-context.md",
             },
             {
               id: "same",
@@ -79,7 +82,7 @@ void test("parsePromptPreset rejects duplicate module ids", () => {
               slot: "final-contract",
               priority: 20,
               header: "second",
-              source: "prompts/gm-output-contract.md",
+              source: "prompts/render/output-contract.md",
             },
           ],
         },

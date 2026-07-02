@@ -7,7 +7,7 @@
       "slot": "pre-history",
       "priority": 10,
       "header": "style_rules",
-      "source": "prompts/gm-style-rules.md"
+      "source": "prompts/render/style-rules.md"
     },
     {
       "id": "style-blacklist",
@@ -15,7 +15,7 @@
       "slot": "pre-history",
       "priority": 20,
       "header": "style_blacklist",
-      "source": "prompts/gm-style-blacklist.md"
+      "source": "prompts/render/style-blacklist.md"
     },
     {
       "id": "render-protocol",
@@ -23,7 +23,7 @@
       "slot": "pre-history",
       "priority": 30,
       "header": "render_protocol",
-      "source": "prompts/gm-render.md"
+      "source": "prompts/render/protocol.md"
     },
     {
       "id": "protagonist-impression",
@@ -31,7 +31,7 @@
       "slot": "pre-history",
       "priority": 40,
       "header": "protagonist_impression",
-      "source": "prompts/protagonist-impression.md"
+      "source": "prompts/render/protagonist-impression.md"
     },
     {
       "id": "output-contract",
@@ -39,7 +39,7 @@
       "slot": "final-contract",
       "priority": 10,
       "header": "output_contract",
-      "source": "prompts/gm-output-contract.md"
+      "source": "prompts/render/output-contract.md"
     }
   ]
 }

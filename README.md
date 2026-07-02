@@ -127,8 +127,8 @@ engine/audit/lint-rules.ts
 默认规则对应的提示词说明在：
 
 ```txt
-prompts/gm-style-blacklist.md
-prompts/gm-output-contract.md
+prompts/render/style-blacklist.md
+prompts/render/output-contract.md
 ```
 
 如果只是玩家本地想加自己的禁词/禁句，不要改源码，建这个文件即可（`prompts/user/` 已被 gitignore）：

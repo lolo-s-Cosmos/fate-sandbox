@@ -40,7 +40,7 @@ export function buildSystemPrompt(baseSystemPrompt: string): string {
   return (
     baseSystemPrompt +
     "\n" +
-    readFileSync(join(PROJECT_ROOT, "prompts", "system-settlement.md"), "utf-8")
+    readFileSync(join(PROJECT_ROOT, "prompts", "settlement/system.md"), "utf-8")
   );
 }
 
@@ -109,11 +109,11 @@ function findLastUserMessageIndex(messages: ReadonlyArray<unknown>): number {
 }
 
 /**
- * 渲染器（Pass B）洁净室 system prompt：gm-render-system（角色 + packet 契约）
+ * 渲染器（Pass B）洁净室 system prompt：render/system.md（角色 + packet 契约）
  * + 全部 render/both 模块，按 slot 顺序与 priority 拼接。零工具 schema、零机械规则。
  */
 export function buildRendererSystemPrompt(): string {
-  const sections = [readPromptFile("prompts/system-render.md").trim()];
+  const sections = [readPromptFile("prompts/render/system.md").trim()];
   for (const slot of ["pre-history", "pre-response", "final-contract"] as const) {
     for (const module of promptModulesForSlot(slot, "render")) {
       sections.push(`<${module.header}>\n${module.body.trim()}\n</${module.header}>`);
