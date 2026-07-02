@@ -1,3 +1,5 @@
+import type { Static } from "typebox";
+
 import { Type } from "typebox";
 
 import {
@@ -9,29 +11,22 @@ import { stringEnumSchema } from "../state/state-enum-schemas.ts";
 
 /**
  * Hook（悬念账本）状态树 schema（自 state-schema.ts 分拆而来）。
- * 与 state.ts 手写接口一一对应；漂移由 state-schema.ts 的双向赋值检查拦截。
+ * 状态类型直接从 schema 派生，schema 是唯一事实源。
  */
 
 export const HOOK_STATUSES = ["active", "parked", "paid", "escalated", "retired"] as const;
 
 export type HookStatus = (typeof HOOK_STATUSES)[number];
 
-export interface HookState {
-  id: string;
-  label: string;
-  status: HookStatus;
-  /** 上次在正文中出现的游戏内时刻 */
-  lastSurfacedAt: string;
-  surfaceCount: number;
-  /** 上次复现带来的新状态；复现/升级/兑现时必填 */
-  lastNovelty: string;
-}
-
 export const HOOK_STATE_SCHEMA = Type.Object({
   id: NON_EMPTY_STRING_SCHEMA,
   label: NON_EMPTY_STRING_SCHEMA,
   status: stringEnumSchema(HOOK_STATUSES),
+  /** 上次在正文中出现的游戏内时刻 */
   lastSurfacedAt: ISO_INSTANT_SCHEMA,
   surfaceCount: NON_NEGATIVE_INTEGER_SCHEMA,
+  /** 上次复现带来的新状态；复现/升级/兑现时必填 */
   lastNovelty: Type.String(),
 });
+
+export type HookState = Static<typeof HOOK_STATE_SCHEMA>;
