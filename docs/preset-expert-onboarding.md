@@ -84,7 +84,7 @@ backlog #12 自己记了：双 pass 延迟靠"结算器上下文缩水"对冲，
 
 - `scripts/render-bench.ts`（`pnpm` 脚本入口见 `package.json`）：多模型 × 多轮 × 盲样渲染对比。
 - `docs/render-bench/<timestamp>/turn-NN/`：每个 turn 有 `baseline.md`、各模型 `round-N.md`、`blind/sample-NN.md` + `key.json`（盲评对照）。
-- `docs/spike-two-pass/`：双 pass 的早期实测样本（turn-52/55/57 的 input/baseline/rendered）。
+- `docs/spikes/two-pass/`：双 pass 的早期实测样本（turn-52/55/57 的 input/baseline/rendered）。
 - `scripts/audit-session.ts`（`pnpm audit:session`）：对真实 session 跑叙事纪律回归——时间推进覆盖率、无代价连续段、output 契约机械子集、**未揭示秘密泄漏**。你的 prompt 改动可以用它做回归，证明没把纪律改坏。
 
 作为 agent 专家，欢迎你**扩 harness**：加评测维度（NPC 声音区分度、意象重复率、节奏曲线）、加 judge 模型、改盲样集。把"提示词玄学"变成 CI 能跑的数字，是这个项目最欢迎的贡献形态。

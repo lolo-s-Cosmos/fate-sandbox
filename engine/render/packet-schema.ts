@@ -8,7 +8,7 @@ import { isRecord, parseTypeBoxValue, trimStringsDeep } from "../core/utils/type
 
 /**
  * Direction Packet：双 pass 架构（backlog #12）中结算器 → 渲染器的唯一通道。
- * 接缝契约已由 docs/spike-two-pass/ 验证（GO）。
+ * 接缝契约已由 docs/spikes/two-pass/ 验证（GO）。
  *
  * 分层语义：
  * - binding（playerAction / resolvedChanges / endWindow / npcStances[].move）：渲染器必须落地，不得改写。

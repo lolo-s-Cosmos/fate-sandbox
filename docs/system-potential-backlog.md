@@ -197,7 +197,7 @@ AGENTS.md 说「先写 JSONL 统计复现」，但没有现成统计工具。建
 
 - [x] 状态：已交互式实测验收（2026-06-14 用户确认）。已接线：`submit_direction_packet` 工具（验证 + 防火墙 + terminate，拦截时报错回喷让结算器重写）；`extensions/two-pass-render/`（agent_end 检出未渲染 packet → 洁净室 complete() 渲染 → lint 不过重试一次 → 泄密仍存则遮蔽 → fsn-prose custom message 落 session + Markdown renderer；渲染不可用时兑底输出结算摘要）；preset 模块加 `pass: settlement|render|both` 字段按 pass 分组（吸收 #11：mechanical-state 调到静态块之后）；结算投影在 extension.ts context 事件过滤 fsn-prose；`gm-system.md` 改写为结算器身份，新增 `gm-direction.md`（packet 填写契约）与 `gm-render-system.md`（渲染器核心）；start.sh 加载新扩展。已知跟进项：#8 审计脚本对新 session 需要改从 fsn-prose custom message 取正文（现只读 assistant text）；渲染侧长期可继续演进 arc-summary 层与 heavy 轮选优。
 - [x] pi 架构可行性已验证（2026-06-11，对照 pi 0.79.1 extensions.md 全文 + 官方 examples）
-- [x] Spike 已完成（2026-06-11，`docs/spike-two-pass/`）：取 2026-06-08 session 的 turn 52/55/57（对白揭示/战斗裁决/宝具高潮三类），手工构造 packet 喂洁净室渲染器。结论 GO：resolvedChanges 全部落地、refusesToSay 防线成立、endWindow 全命中、声音一致性不丢，渲染质量持平或优于单 pass 基线（heavy 轮基线有 2 处 blacklist 违规，渲染版更干净）。已确认的真风险：生产中 packet 由结算器生成，其信息密度未验证；渲染器会自行补充 packet 外的 canon，两道 lint 关卡不可省。
+- [x] Spike 已完成（2026-06-11，`docs/spikes/two-pass/`）：取 2026-06-08 session 的 turn 52/55/57（对白揭示/战斗裁决/宝具高潮三类），手工构造 packet 喂洁净室渲染器。结论 GO：resolvedChanges 全部落地、refusesToSay 防线成立、endWindow 全命中、声音一致性不丢，渲染质量持平或优于单 pass 基线（heavy 轮基线有 2 处 blacklist 违规，渲染版更干净）。已确认的真风险：生产中 packet 由结算器生成，其信息密度未验证；渲染器会自行补充 packet 外的 canon，两道 lint 关卡不可省。
 
 动机：现在单个 GM 上下文同时承载 23 个工具 schema、机械规则、style 黑名单和散文史，两种任务抢同一份注意力预算；散文史里混着工具调用噪音；secret 隔离依赖 prompt 自觉。
 
