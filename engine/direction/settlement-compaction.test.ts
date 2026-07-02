@@ -105,3 +105,56 @@ void test("buildSettlementCompactionSummary omits prose marker when no prose mes
 function proseMessage(text: string): Record<string, unknown> {
   return { role: "custom", customType: "fsn-prose", content: text };
 }
+
+void test("recent turns keep ruling details; older turns collapse to one line", () => {
+  const messages: Record<string, unknown>[] = [];
+  for (let i = 1; i <= 10; i++) {
+    messages.push(
+      userMessage(`行动 ${i}`),
+      packetCallMessage({
+        needsRender: true,
+        playerAction: `行动 ${i} 落地`,
+        resolvedChanges: [`变化 ${i}`],
+        endWindow: `窗口 ${i}`,
+        npcStances: [
+          {
+            actorId: "tohsaka-rin",
+            stance: "警惕",
+            wants: "情报",
+            move: `主动动作 ${i}`,
+            refusesToSay: "家族目标",
+          },
+        ],
+      }),
+    );
+  }
+  const summary = buildSettlementCompactionSummary(messages, undefined);
+
+  // 最近 6 轮（5..10）带细节行；更早（1..4）只有单行索引。
+  assert.match(summary, /⌛ 收尾窗口：窗口 10/);
+  assert.match(summary, /☰ tohsaka-rin：主动动作 5/);
+  assert.doesNotMatch(summary, /⌛ 收尾窗口：窗口 4/);
+  assert.doesNotMatch(summary, /☰ tohsaka-rin：主动动作 1$/mu);
+  assert.match(summary, /- 玩家「行动 1」/);
+});
+
+void test("detail lines degrade to one-line index when folded through a second compaction", () => {
+  const first = buildSettlementCompactionSummary(
+    [
+      userMessage("夜巡"),
+      packetCallMessage({
+        needsRender: true,
+        playerAction: "夜巡落地",
+        resolvedChanges: ["发现结界"],
+        endWindow: "撤回据点前",
+      }),
+    ],
+    undefined,
+  );
+  assert.match(first, /⌛ 收尾窗口：撤回据点前/);
+
+  const second = buildSettlementCompactionSummary([], first);
+  // 折叠只保留 "- " 索引行：细节行消失，索引行保留。
+  assert.doesNotMatch(second, /⌛ 收尾窗口/);
+  assert.match(second, /- 玩家「夜巡」｜夜巡落地→ 发现结界/);
+});

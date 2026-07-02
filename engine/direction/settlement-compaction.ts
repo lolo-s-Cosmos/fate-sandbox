@@ -10,9 +10,16 @@
 import { isRecord } from "../core/utils/typebox-validation.ts";
 import { PROSE_CUSTOM_TYPE, SUBMIT_DIRECTION_PACKET_TOOL } from "./render-turn.ts";
 
-/** 摘要行总数上限（含上次摘要折叠进来的行）。 */
+/** 摘要条目（回合）总数上限（含上次摘要折叠进来的行）。 */
 const MAX_DIGEST_LINES = 80;
 const PLAYER_INPUT_EXCERPT_CHARS = 30;
+/**
+ * 两层梯度（回流自 lonestar settlement digest）：被压缩区域里最近若干轮在索引行下
+ * 额外保留裁决细节（收尾窗口 / NPC 主动 beat / 更长正文摘录）；更早回合只留一行。
+ * 细节行不以 "- " 开头，所以再次 compaction 折叠时自动降级回单行索引。
+ */
+const RECENT_FULL_TURNS = 6;
+const RECENT_PROSE_EXCERPT_CHARS = 200;
 
 const SUMMARY_HEADER = [
   "[结算上下文截断摘要｜机械生成]",
@@ -28,21 +35,38 @@ export function buildSettlementCompactionSummary(
   messages: ReadonlyArray<unknown>,
   previousSummary: string | undefined,
 ): string {
-  const lines = [...previousDigestLines(previousSummary), ...extractTurnLines(messages)];
-  const kept = lines.slice(-MAX_DIGEST_LINES);
-  const dropped = lines.length - kept.length;
+  const previousEntries: TurnDigestEntry[] = previousDigestLines(previousSummary).map((line) => ({
+    header: line,
+    details: [],
+  }));
+  const entries = [...previousEntries, ...extractTurnEntries(messages)];
+  const kept = entries.slice(-MAX_DIGEST_LINES);
+  const dropped = entries.length - kept.length;
   const sections = [SUMMARY_HEADER];
   if (dropped > 0) {
     sections.push(`（更早的 ${dropped} 轮索引已丢弃；如需历史事实查 state 的 turnLog/memory）`);
   }
-  sections.push(...kept);
+  const fullFrom = Math.max(0, kept.length - RECENT_FULL_TURNS);
+  kept.forEach((entry, index) => {
+    sections.push(entry.header);
+    if (index >= fullFrom) {
+      sections.push(...entry.details);
+    }
+  });
   return sections.join("\n");
 }
 
-function extractTurnLines(messages: ReadonlyArray<unknown>): string[] {
-  const lines: string[] = [];
+interface TurnDigestEntry {
+  /** 单行索引（"- " 开头，自洽）。 */
+  header: string;
+  /** 裁决细节行（仅最近 RECENT_FULL_TURNS 轮输出；非 "- " 开头，再压缩时自动降级）。 */
+  details: string[];
+}
+
+function extractTurnEntries(messages: ReadonlyArray<unknown>): TurnDigestEntry[] {
+  const entries: TurnDigestEntry[] = [];
   let currentInputs: string[] = [];
-  let pendingProseExcerpt: string | undefined;
+  let pendingProse: string | undefined;
   for (const message of messages) {
     const userText = playerInputText(message);
     if (userText !== undefined) {
@@ -51,17 +75,50 @@ function extractTurnLines(messages: ReadonlyArray<unknown>): string[] {
     }
     const prose = proseMessageText(message);
     if (prose !== undefined) {
-      pendingProseExcerpt = excerpt(prose, PROSE_EXCERPT_CHARS);
+      pendingProse = prose;
       continue;
     }
     const args = submitPacketArgs(message);
     if (args !== undefined) {
-      lines.push(formatTurnLine(currentInputs, args, pendingProseExcerpt));
+      entries.push({
+        header: formatTurnLine(
+          currentInputs,
+          args,
+          pendingProse === undefined ? undefined : excerpt(pendingProse, PROSE_EXCERPT_CHARS),
+        ),
+        details: formatTurnDetails(args, pendingProse),
+      });
       currentInputs = [];
-      pendingProseExcerpt = undefined;
+      pendingProse = undefined;
     }
   }
-  return lines;
+  return entries;
+}
+
+/** 近期轮的裁决细节：收尾窗口 + NPC 主动 beat + 更长正文摘录。 */
+function formatTurnDetails(args: Record<string, unknown>, prose: string | undefined): string[] {
+  if (args["needsRender"] === false) {
+    return [];
+  }
+  const details: string[] = [];
+  if (typeof args["endWindow"] === "string" && args["endWindow"].trim() !== "") {
+    details.push(`  ⌛ 收尾窗口：${excerpt(args["endWindow"], 80)}`);
+  }
+  if (Array.isArray(args["npcStances"])) {
+    for (const stance of args["npcStances"]) {
+      if (
+        isRecord(stance) &&
+        typeof stance["actorId"] === "string" &&
+        typeof stance["move"] === "string"
+      ) {
+        details.push(`  ☰ ${stance["actorId"]}：${excerpt(stance["move"], 60)}`);
+      }
+    }
+  }
+  if (prose !== undefined) {
+    details.push(`  ▸ 正文（长摘）：${excerpt(prose, RECENT_PROSE_EXCERPT_CHARS)}`);
+  }
+  return details;
 }
 
 const PROSE_EXCERPT_CHARS = 60;
